@@ -4,7 +4,8 @@
   "description": "",
   "main": "code.ts",
   "scripts": {
-    "test": "jest --watch"
+    "test": "jest --watch",
+    "test:d": "node --inspect-brk ./node_modules/jest/bin/jest.js --watch --runInBand"
   },
   "repository": {
     "type": "git",
