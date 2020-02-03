@@ -1,0 +1,4 @@
+node_modules
+bin
+shared/*.js
+shared/*.d.ts

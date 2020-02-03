@@ -1,0 +1,7 @@
+{
+  "extends": "@khaimov/setup/tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react",
+    "jsxFactory": "ReactConsole.createElement"
+  }
+}

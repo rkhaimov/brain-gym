@@ -1,0 +1,3 @@
+{
+  "extends": "@khaimov/setup/tsconfig.json"
+}

@@ -1,0 +1,1 @@
+module.exports = require('@khaimov/setup/jest.config');

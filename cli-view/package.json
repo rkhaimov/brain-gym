@@ -1,11 +1,12 @@
 {
+  "type": "client",
   "name": "brain-gym",
   "version": "1.0.0",
   "description": "",
   "main": "code.ts",
   "scripts": {
-    "test": "jest --watch",
-    "test:d": "node --inspect-brk ./node_modules/jest/bin/jest.js --watch --runInBand"
+    "start": "ts-node index.tsx",
+    "d": "node --inspect-brk node_modules/ts-node/dist/bin.js index.tsx"
   },
   "repository": {
     "type": "git",
@@ -18,11 +19,7 @@
     "url": "https://github.com/rkhaimov/brain-gym/issues"
   },
   "homepage": "https://github.com/rkhaimov/brain-gym#readme",
-  "devDependencies": {
-    "@types/jest": "^24.0.18",
-    "jest": "^24.9.0",
-    "ts-jest": "^24.0.2",
-    "tslint": "^5.19.0",
-    "typescript": "^3.5.3"
+  "dependencies": {
+    "@khaimov/setup": "^1.0.0"
   }
 }

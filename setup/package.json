@@ -1,0 +1,35 @@
+{
+  "name": "@khaimov/setup",
+  "version": "1.0.0",
+  "description": "Build and run time configurations",
+  "main": "",
+  "scripts": {
+    "prepublish": "npm run test && npm run compile:bin && npm run compile:shared",
+    "test": "jest",
+    "compile:bin": "tsc --esModuleInterop --skipLibCheck setup.ts --outDir ./bin",
+    "compile:shared": "tsc --esModuleInterop --skipLibCheck --declaration shared/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rkhaimov/ms-learn.git"
+  },
+  "author": "rkhaimov",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rkhaimov/ms-learn/issues"
+  },
+  "homepage": "https://github.com/rkhaimov/ms-learn#readme",
+  "dependencies": {
+    "@types/express": "^4.17.2",
+    "@types/jest": "^24.0.25",
+    "express": "^4.17.1",
+    "jest": "^24.9.0",
+    "ts-jest": "^24.2.0",
+    "ts-node": "^8.5.4",
+    "tslint": "^5.20.1",
+    "typescript": "^3.7.4"
+  },
+  "bin": {
+    "setup": "./bin/setup.js"
+  }
+}
