@@ -1,0 +1,98 @@
+:root {
+    --PI: 3.14159265358979;
+    --background-color: #2b2828;
+    --clock-background: #181717;
+    --text-color: white;
+    --clock-size: 500px;
+}
+
+body {
+    display: flex;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-size: 25px;
+    font-family: monospace;
+}
+
+.container {
+    position: relative;
+    width: var(--clock-size);
+    height: var(--clock-size);
+    margin: auto;
+    background-color: var(--clock-background);
+    border-radius: calc(var(--clock-size) / 2);
+    border: 5px solid #000000;
+    box-shadow: inset 0 0 27px 7px #0c0b0b;
+}
+
+.hour {
+    position: absolute;
+    display: inline-block;
+    transform: translateX(50%) translateY(50%);
+    text-align: center;
+    width: 35px;
+    height: 29px;
+}
+
+.hour.placeholder::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    height: 5px;
+    width: 25px;
+    top: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    background-color: #696464;
+    border-radius: 5px;
+}
+
+.arrow {
+    position: absolute;
+    top: 250px;
+    left: 250px;
+    height: 5px;
+    width: var(--clock-size);
+}
+
+.arrow::after {
+    content: '';
+    display: inline-block;
+    position: absolute;
+    height: 100%;
+    border-radius: 5px;
+}
+
+.arrow.second::after {
+    width: calc(var(--clock-size) / 2 * 1.2);
+    left: calc(var(--clock-size) / 2 - calc(var(--clock-size) * 0.2));
+    background-color: #656973;
+}
+
+.arrow.minute::after {
+    --width: calc(var(--clock-size) / 2 * 0.6);
+
+    width: var(--width);
+    right: calc(var(--clock-size) / 2 - var(--width));
+    background-color: #f7f7f7;
+}
+
+.arrow.minute::before {
+    content: '';
+    display: inline-block;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    transform: translateX(-50%) translateY(-50%);
+    border-radius: 10px;
+    background-color: #f7f7f7;
+}
+
+.arrow.hour::after {
+    --width: calc(var(--clock-size) / 2 * 0.4);
+
+    width: var(--width);
+    right: calc(var(--clock-size) / 2 - var(--width));
+    background-color: #ee4242;
+}
