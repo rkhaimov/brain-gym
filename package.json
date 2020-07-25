@@ -2,10 +2,11 @@
   "name": "brain-gym",
   "version": "1.0.0",
   "description": "",
-  "main": "code.ts",
+  "main": "index.ts",
   "scripts": {
     "test": "jest --watch",
-    "test:d": "node --inspect-brk ./node_modules/jest/bin/jest.js --watch --runInBand"
+    "test:d": "node --inspect-brk ./node_modules/jest/bin/jest.js --watch --runInBand",
+    "start": "tsc --watch"
   },
   "repository": {
     "type": "git",

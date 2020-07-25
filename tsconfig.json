@@ -1,19 +1,17 @@
 {
+  "include": ["./index.ts"],
   "compilerOptions": {
-    "allowSyntheticDefaultImports": true,
-    "experimentalDecorators": true,
-    "forceConsistentCasingInFileNames": true,
-    "importHelpers": true,
-    "lib": ["esnext", "dom"],
-    "module": "esnext",
+    "target": "esnext",
+    "module": "ESNext",
     "moduleResolution": "node",
-    "noEmitHelpers": true,
-    "noEmit": true,
-    "noImplicitReturns": true,
-    "noUnusedLocals": true,
-    "sourceMap": false,
+    "lib": ["esnext", "dom"],
     "strict": true,
-    "target": "esnext"
+    "noUnusedLocals": true,
+    "noImplicitReturns": true,
+    "inlineSourceMap": true,
+    "forceConsistentCasingInFileNames": true,
+    "incremental": true,
+    "watch": true
   },
   "exclude": [
     "node_modules"
