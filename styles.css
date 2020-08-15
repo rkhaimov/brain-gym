@@ -1,38 +1,9 @@
 body {
-    display: flex;
-    background-color: #414141;
+    margin: 0;
 }
 
-.container {
+.canvas {
     position: relative;
-    display: inline-block;
-    margin: auto;
-    width: 100px;
-    height: 100px;
-    background-color: #2b2b2b;
-}
-
-.particle {
-    position: absolute;
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background-color: #ab4949;
-    top: 50%;
-    left: 50%;
-    animation-delay: 1s;
-    animation-direction: normal;
-    animation-duration: .5s;
-    animation-fill-mode: forwards;
-    animation-name: disapear;
-}
-
-@keyframes disapear {
-    0% {
-        opacity: 1;
-    }
-
-    100% {
-        opacity: 0;
-    }
+    width: 100vw;
+    height: 100vh;
 }

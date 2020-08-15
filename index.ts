@@ -1,58 +1,41 @@
-const PARTICLES_COUNT = 100;
-const DURATION = 1000;
-const START_X = 0;
-const START_Y = 0;
-const MAX_END_X = 200;
-const MAX_UP_Y = -200;
+addLine({x: 0, y: 0}, {x: 200, y: 200});
 
-type AnimationData = {
-  particle: ReturnType<typeof createParticle>;
-  endX: number;
-  maxY: number;
-};
+function addLine(_from: Point, _to: Point) {
+  const from = convertPoint(_from);
+  const to = convertPoint(_to);
 
-const particles: Array<AnimationData> = [];
+  const canvas = document.querySelector('.canvas');
 
-for (let i = 0; i < PARTICLES_COUNT; i++) {
-  particles.push({
-    particle: createParticle(),
-    endX: Math.random() * MAX_END_X * (Math.random() > 0.5 ? 1 : -1),
-    maxY: Math.random() * MAX_UP_Y,
-  });
+  assert(canvas);
+
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line') as unknown as SVGLineElement;
+
+  line.style.stroke = 'rgb(255,0,0)';
+  line.style.strokeWidth = '2';
+
+  line.setAttribute('x1', `${from.x}`);
+  line.setAttribute('y1', `${from.y * -1}`);
+
+  line.setAttribute('x2', `${to.x}`);
+  line.setAttribute('y2', `${to.y * -1}`);
+
+  canvas.appendChild(line);
 }
 
-const animate = (time: number) => {
-  if (time > DURATION) {
-    return;
-  }
+function convertPoint(point: Point) {
+  point.x = point.x + window.innerWidth / 2;
+  point.y = (point.y + window.innerHeight / 2) * -1;
 
-  for (const item of particles) {
-    const {particle, maxY, endX} = item;
-    const resultX = START_X + endX * linear(time / DURATION);
-    const resultY = START_Y + maxY * jump(time / DURATION);
-
-    particle.style.transform =
-      `translateX(${resultX}px) translateY(${resultY}px)`;
-  }
-
-  requestAnimationFrame(animate);
-};
-
-const jump = (progress: number): number =>
-  (progress - Math.pow(progress, 2)) * 4;
-
-const linear = (progress: number): number => progress;
-
-requestAnimationFrame(animate);
-
-function createParticle() {
-  const particle = document.createElement('div');
-
-  particle.classList.add('particle');
-
-  const container = document.querySelector('.container')!;
-
-  container.appendChild(particle);
-
-  return particle;
+  return point;
 }
+
+function assert<T>(val: T): asserts val is NonNullable<T> {
+  if (val === undefined || val === null) {
+    throw new Error(`Expected 'val' to be defined, but received ${val}`);
+  }
+}
+
+type Point = {
+  x: number;
+  y: number;
+};
