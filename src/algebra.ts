@@ -19,3 +19,15 @@ class NumberFactory implements IntAlg<number> {
 }
 
 console.log(makeThreePlusFive(new NumberFactory()));
+
+class PrintFactory implements IntAlg<string> {
+  add(left: string, right: string): string {
+    return `${left} + ${right}`;
+  }
+
+  literal(n: number): string {
+    return `${n}`;
+  }
+}
+
+console.log(makeThreePlusFive(new PrintFactory()));
