@@ -34,3 +34,5 @@ function makeTwoPlusThree(): IExpression {
 
 console.log(makeTwoPlusThree().evaluate());
 console.log(makeTwoPlusThree().print());
+
+export {};
