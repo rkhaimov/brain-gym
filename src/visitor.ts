@@ -1,44 +1,40 @@
-import assert from 'assert';
-
-interface IExpression<TVisitorResult = unknown> {
-  accept(visitor: IExpressionVisitor<unknown>): unknown;
+interface IExpression<TVisitResult> {
+  accept(visitor: IExpressionVisitor<TVisitResult>): TVisitResult;
 }
 
-class Literal implements IExpression {
-  constructor(public n: number) {}
+class Literal<TVisitResult> implements IExpression<TVisitResult> {
+  constructor(public value: number) {}
 
-  accept(visitor: IExpressionVisitor<unknown>): unknown {
+  accept(visitor: IExpressionVisitor<TVisitResult>) {
     return visitor.visitLiteral(this);
   }
 }
 
-class BinaryAdd implements IExpression {
-  constructor(public left: IExpression, public right: IExpression) {}
+class BinaryAdd<TVisitResult> implements IExpression<TVisitResult> {
+  constructor(
+    private left: IExpression<TVisitResult>,
+    private right: IExpression<TVisitResult>
+  ) {}
 
-  accept(visitor: IExpressionVisitor<unknown>): unknown {
-    return visitor.visitBinaryAdd(this);
+  accept(visitor: IExpressionVisitor<TVisitResult>) {
+    return visitor.visitBinaryAdd(this.left.accept(visitor), this.right.accept(visitor));
   }
 }
 
-interface IExpressionVisitor<TVisitResult> {
-  visitLiteral(literal: Literal): TVisitResult;
 
-  visitBinaryAdd(binaryAdd: BinaryAdd): TVisitResult;
+interface IExpressionVisitor<TVisitResult> {
+  visitLiteral(literal: Literal<TVisitResult>): TVisitResult;
+
+  visitBinaryAdd(left: TVisitResult, right: TVisitResult): TVisitResult;
 }
 
 class Evaluator implements IExpressionVisitor<number> {
-  visitBinaryAdd(binaryAdd: BinaryAdd): number {
-    const leftResult = binaryAdd.left.accept(this);
-    const rightResult = binaryAdd.right.accept(this);
-
-    assert(typeof leftResult === 'number');
-    assert(typeof rightResult === 'number');
-
-    return leftResult + rightResult;
+  visitBinaryAdd(left: number, right: number): number {
+    return left + right;
   }
 
-  visitLiteral(literal: Literal): number {
-    return literal.n;
+  visitLiteral(literal: Literal<number>) {
+    return literal.value;
   }
 }
 
@@ -48,6 +44,6 @@ function makeTwoPlusThree() {
 
 const result = makeTwoPlusThree();
 
-console.log(result.accept(new Evaluator()) as number);
+console.log(result.accept(new Evaluator()));
 
 export {};
