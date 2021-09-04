@@ -1,66 +1,44 @@
-interface IExpression<TVisitResult> {
-  accept(visitor: IExpressionVisitor<TVisitResult>): TVisitResult;
+import assert from 'assert';
+
+interface IExpression<TVisitorResult = unknown> {
+  accept(visitor: IExpressionVisitor<unknown>): unknown;
 }
 
-class Literal<TVisitResult> implements IExpression<TVisitResult> {
-  constructor(private n: number) {}
+class Literal implements IExpression {
+  constructor(public n: number) {}
 
-  getValue() {
-    return this.n;
-  }
-
-  accept(visitor: IExpressionVisitor<TVisitResult>) {
+  accept(visitor: IExpressionVisitor<unknown>): unknown {
     return visitor.visitLiteral(this);
   }
 }
 
-class BinaryAdd<TVisitResult> implements IExpression<TVisitResult> {
-  constructor(
-    public left: IExpression<TVisitResult>,
-    public right: IExpression<TVisitResult>
-  ) {}
+class BinaryAdd implements IExpression {
+  constructor(public left: IExpression, public right: IExpression) {}
 
-  accept<TVisitResult>(visitor: IExpressionVisitor<TVisitResult>) {
-    return visitor.visitBinaryAdd(this);
-  }
-}
-
-class BinaryMultiplier<TVisitResult> implements IExpression<TVisitResult> {
-  constructor(
-    public left: IExpression<TVisitResult>,
-    public right: IExpression<TVisitResult>
-  ) {}
-
-  accept<TVisitResult>(visitor: IExpressionVisitor<TVisitResult>) {
+  accept(visitor: IExpressionVisitor<unknown>): unknown {
     return visitor.visitBinaryAdd(this);
   }
 }
 
 interface IExpressionVisitor<TVisitResult> {
-  visitLiteral(literal: Literal<TVisitResult>): TVisitResult;
+  visitLiteral(literal: Literal): TVisitResult;
 
-  visitBinaryAdd(binaryAdd: BinaryAdd<TVisitResult>): TVisitResult;
-
-  visitBinaryMultiplier(binaryAdd: BinaryAdd<TVisitResult>): TVisitResult;
+  visitBinaryAdd(binaryAdd: BinaryAdd): TVisitResult;
 }
 
 class Evaluator implements IExpressionVisitor<number> {
-  visitBinaryAdd(binaryAdd: BinaryAdd<number>): number {
-    return binaryAdd.left.accept(this) + binaryAdd.right.accept(this);
+  visitBinaryAdd(binaryAdd: BinaryAdd): number {
+    const leftResult = binaryAdd.left.accept(this);
+    const rightResult = binaryAdd.right.accept(this);
+
+    assert(typeof leftResult === 'number');
+    assert(typeof rightResult === 'number');
+
+    return leftResult + rightResult;
   }
 
-  visitLiteral(literal: Literal<number>) {
-    return literal.getValue();
-  }
-}
-
-class Printer implements IExpressionVisitor<string> {
-  visitLiteral(literal: Literal<string>): string {
-    return `${literal.getValue()}`;
-  }
-
-  visitBinaryAdd(binaryAdd: BinaryAdd<string>): string {
-    return `${binaryAdd.left.accept(this)} + ${binaryAdd.right.accept(this)}`;
+  visitLiteral(literal: Literal): number {
+    return literal.n;
   }
 }
 
@@ -70,7 +48,6 @@ function makeTwoPlusThree() {
 
 const result = makeTwoPlusThree();
 
-console.log(result.accept(new Evaluator()));
-console.log(result.accept(new Printer()));
+console.log(result.accept(new Evaluator()) as number);
 
 export {};
