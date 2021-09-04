@@ -18,8 +18,21 @@ class BinaryAdd implements IExpression {
   }
 }
 
+class BinaryMultiplier implements IExpression {
+  constructor(private left: IExpression, private right: IExpression) {}
+
+  evaluate(): number {
+    return this.left.evaluate() * this.right.evaluate();
+  }
+}
+
 function makeTwoPlusThree(): IExpression {
   return new BinaryAdd(new Literal(2), new Literal(3));
 }
 
+function makeTwoTimesThree(): IExpression {
+  return new BinaryMultiplier(new Literal(2), new Literal(3));
+}
+
 console.log(makeTwoPlusThree().evaluate());
+console.log(makeTwoTimesThree().evaluate());
