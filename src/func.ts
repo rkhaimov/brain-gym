@@ -6,7 +6,7 @@ type Expression = {
 
 // --- Literal ---
 type Literal = {
-  kind: 'literal'
+  kind: 'literal';
   value: number;
 };
 
@@ -89,3 +89,43 @@ const printBinaryAdd: PrintHandler<BinaryAdd> = {
 
 console.log(apply(makeOnePlusTwo(), [evaluateLiteral, evaluateBinaryAdd]));
 console.log(apply(makeOnePlusTwo(), [printLiteral, printBinaryAdd]));
+
+// --- BinaryMultiplier ---
+type BinaryMultiplier = {
+  kind: 'binary_multiplier';
+  left: Expression;
+  right: Expression;
+};
+
+function createBinaryMultiplier(
+  left: Expression,
+  right: Expression
+): BinaryMultiplier {
+  return { kind: 'binary_multiplier', left, right };
+}
+
+function isBinaryMultiplier(
+  expression: Expression
+): expression is BinaryMultiplier {
+  return expression.kind === 'binary_multiplier';
+}
+
+// --- BinaryMultiplier ---
+
+function makeTwoTimesFive() {
+  return createBinaryMultiplier(createLiteral(2), createLiteral(5));
+}
+
+const evaluateBinaryMultiplier: EvaluateHandler<BinaryMultiplier> = {
+  handles: isBinaryMultiplier,
+  handle: (expression, visit) =>
+    visit(expression.left) * visit(expression.right),
+};
+
+console.log(
+  apply(makeTwoTimesFive(), [
+    evaluateLiteral,
+    evaluateBinaryAdd,
+    evaluateBinaryMultiplier,
+  ])
+);
