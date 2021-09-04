@@ -25,10 +25,23 @@ class BinaryAdd<TVisitResult> implements IExpression<TVisitResult> {
   }
 }
 
+class BinaryMultiplier<TVisitResult> implements IExpression<TVisitResult> {
+  constructor(
+    public left: IExpression<TVisitResult>,
+    public right: IExpression<TVisitResult>
+  ) {}
+
+  accept<TVisitResult>(visitor: IExpressionVisitor<TVisitResult>) {
+    return visitor.visitBinaryAdd(this);
+  }
+}
+
 interface IExpressionVisitor<TVisitResult> {
   visitLiteral(literal: Literal<TVisitResult>): TVisitResult;
 
   visitBinaryAdd(binaryAdd: BinaryAdd<TVisitResult>): TVisitResult;
+
+  visitBinaryMultiplier(binaryAdd: BinaryAdd<TVisitResult>): TVisitResult;
 }
 
 class Evaluator implements IExpressionVisitor<number> {
