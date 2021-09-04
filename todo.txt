@@ -1,0 +1,2 @@
+add strict types for multimethod
+implement mixins?
