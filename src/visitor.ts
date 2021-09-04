@@ -41,6 +41,16 @@ class Evaluator implements IExpressionVisitor<number> {
   }
 }
 
+class Printer implements IExpressionVisitor<string> {
+  visitLiteral(literal: Literal<string>): string {
+    return `${literal.getValue()}`;
+  }
+
+  visitBinaryAdd(binaryAdd: BinaryAdd<string>): string {
+    return `${binaryAdd.left.accept(this)} + ${binaryAdd.right.accept(this)}`;
+  }
+}
+
 function makeTwoPlusThree() {
   return new BinaryAdd(new Literal(2), new Literal(3));
 }
@@ -48,5 +58,6 @@ function makeTwoPlusThree() {
 const result = makeTwoPlusThree();
 
 console.log(result.accept(new Evaluator()));
+console.log(result.accept(new Printer()));
 
 export {};
