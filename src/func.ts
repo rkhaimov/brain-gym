@@ -70,4 +70,19 @@ function makeOnePlusTwo() {
   return createBinaryAdd(createLiteral(1), createLiteral(2));
 }
 
+type PrintHandler<TExpression> = Handler<string, TExpression>;
+
+const printLiteral: PrintHandler<Literal> = {
+  handles: isLiteral,
+  handle: (expression) => `${expression.value}`,
+};
+
+const printBinaryAdd: PrintHandler<BinaryAdd> = {
+  handles: isBinaryAdd,
+  handle: (expression, visit) =>
+    `${visit(expression.left)} + ${visit(expression.right)}`,
+};
+
+
 console.log(apply(makeOnePlusTwo(), [evaluateLiteral, evaluateBinaryAdd]));
+console.log(apply(makeOnePlusTwo(), [printLiteral, printBinaryAdd]));
