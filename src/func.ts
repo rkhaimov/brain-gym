@@ -1,34 +1,38 @@
 import assert from 'assert';
 
-type Expression = {};
+type Expression = {
+  kind: string;
+};
 
 // --- Literal ---
-type Literal = Expression & {
+type Literal = {
+  kind: 'literal'
   value: number;
 };
 
 function createLiteral(n: number): Literal {
-  return { value: n };
+  return { kind: 'literal', value: n };
 }
 
 function isLiteral(expression: Expression): expression is Literal {
-  return 'value' in expression;
+  return expression.kind === 'literal';
 }
 
 // --- Literal ---
 
 // --- BinaryAdd ---
-type BinaryAdd = Expression & {
+type BinaryAdd = {
+  kind: 'binary_add';
   left: Expression;
   right: Expression;
 };
 
 function createBinaryAdd(left: Expression, right: Expression): BinaryAdd {
-  return { left, right };
+  return { kind: 'binary_add', left, right };
 }
 
 function isBinaryAdd(expression: Expression): expression is BinaryAdd {
-  return 'left' in expression;
+  return expression.kind === 'binary_add';
 }
 
 // --- BinaryAdd ---
@@ -82,7 +86,6 @@ const printBinaryAdd: PrintHandler<BinaryAdd> = {
   handle: (expression, visit) =>
     `${visit(expression.left)} + ${visit(expression.right)}`,
 };
-
 
 console.log(apply(makeOnePlusTwo(), [evaluateLiteral, evaluateBinaryAdd]));
 console.log(apply(makeOnePlusTwo(), [printLiteral, printBinaryAdd]));
