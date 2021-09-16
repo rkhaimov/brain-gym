@@ -1,5 +1,7 @@
 interface IExpression {
   evaluate(): number;
+
+  print(): string;
 }
 
 class Literal implements IExpression {
@@ -7,6 +9,10 @@ class Literal implements IExpression {
 
   evaluate(): number {
     return this.n;
+  }
+
+  print(): string {
+    return `${this.n}`;
   }
 }
 
@@ -16,12 +22,17 @@ class BinaryAdd implements IExpression {
   evaluate(): number {
     return this.left.evaluate() + this.right.evaluate();
   }
+
+  print(): string {
+    return `${this.left.print()} + ${this.right.print()}`;
+  }
 }
 
-function makeTwoPlusThree() {
+function makeTwoPlusThree(): IExpression {
   return new BinaryAdd(new Literal(2), new Literal(3));
 }
 
-// --Danger Zone--
+console.log(makeTwoPlusThree().evaluate());
+console.log(makeTwoPlusThree().print());
 
 export {};

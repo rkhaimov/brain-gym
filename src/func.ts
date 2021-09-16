@@ -4,7 +4,6 @@ type Expression = {
   kind: string;
 };
 
-// --- Literal ---
 type Literal = {
   kind: 'literal';
   value: number;
@@ -18,9 +17,6 @@ function isLiteral(expression: Expression): expression is Literal {
   return expression.kind === 'literal';
 }
 
-// --- Literal ---
-
-// --- BinaryAdd ---
 type BinaryAdd = {
   kind: 'binary_add';
   left: Expression;
@@ -35,97 +31,22 @@ function isBinaryAdd(expression: Expression): expression is BinaryAdd {
   return expression.kind === 'binary_add';
 }
 
-// --- BinaryAdd ---
+function evaluate(expression: Expression): number {
+  if (isLiteral(expression)) {
+    return expression.value;
+  }
 
-interface Handler<TReturn, TExpression> {
-  handles(expression: TExpression): boolean;
+  if (isBinaryAdd(expression)) {
+    return evaluate(expression.left) + evaluate(expression.right);
+  }
 
-  handle(
-    expression: TExpression,
-    visit: (expression: Expression) => TReturn
-  ): TReturn;
+  assert(false);
 }
 
-function apply<TReturn>(
-  expression: Expression,
-  handlers: Array<Handler<TReturn, Expression>>
-): TReturn {
-  const handler = handlers.find((handler) => handler.handles(expression));
-
-  assert(handler !== undefined);
-
-  return handler.handle(expression, (next) => apply(next, handlers));
+function makeTwoPlusThree() {
+  return createBinaryAdd(createLiteral(2), createLiteral(3));
 }
 
-type EvaluateHandler<TExpression> = Handler<number, TExpression>;
+// --Danger Zone--
 
-const evaluateLiteral: EvaluateHandler<Literal> = {
-  handles: isLiteral,
-  handle: (expression) => expression.value,
-};
-
-const evaluateBinaryAdd: EvaluateHandler<BinaryAdd> = {
-  handles: isBinaryAdd,
-  handle: (expression, visit) =>
-    visit(expression.left) + visit(expression.right),
-};
-
-function makeOnePlusTwo() {
-  return createBinaryAdd(createLiteral(1), createLiteral(2));
-}
-
-type PrintHandler<TExpression> = Handler<string, TExpression>;
-
-const printLiteral: PrintHandler<Literal> = {
-  handles: isLiteral,
-  handle: (expression) => `${expression.value}`,
-};
-
-const printBinaryAdd: PrintHandler<BinaryAdd> = {
-  handles: isBinaryAdd,
-  handle: (expression, visit) =>
-    `${visit(expression.left)} + ${visit(expression.right)}`,
-};
-
-console.log(apply(makeOnePlusTwo(), [evaluateLiteral, evaluateBinaryAdd]));
-console.log(apply(makeOnePlusTwo(), [printLiteral, printBinaryAdd]));
-
-// --- BinaryMultiplier ---
-type BinaryMultiplier = {
-  kind: 'binary_multiplier';
-  left: Expression;
-  right: Expression;
-};
-
-function createBinaryMultiplier(
-  left: Expression,
-  right: Expression
-): BinaryMultiplier {
-  return { kind: 'binary_multiplier', left, right };
-}
-
-function isBinaryMultiplier(
-  expression: Expression
-): expression is BinaryMultiplier {
-  return expression.kind === 'binary_multiplier';
-}
-
-// --- BinaryMultiplier ---
-
-function makeTwoTimesFive() {
-  return createBinaryMultiplier(createLiteral(2), createLiteral(5));
-}
-
-const evaluateBinaryMultiplier: EvaluateHandler<BinaryMultiplier> = {
-  handles: isBinaryMultiplier,
-  handle: (expression, visit) =>
-    visit(expression.left) * visit(expression.right),
-};
-
-console.log(
-  apply(makeTwoTimesFive(), [
-    evaluateLiteral,
-    evaluateBinaryAdd,
-    evaluateBinaryMultiplier,
-  ])
-);
+export {};

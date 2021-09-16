@@ -50,14 +50,14 @@ type Handlers<TIds extends string, TReturn> = {
   [P in TIds]: IdentifierHandler<ExpressionsDB[P], TReturn>;
 };
 
-function applymultimethod<TIds extends string, TReturn>(
+function invoke<TIds extends string, TReturn>(
   identifiable: Identifiable<string, TIds>,
   handlers: Handlers<TIds, TReturn>
 ): TReturn {
   const handle = handlers[identifiable.id as keyof typeof handlers];
 
   return handle(identifiable, (next) =>
-    applymultimethod(next as Identifiable<string, TIds>, handlers)
+    invoke(next as Identifiable<string, TIds>, handlers)
   );
 }
 
@@ -76,7 +76,7 @@ function makeTwoPlusThree() {
   );
 }
 
-applymultimethod(makeTwoPlusThree(), {
+invoke(makeTwoPlusThree(), {
   literal: literaleval,
   binary_add: binaddeval,
 });
@@ -131,7 +131,7 @@ const simplcondprint: IdentifierHandler<SimpleCondition<string>, string> = (
     expression.onFalse
   )}`;
 
-const result = applymultimethod(makeTwoOrThree(), {
+const result = invoke(makeTwoOrThree(), {
   literal: literalprint,
   binary_add: binaryaddprint,
   simple_condition: simplcondprint,

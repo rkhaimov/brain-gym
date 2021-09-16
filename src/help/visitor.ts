@@ -44,8 +44,6 @@ function makeTwoPlusThree() {
 
 const result = makeTwoPlusThree();
 
-// --Danger zone--
-
 console.log(result.accept(new Evaluator()));
 
 export {};
