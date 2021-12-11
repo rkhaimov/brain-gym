@@ -1,11 +1,10 @@
-import { Configuration } from 'webpack';
-import HtmlPlugin from 'html-webpack-plugin';
-import path from 'path';
+const HtmlPlugin = require('html-webpack-plugin');
+const path = require('path');
 
-const config: Configuration = {
+const config = {
   mode: 'development',
   entry: './src/index.ts',
-  devtool: 'inline-source-map',
+  devtool: 'source-map',
   module: {
     rules: [
       {
@@ -35,4 +34,4 @@ const config: Configuration = {
   plugins: [new HtmlPlugin()],
 };
 
-export default config;
+module.exports = config;
