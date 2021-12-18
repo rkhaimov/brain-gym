@@ -1,10 +1,5 @@
-import {
-  fireEvent,
-  getAllByRole,
-  getByRole,
-  prettyDOM,
-} from '@testing-library/dom';
-import { BehaviorSubject, Observable, switchMap } from 'rxjs';
+import { fireEvent, getByRole, prettyDOM } from '@testing-library/dom';
+import { BehaviorSubject, Observable, of, switchMap } from 'rxjs';
 import { ARIARole } from 'aria-query';
 import {
   createDiv,
@@ -14,89 +9,105 @@ import {
   createSpan,
   ViewElement,
 } from './elements';
-import { render } from './render';
+import { byFrame, createRenderer } from './render';
+import { wait } from './repository';
 
-test('It allows to sync h1 title and input value', () => {
+test('It allows to sync h1 title and input value', async () => {
   const input$ = new BehaviorSubject('');
   const ui$ = createDiv(createH1(input$), createInput(input$));
-  const { outputs, dom } = renderAndInspect(ui$);
+  const rendered = renderAndInspect(ui$);
+  await wait(100);
 
   // Act
-  const input = getByRole(dom, 'textbox' as ARIARole) as HTMLInputElement;
+  const input = getByRole(
+    rendered.dom,
+    'textbox' as ARIARole
+  ) as HTMLInputElement;
 
   fireEvent.input(input, { target: { value: 'Hello world' } });
+  await wait(100);
 
   // Assert
-  expect(outputs.join('\n\n')).toMatchSnapshot();
+  expect(rendered.output).toMatchSnapshot();
 });
 
-test('It allows to create independent pairs', () => {
-  function createH1AndInputPair(): Observable<ViewElement> {
-    const input$ = new BehaviorSubject('');
+test('It allows to change element type', async () => {
+  // Arrange
+  const input$ = new BehaviorSubject('');
 
-    return createDiv(createH1(input$), createInput(input$));
-  }
+  const ui$ = createDiv(
+    input$.pipe(
+      switchMap((input) =>
+        input.includes('H1') ? createH1(of(input)) : createH2(of(input))
+      )
+    ),
+    createInput(input$)
+  );
 
-  const ui$ = createDiv(createH1AndInputPair(), createH1AndInputPair());
-  const { outputs, dom } = renderAndInspect(ui$);
+  const rendered = renderAndInspect(ui$);
+  await wait(100);
 
-  const input = getAllByRole(dom, 'textbox' as ARIARole) as HTMLInputElement[];
+  // Act
+  const input = getByRole(
+    rendered.dom,
+    'textbox' as ARIARole
+  ) as HTMLInputElement;
 
-  fireEvent.input(input[0], { target: { value: 'Hello first world' } });
-  fireEvent.input(input[1], { target: { value: 'Hello second world' } });
+  fireEvent.input(input, { target: { value: 'H1' } });
+  await wait(100);
 
-  expect(outputs.join('\n\n')).toMatchSnapshot();
+  fireEvent.input(input, { target: { value: 'H2' } });
+  await wait(100);
+
+  // Assert
+  expect(rendered.output).toMatchSnapshot();
 });
 
-test('It can do branching', () => {
-  function createBranched(): Observable<ViewElement> {
-    const input$ = new BehaviorSubject('');
+test('It allows to change element attribute', async () => {
+  // Arrange
+  const input$ = new BehaviorSubject('');
 
-    return createDiv(
-      input$.pipe(
-        switchMap((input) =>
-          input.includes('h1') ? createH1(input$) : createH2(input$)
-        )
-      ),
-      createInput(input$)
-    );
-  }
+  const ui$ = createDiv(createSpan(input$, input$), createInput(input$));
+  const rendered = renderAndInspect(ui$);
 
-  const ui$ = createBranched();
-  const { outputs, dom } = renderAndInspect(ui$);
+  await wait(100);
 
-  const input = getByRole(dom, 'textbox' as ARIARole) as HTMLInputElement;
+  // Act
+  const input = getByRole(
+    rendered.dom,
+    'textbox' as ARIARole
+  ) as HTMLInputElement;
 
-  fireEvent.input(input, { target: { value: 'I am h1' } });
-  fireEvent.input(input, { target: { value: 'I am h2' } });
+  fireEvent.input(input, { target: { value: 'Hello' } });
 
-  expect(outputs.join('\n\n')).toMatchSnapshot();
-});
+  await wait(100);
 
-test('It can change attributes', () => {
-  function createWithClassNames() {
-    const input$ = new BehaviorSubject('');
+  fireEvent.input(input, { target: { value: 'World' } });
 
-    return createDiv(createSpan(input$, input$), createInput(input$));
-  }
+  await wait(100);
 
-  const ui$ = createWithClassNames();
-  const { outputs, dom } = renderAndInspect(ui$);
-
-  const input = getByRole(dom, 'textbox' as ARIARole) as HTMLInputElement;
-
-  fireEvent.input(input, { target: { value: 'Class name is changing' } });
-
-  expect(outputs.join('\n\n')).toMatchSnapshot();
+  expect(rendered.output).toMatchSnapshot();
 });
 
 function renderAndInspect(element: Observable<ViewElement>) {
-  const outputs: string[] = [];
+  let outputs: string[] = [];
   const dom = document.createElement('main');
+  const render = createRenderer();
 
-  element.subscribe((ui) => {
-    outputs.push(prettyDOM(render(ui, dom)) as string);
+  const subscription = element.pipe(byFrame()).subscribe((ui) => {
+    try {
+      outputs.push(prettyDOM(render(ui, dom)) as string);
+    } catch (e: unknown) {
+      outputs = [(e as Error).message];
+
+      subscription.unsubscribe();
+    }
   });
 
-  return { outputs, dom };
+  return {
+    get output() {
+      return outputs.join('\n\n');
+    },
+    dom,
+  };
 }

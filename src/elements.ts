@@ -3,6 +3,10 @@ import { combineLatest, map, Observable, Observer, of } from 'rxjs';
 export function createDiv(
   ...children: Observable<ViewElement>[]
 ): Observable<ViewElement> {
+  if (children.length === 0) {
+    return of({ type: 'div', attributes: {}, children: [] });
+  }
+
   return combineLatest(children).pipe(
     map((children) => ({ type: 'div', attributes: {}, children }))
   );
@@ -40,7 +44,7 @@ export function createSpan(
     map(([text, classname]) => ({
       type: 'span',
       attributes: {
-        'class': classname,
+        class: classname,
       },
       children: [text],
     }))

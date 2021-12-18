@@ -1,52 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`It allows to create independent pairs 1`] = `
-"[36m<main>[39m
-  [36m<div>[39m
-    [36m<div>[39m
-      [36m<h1 />[39m
-      [36m<input />[39m
-    [36m</div>[39m
-    [36m<div>[39m
-      [36m<h1 />[39m
-      [36m<input />[39m
-    [36m</div>[39m
-  [36m</div>[39m
-[36m</main>[39m
-
-[36m<main>[39m
-  [36m<div>[39m
-    [36m<div>[39m
-      [36m<h1>[39m
-        [0mHello first world[0m
-      [36m</h1>[39m
-      [36m<input />[39m
-    [36m</div>[39m
-    [36m<div>[39m
-      [36m<h1 />[39m
-      [36m<input />[39m
-    [36m</div>[39m
-  [36m</div>[39m
-[36m</main>[39m
-
-[36m<main>[39m
-  [36m<div>[39m
-    [36m<div>[39m
-      [36m<h1>[39m
-        [0mHello first world[0m
-      [36m</h1>[39m
-      [36m<input />[39m
-    [36m</div>[39m
-    [36m<div>[39m
-      [36m<h1>[39m
-        [0mHello second world[0m
-      [36m</h1>[39m
-      [36m<input />[39m
-    [36m</div>[39m
-  [36m</div>[39m
-[36m</main>[39m"
-`;
-
 exports[`It allows to sync h1 title and input value 1`] = `
 "[36m<main>[39m
   [36m<div>[39m
@@ -60,66 +13,6 @@ exports[`It allows to sync h1 title and input value 1`] = `
     [36m<h1>[39m
       [0mHello world[0m
     [36m</h1>[39m
-    [36m<input />[39m
-  [36m</div>[39m
-[36m</main>[39m"
-`;
-
-exports[`It can change attributes 1`] = `
-"[36m<main>[39m
-  [36m<div>[39m
-    [36m<span[39m
-      [33mclass[39m=[32m\\"\\"[39m
-    [36m/>[39m
-    [36m<input />[39m
-  [36m</div>[39m
-[36m</main>[39m
-
-[36m<main>[39m
-  [36m<div>[39m
-    [36m<span[39m
-      [33mclass[39m=[32m\\"\\"[39m
-    [36m>[39m
-      [0mClass name is changing[0m
-    [36m</span>[39m
-    [36m<input />[39m
-  [36m</div>[39m
-[36m</main>[39m
-
-[36m<main>[39m
-  [36m<div>[39m
-    [36m<span[39m
-      [33mclass[39m=[32m\\"Class name is changing\\"[39m
-    [36m>[39m
-      [0mClass name is changing[0m
-    [36m</span>[39m
-    [36m<input />[39m
-  [36m</div>[39m
-[36m</main>[39m"
-`;
-
-exports[`It can do branching 1`] = `
-"[36m<main>[39m
-  [36m<div>[39m
-    [36m<h2 />[39m
-    [36m<input />[39m
-  [36m</div>[39m
-[36m</main>[39m
-
-[36m<main>[39m
-  [36m<div>[39m
-    [36m<h1>[39m
-      [0mI am h1[0m
-    [36m</h1>[39m
-    [36m<input />[39m
-  [36m</div>[39m
-[36m</main>[39m
-
-[36m<main>[39m
-  [36m<div>[39m
-    [36m<h2>[39m
-      [0mI am h2[0m
-    [36m</h2>[39m
     [36m<input />[39m
   [36m</div>[39m
 [36m</main>[39m"
