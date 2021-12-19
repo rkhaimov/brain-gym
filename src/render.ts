@@ -123,28 +123,14 @@ export function byFrame<TValue>(): OperatorFunction<TValue, TValue> {
   return (observable) =>
     new Observable((emitter) => {
       let id: undefined | ReturnType<typeof requestAnimationFrame>;
-      let locked = false;
-      let last: undefined | TValue;
       const subscription = observable.subscribe((value) => {
-        if (locked) {
-          last = value;
+        if (id) {
+          cancelAnimationFrame(id);
 
-          return;
+          id = undefined;
         }
 
-        emitter.next(value);
-
-        locked = true;
-
-        id = requestAnimationFrame(() => {
-          locked = false;
-
-          if (last) {
-            emitter.next(last);
-
-            last = undefined;
-          }
-        });
+        id = requestAnimationFrame(() => emitter.next(value));
       });
 
       return () => {

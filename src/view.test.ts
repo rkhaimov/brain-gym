@@ -66,10 +66,8 @@ test('It allows to change element type', async () => {
 test('It allows to change element attribute', async () => {
   // Arrange
   const input$ = new BehaviorSubject('');
-
   const ui$ = createDiv(createSpan(input$, input$), createInput(input$));
   const rendered = renderAndInspect(ui$);
-
   await wait(100);
 
   // Act
@@ -79,11 +77,9 @@ test('It allows to change element attribute', async () => {
   ) as HTMLInputElement;
 
   fireEvent.input(input, { target: { value: 'Hello' } });
-
   await wait(100);
 
   fireEvent.input(input, { target: { value: 'World' } });
-
   await wait(100);
 
   expect(rendered.output).toMatchSnapshot();

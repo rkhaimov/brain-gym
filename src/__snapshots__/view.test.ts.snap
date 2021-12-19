@@ -1,5 +1,65 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`It allows to change element attribute 1`] = `
+"[36m<main>[39m
+  [36m<div>[39m
+    [36m<span[39m
+      [33mclass[39m=[32m\\"\\"[39m
+    [36m/>[39m
+    [36m<input />[39m
+  [36m</div>[39m
+[36m</main>[39m
+
+[36m<main>[39m
+  [36m<div>[39m
+    [36m<span[39m
+      [33mclass[39m=[32m\\"Hello\\"[39m
+    [36m>[39m
+      [0mHello[0m
+    [36m</span>[39m
+    [36m<input />[39m
+  [36m</div>[39m
+[36m</main>[39m
+
+[36m<main>[39m
+  [36m<div>[39m
+    [36m<span[39m
+      [33mclass[39m=[32m\\"World\\"[39m
+    [36m>[39m
+      [0mWorld[0m
+    [36m</span>[39m
+    [36m<input />[39m
+  [36m</div>[39m
+[36m</main>[39m"
+`;
+
+exports[`It allows to change element type 1`] = `
+"[36m<main>[39m
+  [36m<div>[39m
+    [36m<h2 />[39m
+    [36m<input />[39m
+  [36m</div>[39m
+[36m</main>[39m
+
+[36m<main>[39m
+  [36m<div>[39m
+    [36m<input />[39m
+    [36m<h1>[39m
+      [0mH1[0m
+    [36m</h1>[39m
+  [36m</div>[39m
+[36m</main>[39m
+
+[36m<main>[39m
+  [36m<div>[39m
+    [36m<input />[39m
+    [36m<h2>[39m
+      [0mH2[0m
+    [36m</h2>[39m
+  [36m</div>[39m
+[36m</main>[39m"
+`;
+
 exports[`It allows to sync h1 title and input value 1`] = `
 "[36m<main>[39m
   [36m<div>[39m
