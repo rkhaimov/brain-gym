@@ -20,8 +20,10 @@
   },
   "homepage": "https://github.com/rkhaimov/thegame#readme",
   "dependencies": {
+    "@types/lodash-es": "^4.17.5",
     "chart.js": "^3.2.1",
     "jest-worker": "^27.0.6",
+    "lodash-es": "^4.17.21",
     "rxjs": "^7.4.0",
     "ts-node": "^10.4.0",
     "typescript": "^4.1.3",

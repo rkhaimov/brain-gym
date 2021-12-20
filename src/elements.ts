@@ -1,73 +1,71 @@
-import { combineLatest, map, Observable, Observer, of } from 'rxjs';
+import { combineLatest, map, Observable, Observer, of, switchMap } from 'rxjs';
 
-export function createDiv(
-  ...children: Observable<ViewElement>[]
-): Observable<ViewElement> {
-  if (children.length === 0) {
-    return of({ type: 'div', attributes: {}, children: [] });
+function createElement(type: string, props: Props): Observable<VirtualObject> {
+  if (props.children.length === 0) {
+    return of({ type, attributes: {}, children: [] });
   }
 
-  return combineLatest(children).pipe(
-    map((children) => ({ type: 'div', attributes: {}, children }))
+  return combineLatest(props.children).pipe(
+    map((children) => ({ type, attributes: {}, children }))
   );
 }
 
-export function createH1(
-  title: Observable<ViewElement>
-): Observable<ViewElement> {
-  return title.pipe(
-    map((title) => ({
-      type: 'h1',
-      attributes: {},
-      children: [title],
-    }))
-  );
+export function createDiv(props: Props): Observable<VirtualElement> {
+  return createElement('div', props);
 }
 
-export function createH2(
-  title: Observable<ViewElement>
-): Observable<ViewElement> {
-  return title.pipe(
-    map((title) => ({
-      type: 'h2',
-      attributes: {},
-      children: [title],
-    }))
-  );
+export function createH1(props: Props): Observable<VirtualElement> {
+  return createElement('h1', props);
+}
+
+export function createH2(props: Props): Observable<VirtualElement> {
+  return createElement('h2', props);
 }
 
 export function createSpan(
-  text: Observable<ViewElement>,
-  classname: Observable<string>
-): Observable<ViewElement> {
-  return combineLatest([text, classname]).pipe(
-    map(([text, classname]) => ({
-      type: 'span',
-      attributes: {
-        class: classname,
-      },
-      children: [text],
-    }))
+  props: Props<{ className: string }>
+): Observable<VirtualElement> {
+  return createElement('span', props).pipe(
+    switchMap((element) => {
+      return props.className.pipe(
+        map((cn) => {
+          element.attributes['class'] = cn;
+
+          return element;
+        })
+      );
+    })
   );
 }
 
 export function createInput(
-  onInput: Observer<string>
-): Observable<ViewElement> {
-  return of({
-    type: 'input',
-    attributes: {
-      onInput: (e: InputEvent) =>
-        onInput.next((e.target as HTMLInputElement).value),
-    },
-    children: [],
-  });
+  props: Props & Handlers<{ onInput: string }>
+): Observable<VirtualElement> {
+  return createElement('input', props).pipe(
+    map((element) => {
+      element.attributes['onInput'] = (e: InputEvent) =>
+        props.onInput.next((e.target as HTMLInputElement).value);
+
+      return element;
+    })
+  );
 }
 
-export type ViewElement =
-  | string
-  | {
-      type: string;
-      attributes: Record<string, unknown>;
-      children: ViewElement[];
-    };
+export type VirtualElement = string | VirtualObject;
+
+export type VirtualObject = {
+  type: string;
+  attributes: Record<string, unknown>;
+  children: VirtualElement[];
+  _ref?: HTMLElement;
+};
+
+type Props<TData extends Record<string, unknown> = {}> = {
+  [key in keyof TData]: Observable<TData[key]>;
+} & {
+  children: Observable<VirtualElement>[];
+};
+
+type Handlers<THandlers extends Record<string, unknown>> = {
+  [key in keyof THandlers]: Observer<THandlers[key]>;
+};
