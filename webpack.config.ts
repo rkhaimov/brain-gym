@@ -3,20 +3,11 @@ const path = require('path');
 
 const config = {
   mode: 'development',
-  entry: './src/index.ts',
+  entry: './src/index.tsx',
   devtool: 'source-map',
   module: {
     rules: [
-      {
-        test: /\.ts$/,
-        exclude: /node_modules/,
-        use: {
-          loader: 'babel-loader',
-          options: {
-            presets: ['@babel/preset-typescript'],
-          },
-        },
-      },
+      { test: /\.tsx?$/, loader: 'ts-loader' },
       {
         test: /\.css$/,
         exclude: /node_modules/,

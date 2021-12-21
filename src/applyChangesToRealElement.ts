@@ -1,6 +1,6 @@
 import { zip } from 'lodash-es';
 import { assert } from './assert';
-import { VirtualElement, VirtualObject } from './elements';
+import { VirtualElement, VirtualNode } from '../global';
 
 export function applyChangesToRealElement(
   prev: VirtualElement | undefined,
@@ -44,7 +44,7 @@ export function applyChangesToRealElement(
   }
 
   if (typeof prev === 'object' && curr === undefined) {
-    update.objectToUndefined(prev, curr, parent);
+    update.objectToUndefined(prev);
 
     return;
   }
@@ -52,10 +52,12 @@ export function applyChangesToRealElement(
   assert(typeof prev === 'object' && typeof curr === 'object');
 
   if (prev.type !== curr.type) {
-    update.elementsAreDifferent(prev, curr, parent);
+    update.elementsTypeAreDifferent(prev, curr);
 
     return;
   }
+
+  update.elementsTypeAreEqual(prev, curr);
 
   if (isCollectionsShallowEqual(prev.attributes, curr.attributes) === false) {
     update.attributesAreDifferent(prev, curr);
@@ -74,54 +76,41 @@ const update = {
   ) => {
     parent.innerHTML = curr;
   },
-  elementsAreDifferent: (
-    prev: VirtualObject,
-    curr: VirtualObject,
-    parent: HTMLElement
-  ) => {
-    const tree = createRealElementFrom(curr);
+  elementsTypeAreEqual: (prev: VirtualNode, curr: VirtualNode) => {
+    curr._ref = prev._ref;
+  },
+  elementsTypeAreDifferent: (prev: VirtualNode, curr: VirtualNode) => {
+    const tree = createRealElementFromAndLinkRefs(curr);
 
     assert(typeof tree === 'object');
 
-    parent.replaceChild(tree, getRealElement(prev));
+    getRealElement(prev).replaceWith(tree);
   },
-  attributesAreDifferent: (prev: VirtualObject, curr: VirtualObject) => {
-    Object.entries(curr.attributes).forEach(([key, value]) => {
-      assert(typeof value === 'string');
-
-      getRealElement(prev).setAttribute(key, value);
-    });
+  attributesAreDifferent: (prev: VirtualNode, curr: VirtualNode) => {
+    removeAttributesFromNode(prev.attributes, getRealElement(prev));
+    assignAttributesToNode(curr.attributes, getRealElement(prev));
 
     update.childrenAreProbablyDifferent(prev, curr);
   },
   undefinedToObject: (
     prev: undefined,
-    curr: VirtualObject,
+    curr: VirtualNode,
     parent: HTMLElement
   ) => {
-    const tree = createRealElementFrom(curr);
+    const tree = createRealElementFromAndLinkRefs(curr);
 
     assert(typeof tree === 'object');
 
     parent.appendChild(tree);
   },
-  childrenAreProbablyDifferent: (prev: VirtualObject, curr: VirtualObject) => {
-    // Need to find better way to model this
-    curr._ref = prev._ref;
-
+  childrenAreProbablyDifferent: (prev: VirtualNode, curr: VirtualNode) => {
     zip(prev.children, curr.children).forEach(([prevChild, currChild]) =>
       applyChangesToRealElement(prevChild, currChild, getRealElement(prev))
     );
   },
-  objectToUndefined: (
-    prev: VirtualObject,
-    curr: undefined,
-    parent: HTMLElement
-  ) => {
-    parent.removeChild(getRealElement(prev));
-  },
-  stringToObject: (prev: string, curr: VirtualObject, parent: HTMLElement) => {
-    const tree = createRealElementFrom(curr);
+  objectToUndefined: (prev: VirtualNode) => getRealElement(prev).remove(),
+  stringToObject: (prev: string, curr: VirtualNode, parent: HTMLElement) => {
+    const tree = createRealElementFromAndLinkRefs(curr);
 
     assert(typeof tree === 'object');
 
@@ -130,7 +119,7 @@ const update = {
   },
   undefinedToString: (prev: undefined, curr: string, parent: HTMLElement) =>
     assert(false, 'Given case is not supported. undefinedToString'),
-  objectToString: (prev: VirtualObject, curr: string, parent: HTMLElement) =>
+  objectToString: (prev: VirtualNode, curr: string, parent: HTMLElement) =>
     assert(false, 'Given case is not supported. objectToString'),
   stringToUndefined: (prev: string, curr: undefined, parent: HTMLElement) =>
     assert(false, 'Given case is not supported. stringToUndefined'),
@@ -140,6 +129,7 @@ function isCollectionsShallowEqual(
   left: Record<string, unknown>,
   right: Record<string, unknown>
 ) {
+  // Untested
   if (Object.keys(left).length !== Object.keys(right).length) {
     return false;
   }
@@ -147,7 +137,7 @@ function isCollectionsShallowEqual(
   return Object.entries(left).every(([key, value]) => value === right[key]);
 }
 
-function createRealElementFrom(
+function createRealElementFromAndLinkRefs(
   virtualElement: VirtualElement
 ): HTMLElement | string {
   if (typeof virtualElement === 'string') {
@@ -157,25 +147,10 @@ function createRealElementFrom(
   virtualElement._ref = document.createElement(virtualElement.type);
   const node = virtualElement._ref;
 
-  Object.entries(virtualElement.attributes).forEach(([key, value]) => {
-    const isEvent = key.startsWith('on');
-
-    if (isEvent === false) {
-      node.setAttribute(key, value as unknown as string);
-
-      return;
-    }
-
-    const name = key.slice(2).toLowerCase();
-
-    node.addEventListener(
-      name as keyof HTMLElementEventMap,
-      value as unknown as () => unknown
-    );
-  });
+  assignAttributesToNode(virtualElement.attributes, node);
 
   virtualElement.children.forEach((child) => {
-    const tree = createRealElementFrom(child);
+    const tree = createRealElementFromAndLinkRefs(child);
 
     if (typeof tree === 'string') {
       node.innerHTML = tree;
@@ -187,7 +162,51 @@ function createRealElementFrom(
   return node;
 }
 
-function getRealElement(element: VirtualObject) {
+function removeAttributesFromNode(
+  attrs: Record<string, unknown>,
+  node: HTMLElement
+) {
+  Object.entries(attrs).forEach(([key, value]) => {
+    const isEvent = key.startsWith('on');
+
+    if (isEvent === false) {
+      node.removeAttribute(key);
+
+      return;
+    }
+
+    const name = key.slice(2).toLowerCase();
+
+    node.removeEventListener(
+      name as keyof HTMLElementEventMap,
+      value as () => unknown
+    );
+  });
+}
+
+function assignAttributesToNode(
+  attrs: Record<string, unknown>,
+  node: HTMLElement
+) {
+  Object.entries(attrs).forEach(([key, value]) => {
+    const isEvent = key.startsWith('on');
+
+    if (isEvent === false) {
+      node.setAttribute(key, value as string);
+
+      return;
+    }
+
+    const name = key.slice(2).toLowerCase();
+
+    node.addEventListener(
+      name as keyof HTMLElementEventMap,
+      value as () => unknown
+    );
+  });
+}
+
+function getRealElement(element: VirtualNode) {
   assert(element._ref !== undefined, 'Expected element to be on the DOM');
 
   return element._ref;

@@ -1,5 +1,5 @@
 import { applyChangesToRealElement } from './applyChangesToRealElement';
-import { VirtualElement } from './elements';
+import { VirtualElement } from '../global';
 
 export function createRenderer() {
   let prev: VirtualElement | undefined;
