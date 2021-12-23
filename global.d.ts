@@ -17,6 +17,7 @@ declare global {
       span: { className?: Observable<string> };
       input: {
         type?: Observable<string>;
+        placeholder?: Observable<string>;
         onInput?(event: InputEvent & { target: HTMLInputElement }): void;
       };
       h1: {};
