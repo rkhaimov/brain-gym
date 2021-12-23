@@ -1,11 +1,16 @@
-import { fireEvent, getByRole, getByText, prettyDOM } from '@testing-library/dom';
+import {
+  fireEvent,
+  getByRole,
+  getByText,
+  prettyDOM,
+} from '@testing-library/dom';
 import { ARIARole } from 'aria-query';
 import { times } from 'lodash-es';
 import { BehaviorSubject, Observable, of, Subject, switchMap } from 'rxjs';
+import { wait } from '../utils';
 import { byFrame } from './byFrame';
 import { createRenderer } from './render';
-import { wait } from './repository';
-import { VirtualElement } from '../global';
+import { VirtualElement } from '../../global';
 import { createElement } from './createElement';
 
 test('It allows to sync h1 title and input value', async () => {

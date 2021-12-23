@@ -64,6 +64,12 @@ input[type=text] {
     margin-left: 8px;
 }
 
+.filters button.active {
+    background-color: black;
+    color: white;
+    cursor: default;
+}
+
 .todos > * + * {
     margin-top: 8px;
 }
@@ -77,4 +83,5 @@ input[type=text] {
     flex: 1;
     text-align: left;
     font-size: 20px;
+    cursor: pointer;
 }

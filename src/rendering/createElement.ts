@@ -1,6 +1,6 @@
 import { combineLatest, map, Observable, Observer, of } from 'rxjs';
 import { flatten } from 'lodash-es';
-import { VirtualElement } from '../global';
+import { VirtualElement } from '../../global';
 
 export function createElement(
   type: string,

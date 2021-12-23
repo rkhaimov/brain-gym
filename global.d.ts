@@ -22,7 +22,7 @@ declare global {
       };
       h1: {};
       h2: {};
-      button: { onClick?(): void };
+      button: { className?: Observable<string>; onClick?(): void };
     }
 
     interface Element extends Observable<VirtualNode> {}

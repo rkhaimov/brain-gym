@@ -8,3 +8,7 @@ export function assert<TCondition>(
 
   throw new Error(message);
 }
+
+export function wait(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}

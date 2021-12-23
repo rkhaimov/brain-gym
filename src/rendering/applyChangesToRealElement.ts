@@ -1,6 +1,6 @@
 import { zip } from 'lodash-es';
-import { assert } from './assert';
-import { VirtualElement, VirtualNode } from '../global';
+import { assert } from '../utils';
+import { VirtualElement, VirtualNode } from '../../global';
 
 export function applyChangesToRealElement(
   prev: VirtualElement | undefined,

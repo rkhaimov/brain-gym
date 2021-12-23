@@ -2,20 +2,26 @@ import {
   BehaviorSubject,
   map,
   mapTo,
-  merge,
+  merge, Observable,
   startWith,
   Subject,
   switchMap,
-  withLatestFrom,
+  withLatestFrom
 } from 'rxjs';
+
+type Todo = {
+  title: string;
+  done: boolean;
+};
+
+export enum Filter {
+  All,
+  Completed,
+  Undone,
+}
 
 export function createTodoModel() {
   // State
-  type Todo = {
-    title: string;
-    done: boolean;
-  };
-
   const search$ = new BehaviorSubject('');
   const _todos$ = new BehaviorSubject<Todo[]>([
     { title: 'Create TODO app', done: false },
@@ -28,7 +34,7 @@ export function createTodoModel() {
   // Operations
 
   // Adding
-  const add$ = new Subject();
+  const add$ = new Subject<void>();
   add$
     .pipe(
       withLatestFrom(search$, _todos$),
@@ -62,24 +68,25 @@ export function createTodoModel() {
     )
     .subscribe(_todos$);
 
-  const all$ = new Subject();
-  const completed$ = new Subject();
-  const undone$ = new Subject();
+  const all$ = new Subject<void>();
+  const completed$ = new Subject<void>();
+  const undone$ = new Subject<void>();
 
-  const todos$ = merge(
-    all$.pipe(mapTo('all' as const)),
-    completed$.pipe(mapTo('completed' as const)),
-    undone$.pipe(mapTo('undone' as const))
-  ).pipe(
-    startWith('all'),
+  const filter$: Observable<Filter> = merge(
+    all$.pipe(mapTo(Filter.All)),
+    completed$.pipe(mapTo(Filter.Completed)),
+    undone$.pipe(mapTo(Filter.Undone))
+  ).pipe(startWith(Filter.All));
+
+  const todos$ = filter$.pipe(
     switchMap((type) =>
       _todos$.pipe(
         map((todos) => {
-          if (type === 'all') {
+          if (type === Filter.All) {
             return todos;
           }
 
-          if (type === 'completed') {
+          if (type === Filter.Completed) {
             return todos.filter((todo) => todo.done);
           }
 
@@ -89,5 +96,16 @@ export function createTodoModel() {
     )
   );
 
-  return { todos$ };
+  return {
+    todos$,
+    filter$,
+    handleSearch: (event: InputEvent & { target: HTMLInputElement }) =>
+      search$.next(event.target.value),
+    handleAdd: () => add$.next(),
+    handleFilterAll: () => all$.next(),
+    handleFilterUndone: () => undone$.next(),
+    handleFilterCompleted: () => completed$.next(),
+    handleDoneToggle: (todo: Todo) => toggle$.next(todo),
+    handleRemove: (todo: Todo) => remove$.next(todo),
+  };
 }

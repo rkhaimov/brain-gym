@@ -16,7 +16,7 @@ const config = {
     ],
   },
   resolve: {
-    extensions: ['.ts', '.js'],
+    extensions: ['.ts', '.tsx', '.js'],
   },
   output: {
     filename: 'bundle.js',
