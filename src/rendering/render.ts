@@ -1,12 +1,12 @@
 import { Observable } from 'rxjs';
 import { applyChangesToRealElement } from './applyChangesToRealElement';
 import { byFrame } from './byFrame';
-import { VirtualElement } from './createElement';
+import { VirtualNodeOrString } from './createElement';
 
 export function createRenderer() {
-  let prev: VirtualElement | undefined;
+  let prev: VirtualNodeOrString | undefined;
 
-  return (curr: VirtualElement, parent: HTMLElement) => {
+  return (curr: VirtualNodeOrString, parent: HTMLElement) => {
     applyChangesToRealElement(prev, curr, parent);
 
     prev = curr;
@@ -15,7 +15,7 @@ export function createRenderer() {
   };
 }
 
-export function renderUItoDOM(ui$: Observable<VirtualElement>) {
+export function renderUItoDOM(ui$: Observable<VirtualNodeOrString>) {
   const render = createRenderer();
   const main = document.createElement('main');
   document.body.appendChild(main);

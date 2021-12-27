@@ -1,10 +1,10 @@
 import { zip } from 'lodash-es';
 import { assert } from '../utils';
-import { VirtualElement, VirtualNode } from './createElement';
+import { VirtualNodeOrString, VirtualNode } from './createElement';
 
 export function applyChangesToRealElement(
-  prev: VirtualElement | undefined,
-  curr: VirtualElement | undefined,
+  prev: VirtualNodeOrString | undefined,
+  curr: VirtualNodeOrString | undefined,
   parent: HTMLElement
 ) {
   if (typeof prev === 'string' && typeof curr === 'string') {
@@ -138,7 +138,7 @@ function isCollectionsShallowEqual(
 }
 
 function createRealElementFromAndLinkRefs(
-  virtualElement: VirtualElement
+  virtualElement: VirtualNodeOrString
 ): HTMLElement | string {
   if (typeof virtualElement === 'string') {
     return virtualElement;

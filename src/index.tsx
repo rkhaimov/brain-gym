@@ -12,13 +12,13 @@ import {
   switchMap,
 } from 'rxjs';
 import './global.css';
-import { createElement, VirtualElement } from './rendering/createElement';
+import { createElement, VirtualNodeOrString } from './rendering/createElement';
 import { renderUItoDOM } from './rendering/render';
 import { wait } from './utils';
 
 renderUItoDOM(createSearchableSelect());
 
-function createSearchableSelect(): Observable<VirtualElement> {
+function createSearchableSelect(): Observable<VirtualNodeOrString> {
   const search$ = new BehaviorSubject('');
 
   const options$ = search$.pipe(
