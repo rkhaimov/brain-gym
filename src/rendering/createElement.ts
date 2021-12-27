@@ -1,10 +1,19 @@
 import { combineLatest, map, Observable, of } from 'rxjs';
 
+type FC = (
+  props: Props | null | undefined,
+  children: Children
+) => ReturnType<typeof createElement>;
+
 export function createElement(
-  type: string,
-  props: Record<string, Observable<string>> | null,
-  ...children: Array<string | Observable<VirtualNodeOrString>>
+  type: string | FC,
+  props?: Props | null,
+  ...children: Children
 ): Observable<VirtualNode> {
+  if (typeof type === 'function') {
+    return type(props, children);
+  }
+
   return combineLatest([prepareChildren(children), prepareProps(props)]).pipe(
     map((received) => ({
       type,
@@ -14,8 +23,18 @@ export function createElement(
   );
 }
 
+export const Fragment: FC = (_, children) => {
+  return prepareChildren(children).pipe(
+    map((received) => ({
+      type: 'fragment',
+      attributes: {},
+      children: received,
+    }))
+  );
+};
+
 function prepareChildren(
-  children: Array<string | Observable<VirtualNodeOrString>>
+  children: Children
 ): Observable<VirtualNodeOrString[]> {
   if (children.length === 0) {
     return of([]);
@@ -25,29 +44,54 @@ function prepareChildren(
     typeof child === 'string' ? of(child) : child
   );
 
-  return combineLatest(converted);
+  return combineLatest(converted).pipe(map(received => {
+    return received.flatMap((received) => {
+      if (typeof received === 'string') {
+        return received;
+      }
+
+      if (received.type === 'fragment') {
+        return received.children;
+      }
+
+      return received;
+    });
+  }));
 }
 
 function prepareProps(
-  props: Record<string, Observable<string>> | null
+  props?: Props | null
 ): Observable<VirtualNode['attributes']> {
-  if (props === null) {
+  if (props === null || props === undefined) {
     return of({});
   }
 
-  const converted: Array<Observable<[string, string]>> = Object.entries(
-    props
-  ).map(([key, value]) =>
-    value.pipe(map((received) => [MAP_PROP_TO_ATTR[key] ?? key, received]))
+  const events = Object.entries(props).filter(
+    ([, value]) => typeof value === 'function'
+  );
+
+  const attributes = Object.entries(props).filter(
+    ([, value]) => typeof value !== 'function'
+  ) as Array<[string, Observable<string>]>;
+
+  const converted: Array<Observable<[string, string]>> = attributes.map(
+    ([key, value]) => value.pipe(map((received) => [key, received]))
   );
 
   return combineLatest(converted).pipe(
-    map((entries) => Object.fromEntries(entries))
+    map((entries) => ({
+      ...Object.fromEntries(entries),
+      ...Object.fromEntries(events),
+    }))
   );
 }
 
-const MAP_PROP_TO_ATTR: Record<string, string> = {
-  className: 'class',
+type Props = {
+  className?: Observable<string>;
+  type?: Observable<string>;
+  title?: Observable<string>;
+  onInput?: JSX.IntrinsicElements['input']['onInput'];
+  onClick?: JSX.IntrinsicElements['button']['onClick'];
 };
 
 export type VirtualNodeOrString = string | VirtualNode;
@@ -58,3 +102,5 @@ export type VirtualNode = {
   children: VirtualNodeOrString[];
   _ref?: HTMLElement;
 };
+
+type Children = Array<string | Observable<VirtualNodeOrString>>;

@@ -192,7 +192,7 @@ function assignAttributesToNode(
     const isEvent = key.startsWith('on');
 
     if (isEvent === false) {
-      node.setAttribute(key, value as string);
+      node.setAttribute(key === 'className' ? 'class' : key, value as string);
 
       return;
     }

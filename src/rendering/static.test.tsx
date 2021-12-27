@@ -7,7 +7,7 @@ test('It handles one level element', () => {
   const ui = <h1>Hello world</h1>;
   const ui$ = createElement('h1', null, 'Hello world');
 
-  expect(renderReact(ui).output).toEqual(renderObservable(ui$).output);
+  expect(renderObservable(ui$).output).toEqual(renderReact(ui).output);
 });
 
 test('It handles two (or more) levels element', () => {
@@ -23,7 +23,7 @@ test('It handles two (or more) levels element', () => {
     createElement('h1', null, 'Hello world')
   );
 
-  expect(renderReact(ui).output).toEqual(renderObservable(ui$).output);
+  expect(renderObservable(ui$).output).toEqual(renderReact(ui).output);
 });
 
 test('It handles static attributes allowing className', () => {
@@ -41,5 +41,5 @@ test('It handles static attributes allowing className', () => {
     createElement('div', { className: of('container') })
   );
 
-  expect(renderReact(ui).output).toEqual(renderObservable(ui$).output);
+  expect(renderObservable(ui$).output).toEqual(renderReact(ui).output);
 });

@@ -1,4 +1,5 @@
 import { prettyDOM } from '@testing-library/dom';
+import { last } from 'lodash-es';
 import ReactDOM from 'react-dom';
 import { Observable } from 'rxjs';
 import { VirtualNodeOrString } from './createElement';
@@ -9,19 +10,32 @@ export function renderReact(jsx: JSX.Element) {
 
   ReactDOM.render(jsx, container);
 
-  return { container, output: prettyDOM(container) };
+  return {
+    container,
+    async act(clb: () => unknown) {
+      document.body.appendChild(container);
+
+      await clb();
+
+      document.body.removeChild(container);
+    },
+    get output() {
+      return prettyDOM(container);
+    },
+  };
 }
 
 export function renderObservable(element: Observable<VirtualNodeOrString>) {
   let outputs: string[] = [];
-  const dom = document.createElement('main');
+  let error: Error;
+  const container = document.createElement('main');
   const render = createRenderer();
 
   const subscription = element.subscribe((ui) => {
     try {
-      outputs.push(prettyDOM(render(ui, dom)) as string);
+      outputs.push(prettyDOM(render(ui, container)) as string);
     } catch (e: unknown) {
-      outputs = [(e as Error).message];
+      error = e as Error;
 
       subscription.unsubscribe();
     }
@@ -29,8 +43,19 @@ export function renderObservable(element: Observable<VirtualNodeOrString>) {
 
   return {
     get output() {
-      return outputs.join('\n\n');
+      if (error) {
+        throw error;
+      }
+
+      return last(outputs);
     },
-    dom,
+    container,
+    async act(clb: () => unknown) {
+      document.body.appendChild(container);
+
+      await clb();
+
+      document.body.removeChild(container);
+    },
   };
 }
