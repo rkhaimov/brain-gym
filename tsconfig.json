@@ -1,13 +1,15 @@
 {
-  "extends": "./tsconfig.base.json",
   "include": [
-    "./src/index.tsx",
-    "./global.d.ts"
+    "./src/index.tsx"
   ],
   "compilerOptions": {
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "Node",
     "target": "ESNext",
     "module": "ESNext",
-    "jsx": "react",
-    "jsxFactory": "createElement"
+    "jsx": "react"
   }
 }

@@ -11,9 +11,8 @@ import {
   startWith,
   switchMap,
 } from 'rxjs';
-import { VirtualElement } from '../global';
 import './global.css';
-import { createElement } from './rendering/createElement';
+import { createElement, VirtualElement } from './rendering/createElement';
 import { renderUItoDOM } from './rendering/render';
 import { wait } from './utils';
 

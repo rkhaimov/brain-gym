@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs';
-import { VirtualElement } from '../../global';
 import { applyChangesToRealElement } from './applyChangesToRealElement';
 import { byFrame } from './byFrame';
+import { VirtualElement } from './createElement';
 
 export function createRenderer() {
   let prev: VirtualElement | undefined;
