@@ -1,3 +1,4 @@
+import { flatten } from 'lodash-es';
 import { combineLatest, map, Observable, of } from 'rxjs';
 
 type FC = (
@@ -34,8 +35,10 @@ export const Fragment: FC = (_, children) => {
 };
 
 function prepareChildren(
-  children: Children
+  _children: Children
 ): Observable<VirtualNodeOrString[]> {
+  const children = flatten(_children);
+
   if (children.length === 0) {
     return of([]);
   }
@@ -44,19 +47,21 @@ function prepareChildren(
     typeof child === 'string' ? of(child) : child
   );
 
-  return combineLatest(converted).pipe(map(received => {
-    return received.flatMap((received) => {
-      if (typeof received === 'string') {
+  return combineLatest(converted).pipe(
+    map((received) => {
+      return received.flatMap((received) => {
+        if (typeof received === 'string') {
+          return received;
+        }
+
+        if (received.type === 'fragment') {
+          return received.children;
+        }
+
         return received;
-      }
-
-      if (received.type === 'fragment') {
-        return received.children;
-      }
-
-      return received;
-    });
-  }));
+      });
+    })
+  );
 }
 
 function prepareProps(
@@ -103,4 +108,8 @@ export type VirtualNode = {
   _ref?: HTMLElement;
 };
 
-type Children = Array<string | Observable<VirtualNodeOrString>>;
+type Children = Array<
+  | string
+  | Observable<VirtualNodeOrString>
+  | Array<Observable<VirtualNodeOrString>>
+>;

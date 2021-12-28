@@ -168,7 +168,7 @@ test('It allows to sync children and it`s attributes', async () => {
           createElement(
             Fragment,
             null,
-            ...times(count, (n) =>
+            times(count, (n) =>
               createElement('h1', { className: of(`${n}`) }, `${n}`)
             )
           )
@@ -191,7 +191,6 @@ test('It allows to sync children and it`s attributes', async () => {
   );
 
   expect(observableUI.output).toEqual(reactUI.output);
-
 
   await reactUI.act(async () => {
     userEvent.clear(await findByRole(reactUI.container, 'textbox'));
