@@ -20,7 +20,7 @@ export function renderReact(jsx: JSX.Element) {
       document.body.removeChild(container);
     },
     get output() {
-      return prettyDOM(container);
+      return prettyDOM(container) as string;
     },
   };
 }
