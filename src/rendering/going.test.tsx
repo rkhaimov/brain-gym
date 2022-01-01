@@ -4,7 +4,6 @@ import {
   map,
   Observable,
   of,
-  scan,
   switchMap,
 } from 'rxjs';
 import {
@@ -139,12 +138,20 @@ function toMemoTree(ui: MetaTree): MemoTree {
 }
 
 function toMemoFactory(factory: FF): FF {
-  const content$ = factory();
+  // Try to reimplement using scan()
+  let last: MemoTree | undefined;
+  const content$ = factory().pipe(
+    map((next) => {
+      last = cache(last, next);
 
-  return () => content$.pipe(scan(cache, null as unknown as MemoTree));
+      return last;
+    })
+  );
 
-  function cache(last: MemoTree | null, next: MetaTree): MemoTree {
-    if (last === null) {
+  return () => content$;
+
+  function cache(last: MemoTree | undefined, next: MetaTree): MemoTree {
+    if (last === undefined) {
       return toMemoTree(next);
     }
 
