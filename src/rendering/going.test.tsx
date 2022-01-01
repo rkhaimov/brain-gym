@@ -4,6 +4,7 @@ import {
   map,
   Observable,
   of,
+  scan,
   switchMap,
 } from 'rxjs';
 import {
@@ -18,7 +19,6 @@ import {
 } from './types';
 import { assert, wait } from '../utils';
 import { propsToAttributes, propsToListeners } from './dom';
-import { noop } from 'lodash-es';
 
 test('It persists state based on type only', async () => {
   const Toggle: FF = () => {
@@ -55,99 +55,51 @@ test('It persists state based on type only', async () => {
     null
   );
 
-  createRenderer(ui).pipe(map((value, index) => {
-    if (index === 0) {
-      // @ts-ignore
-      setTimeout(() => value.children[0].listeners.click(), 100);
-    }
+  createRenderer(ui)
+    .pipe(
+      map((value, index) => {
+        if (index === 0) {
+          // @ts-ignore
+          setTimeout(() => value.children[0].listeners.click(), 100);
+        }
 
-    return value;
-  })).subscribe(log);
+        return value;
+      })
+    )
+    .subscribe(log);
 
-  await wait(1_000);
+  await wait(2_000);
 
   removed$.next(true);
 });
 
-function createRenderer(ui: MetaTree) {
-  const memo: MemoTree = resolve(ui, undefined);
+function createRenderer(_ui: MetaTree) {
+  const memoized = toMemoTree(_ui);
 
-  function resolve(next: MetaTree, curr: MemoTree | undefined): MemoTree {
-    if (curr) {
-      if (next.type === ElementType.String) {
-        return next;
-      }
-
-      if (typeof next.factory === 'string') {
-        if (next.factory === curr.factory) {
-          assert('children' in curr);
-
-          return {
-            ...curr,
-            children: next.children.map((child, index) =>
-              resolve(child, curr.children[index])
-            ),
-          };
-        }
-      }
-
-      if (typeof next.factory === 'function') {
-        if (next.factory === curr.factory) {
-          return curr;
-        }
-      }
+  function toRenderingTree(ui: MetaTree): Observable<RenderingTree> {
+    if (ui.type === ElementType.String) {
+      return of(ui.factory);
     }
 
-    if (next.type === ElementType.String) {
-      return next;
-    }
-
-    if (typeof next.factory === 'function') {
-      return {
-        ...next,
-        last: next
-          .factory()
-          .pipe(map(createLastMemoized((last, meta) => resolve(meta, last)))),
-        children: next.children.map(
-          createLastMemoized((last, meta) => resolve(meta, last))
-        ),
-      };
-    }
-
-    return {
-      ...next,
-      children: next.children.map(
-        createLastMemoized((last, meta) => resolve(meta, last))
-      ),
-    };
-  }
-
-  function toRenderingTree(memo: MemoTree): Observable<RenderingTree> {
-    if (memo.type === ElementType.String) {
-      return of(memo.factory);
-    }
-
-    const factory = memo.factory;
+    const factory = ui.factory;
 
     if (typeof factory === 'function') {
-      assert(memo.last);
-
-      return memo.last.pipe(switchMap(toRenderingTree));
+      return factory().pipe(switchMap(toRenderingTree));
     }
 
-    return combineLatest(memo.children.map(toRenderingTree)).pipe(
+    return combineLatest(ui.children.map(toRenderingTree)).pipe(
       map((children) => {
         return {
           tag: factory,
-          listeners: propsToListeners(memo.props),
-          attributes: propsToAttributes(memo.props),
+          listeners: propsToListeners(ui.props),
+          attributes: propsToAttributes(ui.props),
           children,
         };
       })
     );
   }
 
-  return toRenderingTree(memo);
+  return toRenderingTree(memoized);
 }
 
 function createElement(
@@ -167,16 +119,65 @@ function createElement(
   return { type: ElementType.Object, factory, props, children: converted };
 }
 
-function createLastMemoized<TLast, TArgs extends any[]>(
-  clb: (last: TLast | undefined, ...args: TArgs) => TLast
-) {
-  let last: TLast;
+function toMemoTree(ui: MetaTree): MemoTree {
+  if (ui.type === ElementType.String) {
+    return ui;
+  }
 
-  return (...args: TArgs) => {
-    last = clb(last, ...args);
+  const factory = ui.factory;
 
-    return last;
-  };
+  if (typeof factory === 'function') {
+    return {
+      ...ui,
+      factory: toMemoFactory(factory),
+      original: factory,
+      children: ui.children.map(toMemoTree),
+    };
+  }
+
+  return { ...ui, factory, children: ui.children.map(toMemoTree) };
+}
+
+function toMemoFactory(factory: FF): FF {
+  const content$ = factory();
+
+  return () => content$.pipe(scan(cache, null as unknown as MemoTree));
+
+  function cache(last: MemoTree | null, next: MetaTree): MemoTree {
+    if (last === null) {
+      return toMemoTree(next);
+    }
+
+    if (next.type === ElementType.String) {
+      return next;
+    }
+
+    const factory = next.factory;
+
+    if (typeof factory === 'function') {
+      assert('original' in last);
+
+      if (last.original === factory) {
+        return last;
+      }
+
+      assert(false, 'Unhandled');
+    }
+
+    if (last.factory === factory) {
+      assert('children' in last);
+
+      return {
+        ...last,
+        children: next.children.map((child, index) =>
+          // Turn on undefined index feature
+          cache(last.children[index] ?? child, child)
+        ),
+      };
+    }
+
+    return toMemoTree(next);
+  }
 }
 
 function log(obj: unknown) {

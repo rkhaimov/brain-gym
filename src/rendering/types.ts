@@ -21,14 +21,23 @@ export type MetaTree =
       children: MetaTree[];
     };
 
-export type JSXChildren = Array<string | MetaTree>;
-
 export type MemoTree =
-  | Extract<MetaTree, { type: ElementType.String }>
-  | (Extract<MetaTree, { type: ElementType.Object }> & {
+  | { type: ElementType.String; factory: string }
+  | {
+      type: ElementType.Object;
+      factory: TagName;
+      props: Props;
       children: MemoTree[];
-      last?: Observable<MemoTree>;
-    });
+    }
+  | {
+      type: ElementType.Object;
+      factory: FF;
+      original: FF;
+      props: Props;
+      children: MemoTree[];
+    };
+
+export type JSXChildren = Array<string | MetaTree>;
 
 // Rendering requires information related to DOM
 export type RenderingTree =
