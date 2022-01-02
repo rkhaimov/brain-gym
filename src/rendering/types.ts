@@ -39,15 +39,18 @@ export type MemoTree =
 
 export type JSXChildren = Array<string | MetaTree>;
 
+export type RenderingTreeObject = {
+  tag: string;
+  attributes: Attributes;
+  listeners: Listeners;
+  children: RenderingTree[];
+  _ref?: HTMLElement;
+};
+
 // Rendering requires information related to DOM
 export type RenderingTree =
   | string
-  | {
-      tag: string;
-      attributes: Attributes;
-      listeners: Listeners;
-      children: RenderingTree[];
-    };
+  | RenderingTreeObject;
 
 export type Attributes = Record<string, string>;
 export type Listeners = Record<string, () => unknown>;

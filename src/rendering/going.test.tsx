@@ -1,23 +1,13 @@
-import {
-  BehaviorSubject,
-  combineLatest,
-  map,
-  Observable,
-  of,
-  switchMap,
-} from 'rxjs';
-import {
-  ElementType,
-  FF,
-  JSXChildren,
-  MemoTree,
-  MetaTree,
-  Props,
-  RenderingTree,
-  TagName,
-} from './types';
-import { assert, wait } from '../utils';
-import { propsToAttributes, propsToListeners } from './dom';
+import { BehaviorSubject, map } from 'rxjs';
+import { FF, MetaTree, RenderingTree } from './types';
+import { wait } from '../utils';
+import { toRenderingTree } from './toRenderingTree';
+import { toDOM } from './toDOM';
+import { findAllByRole, findByRole, logDOM, prettyDOM } from '@testing-library/dom';
+import { toMemoTree } from './toMemoTree';
+import { createElement } from './createElement';
+import userEvent from '@testing-library/user-event';
+import { first } from 'lodash-es';
 
 test('It persists state based on type only', async () => {
   const Toggle: FF = () => {
@@ -34,159 +24,79 @@ test('It persists state based on type only', async () => {
     );
   };
 
-  const removed$ = new BehaviorSubject(false);
-  const ui = createElement(
-    () =>
-      removed$.pipe(
-        map((removed) => {
-          if (removed) {
-            return createElement('div', null, createElement(Toggle, null));
-          }
+  const ui = createElement(() => {
+    const removed$ = new BehaviorSubject(false);
 
+    return removed$.pipe(
+      map((removed) => {
+        if (removed) {
           return createElement(
             'div',
             null,
-            createElement(Toggle, null),
+            createElement('button', { onClick: () => removed$.next(true) }, 'Remove'),
             createElement(Toggle, null)
           );
-        })
-      ),
-    null
-  );
-
-  createRenderer(ui)
-    .pipe(
-      map((value, index) => {
-        if (index === 0) {
-          // @ts-ignore
-          setTimeout(() => value.children[0].listeners.click(), 100);
         }
 
-        return value;
-      })
-    )
-    .subscribe(log);
-
-  await wait(2_000);
-
-  removed$.next(true);
-});
-
-function createRenderer(_ui: MetaTree) {
-  const memoized = toMemoTree(_ui);
-
-  function toRenderingTree(ui: MetaTree): Observable<RenderingTree> {
-    if (ui.type === ElementType.String) {
-      return of(ui.factory);
-    }
-
-    const factory = ui.factory;
-
-    if (typeof factory === 'function') {
-      return factory().pipe(switchMap(toRenderingTree));
-    }
-
-    return combineLatest(ui.children.map(toRenderingTree)).pipe(
-      map((children) => {
-        return {
-          tag: factory,
-          listeners: propsToListeners(ui.props),
-          attributes: propsToAttributes(ui.props),
-          children,
-        };
+        return createElement(
+          'div',
+          null,
+          createElement('button', { onClick: () => removed$.next(true) }, 'Remove'),
+          createElement(Toggle, null),
+          createElement(Toggle, null)
+        );
       })
     );
-  }
+  }, null);
 
-  return toRenderingTree(memoized);
-}
+  const observableUI = renderObservable(ui);
+  const outputs = [];
 
-function createElement(
-  factory: TagName | FF,
-  props: Props,
-  ...children: JSXChildren
-): MetaTree {
-  const converted = children.map<MetaTree>((child) =>
-    typeof child === 'string'
-      ? {
-          type: ElementType.String,
-          factory: child,
-        }
-      : child
-  );
+  outputs.push(observableUI.output);
 
-  return { type: ElementType.Object, factory, props, children: converted };
-}
+  await observableUI.act(async () => {
+    const button = (await findAllByRole(observableUI.container, 'button'))[1];
 
-function toMemoTree(ui: MetaTree): MemoTree {
-  if (ui.type === ElementType.String) {
-    return ui;
-  }
+    userEvent.click(button);
+  });
 
-  const factory = ui.factory;
+  outputs.push(observableUI.output);
 
-  if (typeof factory === 'function') {
-    return {
-      ...ui,
-      factory: toMemoFactory(factory),
-      original: factory,
-      children: ui.children.map(toMemoTree),
-    };
-  }
+  await observableUI.act(async () => {
+    const button = (await findAllByRole(observableUI.container, 'button'))[0];
 
-  return { ...ui, factory, children: ui.children.map(toMemoTree) };
-}
+    userEvent.click(button);
+  });
 
-function toMemoFactory(factory: FF): FF {
-  // Try to reimplement using scan()
-  let last: MemoTree | undefined;
-  const content$ = factory().pipe(
-    map((next) => {
-      last = cache(last, next);
+  outputs.push(observableUI.output);
 
-      return last;
-    })
-  );
+  console.log(outputs.join('\n\n'));
+});
 
-  return () => content$;
+function renderObservable(_ui: MetaTree) {
+  const memoized = toMemoTree(_ui);
 
-  function cache(last: MemoTree | undefined, next: MetaTree): MemoTree {
-    if (last === undefined) {
-      return toMemoTree(next);
+  const container = document.createElement('main');
+  let curr: RenderingTree | undefined;
+  toRenderingTree(memoized).subscribe((next) => {
+    try {
+      curr = toDOM(curr, next, container);
+    } catch (e) {
+      console.log(e);
     }
+  });
 
-    if (next.type === ElementType.String) {
-      return next;
-    }
+  return {
+    get output() {
+      return prettyDOM(container);
+    },
+    async act(clb: () => unknown) {
+      document.body.appendChild(container);
 
-    const factory = next.factory;
+      await clb();
 
-    if (typeof factory === 'function') {
-      assert('original' in last);
-
-      if (last.original === factory) {
-        return last;
-      }
-
-      assert(false, 'Unhandled');
-    }
-
-    if (last.factory === factory) {
-      assert('children' in last);
-
-      return {
-        ...last,
-        children: next.children.map((child, index) =>
-          // Turn on undefined index feature
-          cache(last.children[index] ?? child, child)
-        ),
-      };
-    }
-
-    return toMemoTree(next);
-  }
-}
-
-function log(obj: unknown) {
-  console.log(JSON.stringify(obj, null, 2));
+      document.body.removeChild(container);
+    },
+    container,
+  };
 }
