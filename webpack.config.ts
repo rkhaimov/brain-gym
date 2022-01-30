@@ -3,7 +3,7 @@ const path = require('path');
 
 const config = {
   mode: 'development',
-  entry: './src/index.tsx',
+  entry: './src/index.ts',
   devtool: 'source-map',
   module: {
     rules: [
