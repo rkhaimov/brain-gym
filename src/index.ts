@@ -1,25 +1,13 @@
-import { curry } from './curry';
+import * as IO from './io';
+import { flow } from './flow';
 
-const split = curry((delim: string, source: string) => source.split(delim));
+const ioWindow = (): IO.IO<Window> => IO.io(() => window);
 
-const filter = curry((pred: (char: string) => boolean, xs: string[]) =>
-  xs.filter(pred)
+const locationParts: () => IO.IO<string[]> = flow(
+  ioWindow,
+  IO.map((window) => window.location),
+  IO.map((location) => location.href),
+  IO.map((href) => href.split(' '))
 );
 
-const match = curry((pattern: RegExp, source: string) => {
-  return pattern.test(source);
-});
-
-const reduce = curry(
-  (
-    next: (seed: number, current: number) => number,
-    seed: number,
-    xs: number[]
-  ) => xs.reduce(next, seed)
-);
-
-const words = split(' ');
-const filterQs = filter(match(/q/i));
-const max = reduce((x: number, y: number) => (x >= y ? x : y))(-Infinity);
-
-console.log(max([0, 1, 2, 4]));
+IO.unsafeRun(locationParts());
