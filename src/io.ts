@@ -1,19 +1,20 @@
-export type IO<TValue> = { value: () => TValue };
+export class IO<T> {
+  private constructor(private effect: () => T) {}
 
-export const io = <TValue>(value: () => TValue): IO<TValue> => ({
-  value: value,
-});
+  static of<T>(effect: () => T) {
+    return new IO(effect);
+  }
 
-export const map =
-  <TInput, TReturn>(t: (value: TInput) => TReturn) =>
-  (input: IO<TInput>): IO<TReturn> => {
-    return io(() => t(input.value()));
+  map = <TNext>(transform: (value: T) => TNext): IO<TNext> => {
+    return IO.of(() => transform(this.unsafeRun()));
   };
 
-export const flatMap =
-  <TInput, TReturn>(t: (value: TInput) => IO<TReturn>) =>
-  (input: IO<TInput>): IO<TReturn> => {
-    return io(() => t(input.value()).value());
+  flatMap = <TNext>(transform: (value: T) => IO<TNext>): IO<TNext> => {
+    // TODO: This is wrong
+    return transform(this.unsafeRun());
   };
 
-export const unsafeRun = <TInput>(input: IO<TInput>) => input.value();
+  unsafeRun = (): T => {
+    return this.effect();
+  };
+}
