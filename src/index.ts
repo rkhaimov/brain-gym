@@ -1,177 +1,151 @@
-type FoldingTree<TElement> = ComputeNode<TElement> | ValueNode<TElement>;
-
-type ComputeNode<TElement> = {
-  tag: 'compute';
-  left(): FoldingTree<TElement>;
-  right(): FoldingTree<TElement>;
-  compute(left: TElement, right: TElement): TElement;
-};
-
-type ValueNode<TElement> = {
-  tag: 'value';
-  value: TElement;
-};
-
 type Compose = {
+  <I0, I1, R0>(f0: (i0: I0) => I1, f1: (i0: I1) => R0): (i0: I0) => R0;
+  <I0, I1, I2, R0>(
+    f0: (i0: I0) => I1,
+    f1: (i0: I1) => I2,
+    f2: (i0: I2) => R0
+  ): (i0: I0) => R0;
   <I0, I1, I2, I3, R0>(
-    f0: (i0: I0) => FoldingTree<I1>,
-    f1: (i0: FoldingTree<I1>) => FoldingTree<I2>,
-    f2: (i0: FoldingTree<I2>) => FoldingTree<I3>,
-    f3: (i0: FoldingTree<I3>) => FoldingTree<R0>
+    f0: (i0: I0) => I1,
+    f1: (i0: I1) => I2,
+    f2: (i0: I2) => I3,
+    f3: (i0: I3) => R0
+  ): (i0: I0) => R0;
+  <I0, I1, I2, I3, I4, R0>(
+    f0: (i0: I0) => I1,
+    f1: (i0: I1) => I2,
+    f2: (i0: I2) => I3,
+    f3: (i0: I3) => I4,
+    f4: (i0: I4) => R0
   ): (i0: I0) => R0;
 };
 
 const _compose = (...args: Array<(...args: unknown[]) => unknown>): unknown => {
-  return (input: unknown) =>
-    FT.fold(
-      args.reduce((last, arg) => arg(last), input) as FoldingTree<unknown>
-    );
+  return (input: unknown) => args.reduce((last, arg) => arg(last), input);
 };
 
 const compose = _compose as Compose;
 
-// Hack
-const nothing = <TElement>(): ValueNode<TElement> => {
-  const id = undefined as unknown as TElement;
+type StackNode<TElement> = Operation<TElement> | Value<TElement>;
 
-  return { value: id, tag: 'value' };
+type Operation<TElement> = {
+  tag: 'operation';
+  elements: Array<() => StackNode<any>>;
+  operate(...args: any[]): TElement;
 };
 
-const operation = <TElement>(
-  compute: (left: TElement, right: TElement) => TElement,
-  elements: Array<() => FoldingTree<TElement>>
-): FoldingTree<TElement> => {
-  if (elements.length === 0) {
-    return {
-      tag: 'compute',
-      compute,
-      left: nothing,
-      right: nothing,
-    };
-  }
+type Value<TElement> = { tag: 'value'; value: TElement };
 
-  if (elements.length === 1) {
-    return {
-      tag: 'compute',
-      compute,
-      left: elements[0],
-      right: nothing,
-    };
-  }
-
-  const ofAny = (
-    elements: Array<() => FoldingTree<TElement>>
-  ): FoldingTree<TElement> => {
-    if (elements.length === 0) {
-      throw new Error('Bad condition');
-    }
-
-    if (elements.length === 1) {
-      return elements[0]();
-    }
-
-    const right = ofAny(elements.slice(1));
-
-    return {
-      tag: 'compute',
-      compute,
-      left: elements[0],
-      right: () => right,
-    };
-  };
-
-  return ofAny(elements);
-};
-
-const value = <TElement>(value: TElement): ValueNode<TElement> => ({
+const value = <TElement>(value: TElement): Value<TElement> => ({
   tag: 'value',
   value,
 });
 
-const flatMap =
-  <TElement, TNext>(transform: (element: TElement) => FoldingTree<TNext>) =>
-  (tree: FoldingTree<TElement>): FoldingTree<TNext> =>
-    transform(fold(tree));
+const operation = <TElement>(
+  operate: Operation<TElement>['operate'],
+  ...elements: Operation<TElement>['elements']
+): Operation<TElement> => ({
+  tag: 'operation',
+  operate,
+  elements,
+});
 
-const map =
-  <TElement, TNext>(transform: (element: TElement) => TNext) =>
-  (tree: FoldingTree<TElement>): FoldingTree<TNext> =>
-    value(transform(fold(tree)));
-
-const fold = <TElement>(tree: FoldingTree<TElement>): TElement => {
-  type Footprint<TElement> = [
-    ComputeNode<TElement>,
-    ValueNode<TElement>?,
-    ValueNode<TElement>?
-  ];
-
-  const footprints: Array<Footprint<TElement>> = [];
-  let curr = tree;
-
-  while (curr.tag !== 'value' || footprints.length > 0) {
-    while (curr.tag !== 'value') {
-      footprints.push([curr]);
-      curr = curr.left();
-    }
-
-    footprints[footprints.length - 1].push(curr);
-
-    if (footprints[footprints.length - 1].length === 3) {
-      const [compute, v0, v1] = footprints.pop()!;
-
-      curr = { tag: 'value', value: compute.compute(v0!.value, v1!.value) };
-    } else {
-      curr = footprints[footprints.length - 1][0].right();
-    }
+const range = (from: number, to: number): StackNode<number[]> => {
+  if (from === to) {
+    return value([]);
   }
 
-  return curr.value;
+  return operation(
+    (tail: number[]) => [from, ...tail],
+    () => range(from + 1, to)
+  );
 };
 
-const FT = { fold, value, operation, flatMap, map, compose };
+const memo = new Map<number, StackNode<number>>();
+const fib = (n: number): StackNode<number> => {
+  if (memo.has(n)) {
+    return memo.get(n)!;
+  }
 
-const sort = (ns: number[]): FoldingTree<number[]> => {
+  if (n < 2) {
+    return value(n);
+  }
+
+  memo.set(
+    n,
+    operation(
+      (left: number, right: number) => left + right,
+      () => fib(n - 1),
+      () => fib(n - 2)
+    )
+  );
+
+  return memo.get(n)!;
+};
+
+const sort = (ns: number[]): StackNode<number[]> => {
   if (ns.length < 2) {
-    return FT.value(ns);
+    return value(ns);
   }
 
   const [n, ...tail] = ns;
 
-  return FT.operation(
-    (left, right) => [...left, n, ...right],
-    [
-      () => sort(tail.filter((x) => x <= n)),
-      () => sort(tail.filter((x) => x > n)),
-    ]
-  );
-};
-
-const range = (to: number): FoldingTree<number[]> => {
-  if (to === 0) {
-    return FT.value([]);
-  }
-
-  return FT.operation((left) => [to, ...left], [() => range(to - 1)]);
-};
-
-const rib = (n: number): FoldingTree<number> => {
-  if (n <= 2) {
-    return value(n);
-  }
-
   return operation(
-    (left, right) => left + right,
-    [() => rib(n - 1), () => rib(n - 2), () => rib(n - 3)]
+    (lesser, greater) => [...lesser, n, ...greater],
+    () => sort(tail.filter((x) => x > n)),
+    () => sort(tail.filter((x) => x <= n))
   );
 };
 
-const onlyEvens = (ns: number[]): number[] => ns.filter((n) => n % 2 === 0);
+const map =
+  <TPrevElement, TNextElement>(
+    mapper: (element: TPrevElement) => TNextElement
+  ) =>
+  (stack: StackNode<TPrevElement>): StackNode<TNextElement> => {
+    return value(mapper(fold(stack)));
+  };
 
-const magic = FT.compose(
-  rib,
-  FT.flatMap(range),
-  FT.flatMap(sort),
-  FT.map(onlyEvens)
+const flatMap =
+  <TPrevElement, TNextElement>(
+    mapper: (element: TPrevElement) => StackNode<TNextElement>
+  ) =>
+  (stack: StackNode<TPrevElement>): StackNode<TNextElement> => {
+    return mapper(fold(stack));
+  };
+
+const headOfSortedFibRange = compose(
+  fib,
+  flatMap((to) => range(0, to)),
+  flatMap(sort),
+  map((ns) => ns.slice(0, 10)),
+  fold
 );
 
-console.log(magic(10));
+console.log(headOfSortedFibRange(20));
+
+function fold<TElement>(stack: StackNode<TElement>): TElement {
+  let current = stack;
+  const footprints: Array<{ node: Operation<TElement>; args: TElement[] }> = [];
+
+  while (current.tag === 'operation' || footprints.length > 0) {
+    if (current.tag === 'operation') {
+      footprints.push({ node: current, args: [] });
+    }
+
+    const last = footprints[footprints.length - 1];
+
+    if (current.tag === 'value') {
+      last.args.push(current.value);
+    }
+
+    if (last.args.length === last.node.elements.length) {
+      const operation = footprints.pop()!;
+
+      current = value(operation.node.operate(...operation.args));
+    } else {
+      current = last.node.elements[last.args.length]();
+    }
+  }
+
+  return current.value;
+}
