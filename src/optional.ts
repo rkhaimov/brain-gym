@@ -1,3 +1,5 @@
+import { id } from './id';
+
 type Some<TA> = { tag: 'some'; value: TA };
 type None = { tag: 'none' };
 
@@ -10,11 +12,19 @@ export class Optional<TA> {
   constructor(private container: Some<TA> | None) {}
 
   map = <TB>(transform: (value: TA) => TB): Optional<TB> => {
+    return this.flatMap((value) => Optional.some(transform(value)));
+  };
+
+  default = (none: TA): TA => {
+    return this.fold(none, id);
+  };
+
+  flatMap = <TB>(transform: (value: TA) => Optional<TB>): Optional<TB> => {
     if (this.container.tag === 'none') {
       return Optional.none();
     }
 
-    return Optional.some(transform(this.container.value));
+    return transform(this.container.value);
   };
 
   fold = <TB>(none: TB, some: (value: TA) => TB): TB => {
