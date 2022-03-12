@@ -1,145 +1,128 @@
-type Bowl = 'I';
-type Space = 'X';
-type Game = Array<Bowl | Space>;
-type Position = number;
-
-const winning = new Map<string, boolean>();
-
-const isWinningGame = (game: Game, myturn: boolean): boolean => {
-  const winning = isWinningTurn(game);
-
-  if (myturn && winning) {
-    return true;
-  }
-
-  if (not(myturn) && winning) {
-    return false;
-  }
-
-  if (myturn) {
-    return allMoves(game).some((moved) => isWinningGame(moved, not(myturn)));
-  }
-
-  return allMoves(game).every((moved) => isWinningGame(moved, not(myturn)));
-};
-
-const isWinningTurn = (game: Game): boolean => {
-  return allMoves(game).some(hasNoMoves);
-};
-
-const hasNoMoves = (game: Game): boolean => {
-  return game.every(ch => not(ch.includes('I')));
-};
-
-const allMoves = (game: Game): Game[] => {
-  return game
-    .reduce(
-      (games, _, position) => [
-        ...games,
-        ...concatGames(
-          tryOneShotMove(position, game),
-          tryTwoShotsMove(position, game)
-        )
-      ],
-      [] as Game[]
-    )
-    .map(minimizeGame);
-};
-
-const tryOneShotMove = (position: Position, game: Game): Game => {
-  if (isOneShotPossible(position, game)) {
-    return oneShot(position, game);
-  }
-
-  return emptyGame();
-};
-
-const tryTwoShotsMove = (position: Position, game: Game): Game => {
-  if (isTwoShotsPossible(position, game)) {
-    return twoShots(position, game);
-  }
-
-  return emptyGame();
-};
-
-const isOneShotPossible = (position: Position, game: Game): boolean => {
-  return isBowlAt(position, game);
-};
-
-const oneShot = (position: Position, game: Game): Game => {
-  return shotBowlAt(position, game);
-};
-
-const isTwoShotsPossible = (position: Position, game: Game): boolean => {
-  return (
-    isOneShotPossible(position, game) &&
-    isOneShotPossible(nextPositionFrom(position), game)
-  );
-};
-
-const twoShots = (position: Position, game: Game): Game => {
-  return oneShot(nextPositionFrom(position), oneShot(position, game));
-};
-
-const dematerialize = (game: string): Game =>
-  game.split('').filter((ch): ch is Bowl | Space => ch === 'I' || ch === 'X');
-
-const isBowlAt = (position: Position, game: Game): boolean =>
-  game[position] === 'I';
-
-const shotBowlAt = (position: Position, game: Game): Game => {
-  return game.map((sign, index) => (position === index ? 'X' : sign));
-};
-
-const nextPositionFrom = (position: Position): Position => position + 1;
-
-const emptyGame = (): Game => [];
-
-const concatGames = (left: Game, right: Game): Game[] => {
-  if (left.length === 0 && right.length === 0) {
-    return [];
-  }
-
-  if (left.length === 0) {
-    return [right];
-  }
-
-  if (right.length === 0) {
-    return [left];
-  }
-
-  return [left, right];
-};
+type Game = number[];
+type Pile = Game[number];
 
 const not = (cond: boolean): boolean => !cond;
 
-const toResultString = (winning: boolean): string => (winning ? 'WIN' : 'LOSE');
+const range = (from: number, to: number): number[] => {
+  if (from === to) {
+    return [];
+  }
 
-const minimizeGame = (game: Game): Game => {
-  return game;
-
-  return dematerialize(
-    materialize(game)
-      .split(/X+/g)
-      .filter((ch) => ch !== '')
-      .sort((left, right) => left.length - right.length)
-      .join('X')
-  );
+  return [from, ...range(from + 1, to)];
 };
 
-const materialize = (game: Game): string => game.join('');
+const isWinningGame = (game: Game): boolean => lsgn(game) !== 0;
 
-// console.table(
-//   range(0, 10)
-//     .map((n) => 'I'.repeat(n))
-//     .map(
-//       (game) =>
-//         [game, isWinningGame(minimizeGame(dematerialize(game)), true)] as const
-//     )
-//     .map(([game, won]) => {
-//       console.log(won);
-//       return won ? { win: game, lose: '-' } : { win: '-', lose: game };
-//     })
-// );
+const allMoves = (piles: Game): Game[] => {
+  return piles
+    .reduce(
+      (accumulated, pile, index) => [
+        ...accumulated,
+        ...allMovesOnPile(pile).map((move) => [
+          ...move,
+          ...piles.slice(0, index),
+          ...piles.slice(index + 1),
+        ]),
+      ],
+      [] as Game[]
+    )
+    .map(minimize);
+};
 
-console.log(isWinningGame(minimizeGame(dematerialize('III')), true));
+const allMovesOnPile = (pile: Pile): Game[] => {
+  if (pile === 1) {
+    return [[]];
+  }
+
+  if (pile === 2) {
+    return [[pile - 1], []];
+  }
+
+  return [
+    [pile - 2],
+    [pile - 1],
+    ...allDivisionsOff(pile - 1),
+    ...allDivisionsOff(pile - 2),
+  ];
+};
+
+const allDivisionsOff = (pile: Pile): Pile[][] => {
+  return range(0, (pile - (pile % 2)) / 2).map((times) => [
+    times + 1,
+    pile - (times + 1),
+  ]);
+};
+
+const toResultString = (winning: boolean): string => (winning ? 'WIN' : 'LOSE');
+
+const one = new Set([1, 4, 8, 13, 16, 20, 26, 32, 37]);
+
+const minimize = (piles: Game): Game => {
+  return ungroup(piles.map((pile) => (one.has(pile) ? 1 : pile)).sort());
+};
+
+const ungroup = (piles: Game): Game => {
+  if (piles.length < 4) {
+    return piles;
+  }
+
+  const [a, b, c, d, ...tail] = piles;
+
+  if (a === b && b === c && c === d) {
+    return ungroup([c, d, ...tail]);
+  }
+
+  return [a, ...ungroup([b, c, d, ...tail])];
+};
+
+const dematerialize = (game: string): Game =>
+  game
+    .split(/X+/g)
+    .filter((ch) => ch.includes('I'))
+    .map((ch) => ch.length);
+
+const materialize = (game: Game): string =>
+  game.map((count) => 'I'.repeat(count)).join('X');
+
+const lsgn = (piles: Game): number => {
+  if (piles.length === 0) {
+    return 0;
+  }
+
+  return piles.map(_sgn).reduce(xor);
+};
+
+const memo = new Map<number, number>();
+
+const opt =
+  (fn: typeof sgn): typeof sgn =>
+  (pile) => {
+    if (not(memo.has(pile))) {
+      memo.set(pile, fn(pile));
+    }
+
+    return memo.get(pile)!;
+  };
+
+const sgn = (pile: Pile): number => {
+  return mex(allMovesOnPile(pile).map(lsgn));
+};
+
+const _sgn = opt(sgn);
+
+const xor = (a: number, b: number): number => a ^ b;
+
+const mex = (ns: number[]): number => {
+  if (ns.length === 0) {
+    return 0;
+  }
+
+  const prepared = new Set(ns);
+  const found = range(0, ns.length).find((n) => not(prepared.has(n)));
+
+  if (found === undefined) {
+    return Math.max(...ns) + 1;
+  }
+
+  return found;
+};
