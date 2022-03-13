@@ -75,15 +75,6 @@ export class Either<TLeft, TRight> {
     return transform(this.ma.right);
   };
 
-  leftMap = <TLeftB>(
-    transform: (value: TLeft) => TLeftB
-  ): Either<TLeftB, TRight> => {
-    return this.fold(
-      (left) => Either.left(transform(left)),
-      (right) => Either.right(right)
-    );
-  };
-
   // (a -> b) -> Either[a] -> Either[b]
   map = <TRightB>(
     transform: (value: TRight) => TRightB

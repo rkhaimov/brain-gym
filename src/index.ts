@@ -1,128 +1,117 @@
-type Game = number[];
-type Pile = Game[number];
+import {
+  BehaviorSubject,
+  exhaustMap,
+  filter,
+  fromEvent,
+  map,
+  mapTo,
+  merge,
+  Observable,
+  of,
+  partition,
+  scan,
+  switchMap,
+  take,
+  takeLast,
+  takeUntil,
+  tap,
+} from 'rxjs';
+import { id } from './id';
 
-const not = (cond: boolean): boolean => !cond;
+document.body.innerHTML = `<div>
+  It is bright new World
+  <button id='openSheet'>Open the thing</button>
+  <div id='sheet' style='position: fixed; left: 0; right: 0; bottom: 0; top: 0; transition: background-color 0.2s'>
+    <div id='sheetContent' style='background-color: white; border-radius: 10px; min-height: 100%; padding: 15px; position: relative; top: 100%; transition: top 0.2s'>
+    <div id='sheetGrab' style='width: 100px;
+    height: 10px;
+    background-color: #000;
+    border-radius: 10px;
+    margin: 0 auto 15px;'></div>
+</div>
+  </div>
+</div>`;
 
-const range = (from: number, to: number): number[] => {
-  if (from === to) {
-    return [];
-  }
+const sheet = document.querySelector('#sheet') as HTMLDivElement;
+const sheetContent = document.querySelector('#sheetContent') as HTMLDivElement;
 
-  return [from, ...range(from + 1, to)];
-};
+const openSheet = document.querySelector('#openSheet') as HTMLButtonElement;
+const sheetGrab = document.querySelector('#sheetGrab') as HTMLDivElement;
 
-const isWinningGame = (game: Game): boolean => lsgn(game) !== 0;
+const sheetOpened = new BehaviorSubject(false);
 
-const allMoves = (piles: Game): Game[] => {
-  return piles
-    .reduce(
-      (accumulated, pile, index) => [
-        ...accumulated,
-        ...allMovesOnPile(pile).map((move) => [
-          ...move,
-          ...piles.slice(0, index),
-          ...piles.slice(index + 1),
-        ]),
-      ],
-      [] as Game[]
+fromEvent(openSheet, 'click').pipe(mapTo(true)).subscribe(sheetOpened);
+
+sheetOpened
+  .pipe(
+    tap((opened) => {
+      if (opened) {
+        sheet.style.display = 'block';
+      } else {
+        sheet.style.display = 'none';
+      }
+    }),
+    filter(id),
+    switchMap(() => {
+      const top$ = top();
+
+      return merge(grabbing(top$), closing(top$), opacity(top$));
+    })
+  )
+  .subscribe();
+
+sheetOpened.pipe(filter(id));
+
+function grabbing(top$: Observable<number>): Observable<unknown> {
+  return top$.pipe(tap((top) => (sheetContent.style.top = `${top}px`)));
+}
+
+function closing(top$: Observable<number>): Observable<unknown> {
+  return top$.pipe(
+    filter((top) => top === sheetContent.getBoundingClientRect().height),
+    switchMap(() => fromEvent(sheetContent, 'transitionend').pipe(take(1))),
+    tap(() => sheetOpened.next(false))
+  );
+}
+
+function opacity(top$: Observable<number>): Observable<unknown> {
+  return top$.pipe(
+    map((top) => top / sheetContent.getBoundingClientRect().height),
+    tap(
+      (opacity) =>
+        (sheet.style.backgroundColor = `rgb(0 0 0 / ${
+          Math.min(1 - opacity, 0.8) * 100
+        }%)`)
     )
-    .map(minimize);
-};
+  );
+}
 
-const allMovesOnPile = (pile: Pile): Game[] => {
-  if (pile === 1) {
-    return [[]];
-  }
+function top(): Observable<number> {
+  const TOP_OFFSET = 15;
 
-  if (pile === 2) {
-    return [[pile - 1], []];
-  }
+  const moving$ = fromEvent(sheetGrab, 'mousedown').pipe(
+    exhaustMap((): Observable<number> => {
+      const grab$ = fromEvent<MouseEvent>(sheet, 'mousemove').pipe(
+        scan((top, event) => top + event.movementY, TOP_OFFSET),
+        filter((top) => top > TOP_OFFSET),
+        takeUntil(fromEvent(sheet, 'mouseup'))
+      );
 
-  return [
-    [pile - 2],
-    [pile - 1],
-    ...allDivisionsOff(pile - 1),
-    ...allDivisionsOff(pile - 2),
-  ];
-};
+      const [keep$, close$] = partition(
+        grab$.pipe(takeLast(1)),
+        (top) => top < sheetContent.getBoundingClientRect().height / 2
+      );
 
-const allDivisionsOff = (pile: Pile): Pile[][] => {
-  return range(0, (pile - (pile % 2)) / 2).map((times) => [
-    times + 1,
-    pile - (times + 1),
-  ]);
-};
+      return merge(
+        grab$,
+        keep$.pipe(mapTo(TOP_OFFSET)),
+        close$.pipe(mapTo(sheetContent.getBoundingClientRect().height))
+      );
+    })
+  );
 
-const toResultString = (winning: boolean): string => (winning ? 'WIN' : 'LOSE');
+  // Reimplement using animationFrames and transform
+  document.body.offsetTop;
 
-const one = new Set([1, 4, 8, 13, 16, 20, 26, 32, 37]);
-
-const minimize = (piles: Game): Game => {
-  return ungroup(piles.map((pile) => (one.has(pile) ? 1 : pile)).sort());
-};
-
-const ungroup = (piles: Game): Game => {
-  if (piles.length < 4) {
-    return piles;
-  }
-
-  const [a, b, c, d, ...tail] = piles;
-
-  if (a === b && b === c && c === d) {
-    return ungroup([c, d, ...tail]);
-  }
-
-  return [a, ...ungroup([b, c, d, ...tail])];
-};
-
-const dematerialize = (game: string): Game =>
-  game
-    .split(/X+/g)
-    .filter((ch) => ch.includes('I'))
-    .map((ch) => ch.length);
-
-const materialize = (game: Game): string =>
-  game.map((count) => 'I'.repeat(count)).join('X');
-
-const lsgn = (piles: Game): number => {
-  if (piles.length === 0) {
-    return 0;
-  }
-
-  return piles.map(_sgn).reduce(xor);
-};
-
-const memo = new Map<number, number>();
-
-const opt =
-  (fn: typeof sgn): typeof sgn =>
-  (pile) => {
-    if (not(memo.has(pile))) {
-      memo.set(pile, fn(pile));
-    }
-
-    return memo.get(pile)!;
-  };
-
-const sgn = (pile: Pile): number => {
-  return mex(allMovesOnPile(pile).map(lsgn));
-};
-
-const _sgn = opt(sgn);
-
-const xor = (a: number, b: number): number => a ^ b;
-
-const mex = (ns: number[]): number => {
-  if (ns.length === 0) {
-    return 0;
-  }
-
-  const prepared = new Set(ns);
-  const found = range(0, ns.length).find((n) => not(prepared.has(n)));
-
-  if (found === undefined) {
-    return Math.max(...ns) + 1;
-  }
-
-  return found;
-};
+  return merge(of(TOP_OFFSET), moving$);
+}
