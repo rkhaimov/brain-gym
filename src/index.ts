@@ -1,117 +1,124 @@
-import {
-  BehaviorSubject,
-  exhaustMap,
-  filter,
-  fromEvent,
-  map,
-  mapTo,
-  merge,
-  Observable,
-  of,
-  partition,
-  scan,
-  switchMap,
-  take,
-  takeLast,
-  takeUntil,
-  tap,
-} from 'rxjs';
-import { id } from './id';
+import { renderBody, renderPoint } from './render';
+import { Point } from './point';
+import { Chart } from 'chart.js';
+import 'chart.js/auto';
 
-document.body.innerHTML = `<div>
-  It is bright new World
-  <button id='openSheet'>Open the thing</button>
-  <div id='sheet' style='position: fixed; left: 0; right: 0; bottom: 0; top: 0; transition: background-color 0.2s'>
-    <div id='sheetContent' style='background-color: white; border-radius: 10px; min-height: 100%; padding: 15px; position: relative; top: 100%; transition: top 0.2s'>
-    <div id='sheetGrab' style='width: 100px;
-    height: 10px;
-    background-color: #000;
-    border-radius: 10px;
-    margin: 0 auto 15px;'></div>
-</div>
-  </div>
-</div>`;
+renderBody();
 
-const sheet = document.querySelector('#sheet') as HTMLDivElement;
-const sheetContent = document.querySelector('#sheetContent') as HTMLDivElement;
+const points: Point[] = [
+  { x: 0, y: 500 },
+  { x: 500, y: 500 },
+  { x: 250, y: 0 },
+];
 
-const openSheet = document.querySelector('#openSheet') as HTMLButtonElement;
-const sheetGrab = document.querySelector('#sheetGrab') as HTMLDivElement;
+points.map(renderPoint('blue', 10, 1));
 
-const sheetOpened = new BehaviorSubject(false);
+// debugger
+const guess = minA2((x, y) => score(points, { x, y }));
 
-fromEvent(openSheet, 'click').pipe(mapTo(true)).subscribe(sheetOpened);
+console.log(score(points, { x: guess[0], y: guess[1] }));
 
-sheetOpened
-  .pipe(
-    tap((opened) => {
-      if (opened) {
-        sheet.style.display = 'block';
-      } else {
-        sheet.style.display = 'none';
-      }
-    }),
-    filter(id),
-    switchMap(() => {
-      const top$ = top();
+renderPoint('red', 20, 1)({ x: guess[0], y: guess[1] });
+renderPoint(
+  'brown',
+  score(points, { x: guess[0], y: guess[1] }) * 2,
+  0
+)({ x: guess[0], y: guess[1] });
 
-      return merge(grabbing(top$), closing(top$), opacity(top$));
-    })
-  )
-  .subscribe();
+// inspect();
 
-sheetOpened.pipe(filter(id));
+function minA2(f: (x0: number, x1: number) => number): [number, number] {
+  const epochs = 1_000;
 
-function grabbing(top$: Observable<number>): Observable<unknown> {
-  return top$.pipe(tap((top) => (sheetContent.style.top = `${top}px`)));
+  const epsilon = (epoch: number): number =>
+    (epochs - epoch) * Math.pow(10, -1);
+
+  let x0 = 0;
+  let x1 = 0;
+
+  for (const epoch of times(epochs)) {
+    const slopeX0 = deriv((x) => f(x, x1), x0);
+    const slopeX1 = deriv((x) => f(x0, x), x1);
+
+    x0 -= slopeX0 * epsilon(epoch);
+    x1 -= slopeX1 * epsilon(epoch);
+  }
+
+  return [x0, x1];
 }
 
-function closing(top$: Observable<number>): Observable<unknown> {
-  return top$.pipe(
-    filter((top) => top === sheetContent.getBoundingClientRect().height),
-    switchMap(() => fromEvent(sheetContent, 'transitionend').pipe(take(1))),
-    tap(() => sheetOpened.next(false))
-  );
+function min(f: (x: number) => number): number {
+  const epochs = 1_000;
+
+  const epsilon = (epoch: number): number =>
+    (epochs - epoch) * Math.pow(10, -1);
+
+  let from = 0;
+
+  console.log(deriv(f, from));
+  for (const epoch of times(epochs)) {
+    const slope = deriv(f, from);
+
+    from -= slope * epsilon(epoch);
+  }
+  console.log(deriv(f, from));
+
+  return from;
 }
 
-function opacity(top$: Observable<number>): Observable<unknown> {
-  return top$.pipe(
-    map((top) => top / sheetContent.getBoundingClientRect().height),
-    tap(
-      (opacity) =>
-        (sheet.style.backgroundColor = `rgb(0 0 0 / ${
-          Math.min(1 - opacity, 0.8) * 100
-        }%)`)
-    )
-  );
+function deriv(f: (x: number) => number, at: number) {
+  const small = Math.pow(10, -2);
+
+  return (f(at + small) - f(at)) / small;
 }
 
-function top(): Observable<number> {
-  const TOP_OFFSET = 15;
+function score(points: Point[], guess: Point): number {
+  return Math.max(...points.map((point) => diff(point, guess)));
+}
 
-  const moving$ = fromEvent(sheetGrab, 'mousedown').pipe(
-    exhaustMap((): Observable<number> => {
-      const grab$ = fromEvent<MouseEvent>(sheet, 'mousemove').pipe(
-        scan((top, event) => top + event.movementY, TOP_OFFSET),
-        filter((top) => top > TOP_OFFSET),
-        takeUntil(fromEvent(sheet, 'mouseup'))
-      );
+function sum(a: number, b: number): number {
+  return a + b;
+}
 
-      const [keep$, close$] = partition(
-        grab$.pipe(takeLast(1)),
-        (top) => top < sheetContent.getBoundingClientRect().height / 2
-      );
+function diff(left: Point, right: Point): number {
+  return Math.hypot(left.x - right.x, left.y - right.y);
+}
 
-      return merge(
-        grab$,
-        keep$.pipe(mapTo(TOP_OFFSET)),
-        close$.pipe(mapTo(sheetContent.getBoundingClientRect().height))
-      );
-    })
-  );
+function times(count: number): number[] {
+  return new Array(count).fill(null).map((_, index) => index);
+}
 
-  // Reimplement using animationFrames and transform
-  document.body.offsetTop;
+function inspect() {
+  document.body.innerHTML =
+    '<canvas id="chart" width="1000" height="700"></canvas>';
 
-  return merge(of(TOP_OFFSET), moving$);
+  const steps = 50;
+
+  new Chart(document.querySelector('#chart') as HTMLCanvasElement, {
+    type: 'line',
+    data: {
+      labels: times(steps),
+      datasets: [
+        {
+          label: 'Score',
+          data: times(steps).map((proba) => score(points, { y: 0, x: proba })),
+          fill: false,
+          tension: 0.1,
+        },
+        {
+          label: 'Deriv',
+          data: times(steps).map((proba) =>
+            deriv((x) => score(points, { y: 0, x }), proba)
+          ),
+          fill: false,
+          borderColor: 'rgb(75, 192, 192)',
+          tension: 0.1,
+        },
+      ],
+    },
+    options: {
+      responsive: false,
+      maintainAspectRatio: false,
+    },
+  });
 }
