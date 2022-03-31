@@ -1,124 +1,106 @@
-import { renderBody, renderPoint } from './render';
-import { Point } from './point';
-import { Chart } from 'chart.js';
-import 'chart.js/auto';
+type Mouse = {
+  color: 'green' | 'yellow';
+  condition: 'skinny' | 'fat';
+};
 
-renderBody();
-
-const points: Point[] = [
-  { x: 0, y: 500 },
-  { x: 500, y: 500 },
-  { x: 250, y: 0 },
+const mouses: Mouse[] = [
+  { color: 'green', condition: 'fat' },
+  { color: 'green', condition: 'fat' },
+  { color: 'green', condition: 'fat' },
+  { color: 'green', condition: 'skinny' },
+  { color: 'yellow', condition: 'skinny' },
+  { color: 'yellow', condition: 'skinny' },
+  { color: 'yellow', condition: 'skinny' },
+  { color: 'yellow', condition: 'skinny' },
+  { color: 'yellow', condition: 'fat' },
 ];
 
-points.map(renderPoint('blue', 10, 1));
+type DecisionTree = DecisionLeaf | DecisionNode;
 
-// debugger
-const guess = minA2((x, y) => score(points, { x, y }));
+type DecisionLeaf = {
+  tag: 'leaf';
+  predictions: Map<Mouse['condition'], number>;
+};
 
-console.log(score(points, { x: guess[0], y: guess[1] }));
+type DecisionNode = {
+  tag: 'node';
+  paths: Map<Mouse['color'], DecisionTree>;
+};
 
-renderPoint('red', 20, 1)({ x: guess[0], y: guess[1] });
-renderPoint(
-  'brown',
-  score(points, { x: guess[0], y: guess[1] }) * 2,
-  0
-)({ x: guess[0], y: guess[1] });
+console.log(predict({ color: 'green' }, grow(mouses)));
 
-// inspect();
-
-function minA2(f: (x0: number, x1: number) => number): [number, number] {
-  const epochs = 1_000;
-
-  const epsilon = (epoch: number): number =>
-    (epochs - epoch) * Math.pow(10, -1);
-
-  let x0 = 0;
-  let x1 = 0;
-
-  for (const epoch of times(epochs)) {
-    const slopeX0 = deriv((x) => f(x, x1), x0);
-    const slopeX1 = deriv((x) => f(x0, x), x1);
-
-    x0 -= slopeX0 * epsilon(epoch);
-    x1 -= slopeX1 * epsilon(epoch);
+function predict(
+  mouse: Omit<Mouse, 'condition'>,
+  tree: DecisionTree
+): DecisionLeaf['predictions'] {
+  if (tree.tag === 'leaf') {
+    return tree.predictions;
   }
 
-  return [x0, x1];
+  return predict(mouse, tree.paths.get(mouse.color)!);
 }
 
-function min(f: (x: number) => number): number {
-  const epochs = 1_000;
-
-  const epsilon = (epoch: number): number =>
-    (epochs - epoch) * Math.pow(10, -1);
-
-  let from = 0;
-
-  console.log(deriv(f, from));
-  for (const epoch of times(epochs)) {
-    const slope = deriv(f, from);
-
-    from -= slope * epsilon(epoch);
+function grow(mouses: Mouse[]): DecisionTree {
+  if (hasFinalDecision(mouses)) {
+    return {
+      tag: 'leaf',
+      predictions: getPredictions(mouses),
+    };
   }
-  console.log(deriv(f, from));
 
-  return from;
+  const property = nextProperty(mouses);
+
+  return {
+    tag: 'node',
+    paths: map(partitionBy(property, mouses), (subject) => grow(subject)),
+  };
 }
 
-function deriv(f: (x: number) => number, at: number) {
-  const small = Math.pow(10, -2);
+function hasFinalDecision(mouses: Mouse[]): boolean {
+  if (mouses.length === 0) {
+    return true;
+  }
 
-  return (f(at + small) - f(at)) / small;
+  const sample = mouses[0];
+
+  return mouses.every((mouse) => mouse.color === sample.color);
 }
 
-function score(points: Point[], guess: Point): number {
-  return Math.max(...points.map((point) => diff(point, guess)));
+function getPredictions(mouses: Mouse[]): DecisionLeaf['predictions'] {
+  return map(
+    partitionBy('condition', mouses),
+    (group) => group.length / mouses.length
+  );
 }
 
-function sum(a: number, b: number): number {
-  return a + b;
+function nextProperty(mouses: Mouse[]): 'color' {
+  return 'color';
 }
 
-function diff(left: Point, right: Point): number {
-  return Math.hypot(left.x - right.x, left.y - right.y);
-}
+function partitionBy<TKey extends keyof Mouse>(
+  key: TKey,
+  mouses: Mouse[]
+): Map<Mouse[TKey], Mouse[]> {
+  const result: Map<Mouse[TKey], Mouse[]> = new Map();
 
-function times(count: number): number[] {
-  return new Array(count).fill(null).map((_, index) => index);
-}
+  mouses.forEach((mouse) => {
+    if (result.has(mouse[key]) === false) {
+      result.set(mouse[key], []);
+    }
 
-function inspect() {
-  document.body.innerHTML =
-    '<canvas id="chart" width="1000" height="700"></canvas>';
-
-  const steps = 50;
-
-  new Chart(document.querySelector('#chart') as HTMLCanvasElement, {
-    type: 'line',
-    data: {
-      labels: times(steps),
-      datasets: [
-        {
-          label: 'Score',
-          data: times(steps).map((proba) => score(points, { y: 0, x: proba })),
-          fill: false,
-          tension: 0.1,
-        },
-        {
-          label: 'Deriv',
-          data: times(steps).map((proba) =>
-            deriv((x) => score(points, { y: 0, x }), proba)
-          ),
-          fill: false,
-          borderColor: 'rgb(75, 192, 192)',
-          tension: 0.1,
-        },
-      ],
-    },
-    options: {
-      responsive: false,
-      maintainAspectRatio: false,
-    },
+    result.get(mouse[key])!.push(mouse);
   });
+
+  return result;
+}
+
+function map<TKey, TA, TB>(
+  collection: Map<TKey, TA>,
+  transform: (a: TA) => TB
+): Map<TKey, TB> {
+  const result = new Map<TKey, TB>();
+
+  collection.forEach((value, key) => result.set(key, transform(value)));
+
+  return result;
 }

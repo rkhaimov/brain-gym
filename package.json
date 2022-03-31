@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "webpack-cli serve",
+    "server": "ts-node src/index.ts",
     "format": "prettier --write .",
     "test": "jest --watch",
     "test:debug": "node --inspect-brk ./node_modules/jest/bin/jest.js --watch --runInBand"
@@ -26,6 +27,7 @@
     "@types/react": "^17.0.38",
     "@types/react-dom": "^17.0.11",
     "chart.js": "^3.2.1",
+    "csv-parser": "^3.0.0",
     "jest-worker": "^27.0.6",
     "lodash-es": "^4.17.21",
     "react": "^17.0.2",
