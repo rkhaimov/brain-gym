@@ -37,7 +37,7 @@ function min(f: (x: number) => number): number {
   return from;
 }
 
-export function deriv(f: (x: number) => number, at: number) {
+function deriv(f: (x: number) => number, at: number) {
   const small = Math.pow(10, -2);
 
   return (f(at + small) - f(at)) / small;

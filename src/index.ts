@@ -1,106 +1,70 @@
-type Mouse = {
-  color: 'green' | 'yellow';
-  condition: 'skinny' | 'fat';
+type Utils<TCurrent, TOriginal> = {
+  map<TNext>(t: (a: TCurrent) => TNext): Utils<TNext, TOriginal>;
+  filter(t: (a: TCurrent) => boolean): Utils<TCurrent, TOriginal>;
+  fold(): Operation<TCurrent, TOriginal>;
 };
 
-const mouses: Mouse[] = [
-  { color: 'green', condition: 'fat' },
-  { color: 'green', condition: 'fat' },
-  { color: 'green', condition: 'fat' },
-  { color: 'green', condition: 'skinny' },
-  { color: 'yellow', condition: 'skinny' },
-  { color: 'yellow', condition: 'skinny' },
-  { color: 'yellow', condition: 'skinny' },
-  { color: 'yellow', condition: 'skinny' },
-  { color: 'yellow', condition: 'fat' },
-];
+type Operation<TCurrent, TOriginal> = (
+  original: TOriginal
+) => TCurrent | undefined;
 
-type DecisionTree = DecisionLeaf | DecisionNode;
-
-type DecisionLeaf = {
-  tag: 'leaf';
-  predictions: Map<Mouse['condition'], number>;
-};
-
-type DecisionNode = {
-  tag: 'node';
-  paths: Map<Mouse['color'], DecisionTree>;
-};
-
-console.log(predict({ color: 'green' }, grow(mouses)));
-
-function predict(
-  mouse: Omit<Mouse, 'condition'>,
-  tree: DecisionTree
-): DecisionLeaf['predictions'] {
-  if (tree.tag === 'leaf') {
-    return tree.predictions;
-  }
-
-  return predict(mouse, tree.paths.get(mouse.color)!);
-}
-
-function grow(mouses: Mouse[]): DecisionTree {
-  if (hasFinalDecision(mouses)) {
-    return {
-      tag: 'leaf',
-      predictions: getPredictions(mouses),
-    };
-  }
-
-  const property = nextProperty(mouses);
-
+function createUtils<TCurrent, TOriginal>(
+  operation: Operation<TCurrent, TOriginal>,
+): Utils<TCurrent, TOriginal> {
   return {
-    tag: 'node',
-    paths: map(partitionBy(property, mouses), (subject) => grow(subject)),
+    map<TNext>(t: (a: TCurrent) => TNext): Utils<TNext, TOriginal> {
+      return createUtils<TNext, TOriginal>((original) => {
+        const prev = operation(original);
+
+        if (prev === undefined) {
+          return undefined;
+        }
+
+        return t(prev);
+      });
+    },
+    filter(p: (a: TCurrent) => boolean): Utils<TCurrent, TOriginal> {
+      return createUtils((original) => {
+        const prev = operation(original);
+
+        if (prev === undefined) {
+          return undefined;
+        }
+
+        if (p(prev)) {
+          return prev;
+        }
+
+        return undefined;
+      });
+    },
+    fold: () => operation,
   };
 }
 
-function hasFinalDecision(mouses: Mouse[]): boolean {
-  if (mouses.length === 0) {
-    return true;
-  }
-
-  const sample = mouses[0];
-
-  return mouses.every((mouse) => mouse.color === sample.color);
+function wrap<TA>(as: TA[]) {
+  return createUtils<TA, TA>((a) => a);
 }
 
-function getPredictions(mouses: Mouse[]): DecisionLeaf['predictions'] {
-  return map(
-    partitionBy('condition', mouses),
-    (group) => group.length / mouses.length
-  );
-}
+function apply<TA, TB>(as: TA[], operation: Operation<TB, TA>): TB[] {
+  return as.reduce((result, element) => {
+    const transformed = operation(element);
 
-function nextProperty(mouses: Mouse[]): 'color' {
-  return 'color';
-}
-
-function partitionBy<TKey extends keyof Mouse>(
-  key: TKey,
-  mouses: Mouse[]
-): Map<Mouse[TKey], Mouse[]> {
-  const result: Map<Mouse[TKey], Mouse[]> = new Map();
-
-  mouses.forEach((mouse) => {
-    if (result.has(mouse[key]) === false) {
-      result.set(mouse[key], []);
+    if (transformed === undefined) {
+      return result;
     }
 
-    result.get(mouse[key])!.push(mouse);
-  });
-
-  return result;
+    return [...result, transformed];
+  }, [] as TB[]);
 }
 
-function map<TKey, TA, TB>(
-  collection: Map<TKey, TA>,
-  transform: (a: TA) => TB
-): Map<TKey, TB> {
-  const result = new Map<TKey, TB>();
-
-  collection.forEach((value, key) => result.set(key, transform(value)));
-
-  return result;
-}
+console.log(
+  apply(
+    [1, 2, 3],
+    createUtils<number, number>((a) => a)
+      .map((a) => a * a)
+      .map((a) => `${a}`)
+      .filter((a) => a.includes('1'))
+      .fold()
+  )
+);
