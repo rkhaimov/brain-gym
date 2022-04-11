@@ -9,7 +9,8 @@
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "Node",
     "target": "ESNext",
-    "module": "CommonJS",
+    "module": "ESNext",
+    "resolveJsonModule": true,
     "jsx": "react"
   }
 }
