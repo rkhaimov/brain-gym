@@ -1,15 +1,30 @@
-import { InternalValidationError, ValidationError } from './core';
-import { number } from './primitives';
+import { InternalValidationError, TypeNode } from './core';
+
+type FormValidationError = { path: string; message: string };
+
+export const narrow = <TType>(tn: TypeNode<TType>, value: unknown): TType => {
+  const errors = tn.validate(value as TType);
+
+  if (errors.length === 0) {
+    return value as TType;
+  }
+
+  throw new Error(toReadableErrors(errors));
+};
+
+export const fromErrorMessage = (message: string): InternalValidationError => {
+  return { paths: [], message };
+};
 
 export const prependErrorPathWith =
   (path: InternalValidationError['paths'][number]) =>
-  (error: InternalValidationError): InternalValidationError => {
-    return { paths: [path, ...error.paths], message: error.message };
-  };
+    (error: InternalValidationError): InternalValidationError => {
+      return { paths: [path, ...error.paths], message: error.message };
+    };
 
-export const toValidationError = (
+const toFormValidationError = (
   error: InternalValidationError
-): ValidationError => {
+): FormValidationError => {
   return {
     path: toPath(error.paths),
     message: error.message,

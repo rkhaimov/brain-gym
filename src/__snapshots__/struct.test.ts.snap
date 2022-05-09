@@ -1,0 +1,56 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`list Validates and generates defaults allows to add whole object validations 1`] = `
+Array [
+  Object {
+    "message": "Not dividable by 12",
+    "paths": Array [
+      "age",
+    ],
+  },
+  Object {
+    "message": "list is empty",
+    "paths": Array [
+      "weights",
+    ],
+  },
+]
+`;
+
+exports[`list Validates and generates defaults validates with static checking 1`] = `
+Array [
+  Object {
+    "message": "not an object",
+    "paths": Array [],
+  },
+]
+`;
+
+exports[`list Validates and generates defaults validates with static checking 2`] = `
+Array [
+  Object {
+    "message": "Not a number",
+    "paths": Array [
+      "age",
+    ],
+  },
+  Object {
+    "message": "Not a list",
+    "paths": Array [
+      "weights",
+    ],
+  },
+]
+`;
+
+exports[`list Validates and generates defaults validates with static checking 3`] = `
+Array [
+  Object {
+    "message": "Not a number",
+    "paths": Array [
+      "weights",
+      2,
+    ],
+  },
+]
+`;

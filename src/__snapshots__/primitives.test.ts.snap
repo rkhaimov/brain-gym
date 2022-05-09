@@ -1,0 +1,58 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Primitive types Constraints composition allows to add additional constraints 1`] = `
+Array [
+  Object {
+    "message": "Lesser than 50",
+    "paths": Array [],
+  },
+]
+`;
+
+exports[`Primitive types Constraints composition allows to add additional constraints 2`] = `
+Array [
+  Object {
+    "message": "Not a number",
+    "paths": Array [],
+  },
+]
+`;
+
+exports[`Primitive types Constraints composition allows to add additional constraints 3`] = `
+Array [
+  Object {
+    "message": "Not a number",
+    "paths": Array [],
+  },
+  Object {
+    "message": "Lesser than 50",
+    "paths": Array [],
+  },
+]
+`;
+
+exports[`Primitive types Constraints composition throws non matching defaults error 1`] = `"Empty path: Lesser than 5"`;
+
+exports[`Primitive types Type widening primitive types can be nullable 1`] = `
+Array [
+  Object {
+    "message": "Not a number",
+    "paths": Array [],
+  },
+  Object {
+    "message": "Not nil",
+    "paths": Array [],
+  },
+]
+`;
+
+exports[`Primitive types Validates and generates defaults narrows in assertion like manner 1`] = `"Empty path: Not a number"`;
+
+exports[`Primitive types Validates and generates defaults validates with static checking 1`] = `
+Array [
+  Object {
+    "message": "Not a number",
+    "paths": Array [],
+  },
+]
+`;

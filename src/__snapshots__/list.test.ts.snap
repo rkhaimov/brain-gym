@@ -1,0 +1,36 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`list Validates and generates defaults generates defaults for composite types 1`] = `
+Array [
+  Object {
+    "message": "list is empty",
+    "paths": Array [],
+  },
+]
+`;
+
+exports[`list Validates and generates defaults validates with static checking 1`] = `
+Array [
+  Object {
+    "message": "Not a list",
+    "paths": Array [],
+  },
+]
+`;
+
+exports[`list Validates and generates defaults validates with static checking 2`] = `
+Array [
+  Object {
+    "message": "Not a number",
+    "paths": Array [
+      0,
+    ],
+  },
+  Object {
+    "message": "Not a number",
+    "paths": Array [
+      2,
+    ],
+  },
+]
+`;
