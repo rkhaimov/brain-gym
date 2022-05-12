@@ -1,5 +1,5 @@
 import { ToType, TypeNode } from '../core';
-import { fromErrorMessage, prependErrorPathWith } from '../validate';
+import { fromErrorMessage, prependErrorPathWith, validate } from '../validate';
 import {
   ContainerTypeNode,
   createContainerTypeNode,
@@ -12,7 +12,7 @@ export const list = <TChildren extends TypeNode>(
     validate: (value) => {
       if (Array.isArray(value)) {
         return value.flatMap((element, index) =>
-          tn.validate(element).map(prependErrorPathWith(index))
+          validate(tn, element).map(prependErrorPathWith(index))
         );
       }
 

@@ -1,16 +1,22 @@
+import { ValidationMessages } from 'validation-messages';
+
 export type InternalValidationError = {
   paths: Array<string | number>;
   message: string;
+  kind: keyof ValidationMessages;
+  params: ValidationMessages[keyof ValidationMessages];
 };
 
 export interface TypeNode<TType = unknown> {
   wrap(...transforms: TypeNodeOperator<this>[]): this;
 
-  clone(tn: Pick<this, 'validate' | 'defaults'>): this;
+  clone(tn: Partial<Pick<this, '__validate' | 'defaults' | 'translate'>>): this;
 
-  validate(value: TType): InternalValidationError[];
+  __validate(value: TType): InternalValidationError[];
 
   defaults(): TType;
+
+  translate(error: InternalValidationError): InternalValidationError;
 }
 
 export type TypeNodeOperator<TTypeNode extends TypeNode> = (

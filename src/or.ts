@@ -1,5 +1,6 @@
-import { TypeNode } from '../core';
-import { createTypeNode } from './createTypeNode';
+import { TypeNode } from './core';
+import { createTypeNode } from './type-node/createTypeNode';
+import { validate } from './validate';
 
 export const or = <TLeft, TRight>(
   left: TypeNode<TLeft>,
@@ -7,13 +8,13 @@ export const or = <TLeft, TRight>(
 ): TypeNode<TLeft | TRight> =>
   createTypeNode<TLeft | TRight>({
     validate: (value) => {
-      const lerrors = left.validate(value as TLeft);
+      const lerrors = validate(left, value as TLeft);
 
       if (lerrors.length === 0) {
         return [];
       }
 
-      const rerrors = right.validate(value as TRight);
+      const rerrors = validate(right, value as TRight);
 
       if (rerrors.length === 0) {
         return [];
@@ -23,9 +24,3 @@ export const or = <TLeft, TRight>(
     },
     defaults: left.defaults,
   });
-
-export const brand = <TType, TBrand extends string>(
-  tn: TypeNode<TType>,
-  brand: TBrand
-): TypeNode<TType & { __brand: TBrand }> =>
-  tn as TypeNode<TType & { __brand: TBrand }>;

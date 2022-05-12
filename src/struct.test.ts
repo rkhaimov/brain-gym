@@ -1,74 +1,102 @@
-import { struct } from './record-type-node/struct';
-import { number } from './type-node/primitives';
 import { list } from './container-type-node/list';
-import { andValidate, defaultsTo } from './operators';
-import { nonEmptyList } from './container-type-node/operators';
-import { biggerOrEqThan, dividableBy } from './type-node/operators';
-import { pickRewrite } from './record-type-node/pickRewrite';
+import { hasExactLength } from './hasExactLength';
+import { or } from './or';
+import { rewrite } from './record-type-node/HOTn';
+import { struct } from './record-type-node/struct';
+import { translateTo } from './translateTo';
+import { exact } from './type-node/types/exact';
+import { number } from './type-node/types/number';
+import { toFormValidationErrors, validate } from './validate';
 
 describe('list', () => {
   describe('Validates and generates defaults', () => {
     it('validates with static checking', () => {
       const userTn = struct({ age: number(), weights: list(number()) });
 
-      const notAnObject = '';
+      // @ts-expect-error // Static check
+      expect(validate(userTn, '')).toMatchSnapshot();
 
-      // @ts-ignore // Static check
-      expect(userTn.validate(notAnObject)).toMatchSnapshot();
+      // @ts-expect-error // Static check
+      expect(validate(userTn, {})).toMatchSnapshot();
 
-      const notAllProps = {};
+      expect(
+        validate(userTn, { age: 42, weights: [0, 1, '2'] })
+      ).toMatchSnapshot();
 
-      // @ts-ignore // Static check
-      expect(userTn.validate(notAllProps)).toMatchSnapshot();
-
-      const weightsInvalid = { age: 42, weights: [0, 1, '2'] };
-
-      // @ts-ignore // Static check
-      expect(userTn.validate(weightsInvalid)).toMatchSnapshot();
-
-      const user = { age: 42, weights: [0, 1, 2] };
-
-      expectNoErrors(userTn.validate(user));
+      expectNoErrors(validate(userTn, { age: 42, weights: [0, 1, 2] }));
     });
 
-    it('allows to add whole object validations', () => {
-      const userTn = struct({ age: number(), weights: list(number()) }).wrap(
-        andValidate((user) => {
-          if (user.age > 10) {
-            return pickRewrite(userTn, {
-              age: (tn) => tn.wrap(dividableBy(12)),
-              weights: (tn) => tn.wrap(nonEmptyList()),
-            }).validate(user);
-          }
-
-          return pickRewrite(userTn, {
-            age: (tn) => tn.wrap(biggerOrEqThan(3)),
-          }).validate(user);
+    it('able to handle or validation', () => {
+      const userTn = or(
+        struct({
+          type: exact('hr'),
+          values: list(number()).wrap(
+            hasExactLength(1),
+            translateTo({
+              hasExactLength: (size) =>
+                `List has to have size of ${size} for HR`,
+            })
+          ),
         }),
-        defaultsTo(() => ({ age: 3, weights: [] }))
+        struct({
+          type: exact('ecg'),
+          values: list(number()).wrap(
+            hasExactLength(3),
+            translateTo({
+              hasExactLength: (size) =>
+                `List has to have size of ${size} for ECG`,
+            })
+          ),
+        })
+      ).wrap(translateTo({ exact: (type) => `Type must be exact ${type}` }));
+
+      // @ts-expect-error // Static check
+      expect(validate(userTn, {})).toMatchSnapshot();
+
+      expect(
+        validate(userTn, {
+          // @ts-expect-error // Static check
+          type: '',
+        })
+      ).toMatchSnapshot();
+
+      expect(
+        validate(userTn, {
+          type: 'hr' as const,
+          values: [],
+        })
+      ).toMatchSnapshot();
+
+      expect(
+        toFormValidationErrors(
+          validate(userTn, {
+            type: 'hr' as const,
+            values: [1, 2, 3],
+          })
+        )
+      ).toMatchSnapshot();
+
+      expectNoErrors(
+        validate(userTn, {
+          type: 'hr' as const,
+          values: [1],
+        })
       );
+    });
 
-      const invalid = {
-        age: 20,
-        weights: [],
-      };
+    it('allows to rewrite validation', () => {
+      const tn = struct({
+        age: number(),
+        weight: number(),
+      }).wrap(translateTo({ number: () => 'Not a number' }));
 
-      expect(userTn.validate(invalid)).toMatchSnapshot();
+      const rtn = rewrite(tn, {
+        age: (tn) =>
+          tn.wrap(translateTo({ number: () => 'Age should be a number' })),
+      });
 
-      const valid0 = {
-        age: 10,
-        weights: [],
-      };
-
-      expectNoErrors(userTn.validate(valid0));
-
-      const valid1 = {
-        age: 12,
-        weights: [1],
-      };
-
-      expectNoErrors(userTn.validate(valid1));
-      expectNoErrors(userTn.validate(userTn.defaults()));
+      // @ts-expect-error static-check
+      expect(validate(rtn, { age: '', weight: '' })).toMatchSnapshot();
     });
   });
 });

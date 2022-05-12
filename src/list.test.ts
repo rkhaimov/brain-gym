@@ -1,38 +1,36 @@
-import { number } from './type-node/primitives';
 import { list } from './container-type-node/list';
-import { nonEmptyList } from './container-type-node/operators';
+import { defaultsMap } from './defaultsMap';
+import { hasNonZeroLength } from './hasNonZeroLength';
+import { translateTo } from './translateTo';
+import { biggerOrEqThan } from './type-node/operators/biggerOrEqThan';
+import { number } from './type-node/types/number';
+import { validate } from './validate';
 
 describe('list', () => {
   describe('Validates and generates defaults', () => {
     it('validates with static checking', () => {
       const tn = list(number());
 
-      const emptyList: number[] = [];
+      expectNoErrors(validate(tn, []));
 
-      expectNoErrors(tn.validate(emptyList));
+      expectNoErrors(validate(tn, [42]));
 
-      const numericList = [42];
+      // @ts-expect-error // Static check
+      expect(validate(tn, '42')).toMatchSnapshot();
 
-      expectNoErrors(tn.validate(numericList));
-
-      const chars = '42';
-
-      // @ts-ignore // Static check
-      expect(tn.validate(chars)).toMatchSnapshot();
-
-      const heteroList = ['42', 42, '42'];
-
-      // @ts-ignore // Static check
-      expect(tn.validate(heteroList)).toMatchSnapshot();
+      expect(validate(tn, ['42', 42, '42'])).toMatchSnapshot();
     });
 
     it('generates defaults for composite types', () => {
-      const tn = list(number()).wrap(nonEmptyList());
-      const emptyList: number[] = [];
+      const tn = list(number().wrap(biggerOrEqThan(10))).wrap(
+        hasNonZeroLength(),
+        defaultsMap((_, tn) => [tn.children().defaults()]),
+        translateTo({ biggerOrEqThan: () => 'Number is too small' })
+      );
 
-      expect(tn.validate(emptyList)).toMatchSnapshot();
-
-      expectNoErrors(tn.validate(tn.defaults()));
+      expect(validate(tn, [])).toMatchSnapshot();
+      expectNoErrors(validate(tn, tn.defaults()));
+      expect(validate(tn, [2])).toMatchSnapshot();
     });
   });
 });

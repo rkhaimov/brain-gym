@@ -3,8 +3,23 @@
 exports[`list Validates and generates defaults generates defaults for composite types 1`] = `
 Array [
   Object {
-    "message": "list is empty",
+    "kind": "hasNonZeroLength",
+    "message": "hasNonZeroLength: no params",
+    "params": undefined,
     "paths": Array [],
+  },
+]
+`;
+
+exports[`list Validates and generates defaults generates defaults for composite types 2`] = `
+Array [
+  Object {
+    "kind": "biggerOrEqThan",
+    "message": "Number is too small",
+    "params": 10,
+    "paths": Array [
+      0,
+    ],
   },
 ]
 `;
@@ -12,7 +27,9 @@ Array [
 exports[`list Validates and generates defaults validates with static checking 1`] = `
 Array [
   Object {
+    "kind": "unknown",
     "message": "Not a list",
+    "params": undefined,
     "paths": Array [],
   },
 ]
@@ -21,13 +38,17 @@ Array [
 exports[`list Validates and generates defaults validates with static checking 2`] = `
 Array [
   Object {
-    "message": "Not a number",
+    "kind": "number",
+    "message": "number: no params",
+    "params": undefined,
     "paths": Array [
       0,
     ],
   },
   Object {
-    "message": "Not a number",
+    "kind": "number",
+    "message": "number: no params",
+    "params": undefined,
     "paths": Array [
       2,
     ],

@@ -1,19 +1,30 @@
 import {
-  createRecordTypeNode,
+  createStructTypeNode,
   TNRecord,
   TypeNodeRecordToType,
-} from './createRecordTypeNode';
-import { fromErrorMessage, prependErrorPathWith } from '../validate';
+} from './createStructTypeNode';
+import {
+  fromErrorMessage,
+  fromKindAndPayload,
+  prependErrorPathWith,
+  validate,
+} from '../validate';
+
+declare module 'validation-messages' {
+  interface ValidationMessages {
+    object: void;
+  }
+}
 
 export const struct = <TRecord extends TNRecord>(record: TRecord) =>
-  createRecordTypeNode<TRecord>({
+  createStructTypeNode<TRecord>({
     validate: (value) => {
       if (typeof value !== 'object') {
-        return [fromErrorMessage('not an object')];
+        return [fromKindAndPayload('object')];
       }
 
       return Object.entries(record).flatMap(([key, tn]) =>
-        tn.validate(value[key]).map(prependErrorPathWith(key))
+        validate(tn, value[key]).map(prependErrorPathWith(key))
       );
     },
     defaults: () =>

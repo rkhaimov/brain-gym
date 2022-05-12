@@ -1,5 +1,5 @@
 import { pick as _pick } from 'lodash-es';
-import { StructTypeNode, TNRecord } from './createRecordTypeNode';
+import { StructTypeNode, TNRecord } from './createStructTypeNode';
 import { struct } from './struct';
 
 export const pick = <TRecord extends TNRecord, TKey extends keyof TRecord>(
@@ -20,13 +20,18 @@ export const extend = <TLeft extends TNRecord, TRight extends TNRecord>(
 
 export const rewrite = <TRecord extends TNRecord>(
   tn: StructTypeNode<TRecord>,
-  rewrites: RewritesOf<TRecord>
+  rewrites: Partial<RewritesOf<TRecord>>
 ): StructTypeNode<TRecord> => {
   const rewritten = Object.fromEntries(
-    Object.entries(tn.record()).map(([key, tn]) => [
-      key,
-      rewrites[key](tn as TRecord[string]),
-    ])
+    Object.entries(tn.record()).map(([key, tn]) => {
+      const rewrite = rewrites[key];
+
+      if (rewrite) {
+        return [key, rewrite(tn as TRecord[string])];
+      }
+
+      return [key, tn];
+    })
   );
 
   return struct(rewritten as unknown as TRecord);

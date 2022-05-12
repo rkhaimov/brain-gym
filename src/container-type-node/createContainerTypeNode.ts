@@ -1,28 +1,31 @@
 import { TypeNode } from '../core';
-import { narrow } from '../validate';
 
 export interface ContainerTypeNode<TType, TChildren extends TypeNode>
   extends TypeNode<TType> {
   children(): TChildren;
 }
 
-export const createContainerTypeNode = <TType, TChildren extends TypeNode>(
-  config: Pick<
-    ContainerTypeNode<TType, TChildren>,
-    'validate' | 'defaults' | 'children'
-  >
-) => {
+export const createContainerTypeNode = <
+  TType,
+  TChildren extends TypeNode
+>(config: {
+  validate: ContainerTypeNode<TType, TChildren>['__validate'];
+  defaults: ContainerTypeNode<TType, TChildren>['defaults'];
+  children: ContainerTypeNode<TType, TChildren>['children'];
+  translate?: ContainerTypeNode<TType, TChildren>['translate'];
+}) => {
   const tn: ContainerTypeNode<TType, TChildren> = {
-    validate: config.validate,
     children: config.children,
-    defaults: () => narrow(tn, config.defaults()),
+    translate: config.translate ?? ((error) => error),
+    __validate: config.validate,
+    defaults: config.defaults,
     wrap: (transform, ...transforms) =>
       transforms.reduce((last, curr) => curr(last), transform(tn)),
-    clone: ({ validate, defaults }) =>
+    clone: ({ __validate, ...and }) =>
       createContainerTypeNode({
-        validate,
-        defaults,
-        children: config.children,
+        ...config,
+        ...and,
+        validate: __validate ?? config.validate,
       }),
   };
 
