@@ -1,22 +1,22 @@
-import { ValidationMessages } from 'validation-messages';
+import { Dictionary } from './translate/dictionary';
+import { InternalValidationError } from './translate/error';
 
-export type InternalValidationError = {
-  paths: Array<string | number>;
-  message: string;
-  kind: keyof ValidationMessages;
-  params: ValidationMessages[keyof ValidationMessages];
+export type TypeNodeConfig<TType = unknown> = {
+  validate: TypeNode<TType>['__validate'];
+  defaults: TypeNode<TType>['defaults'];
+  dictionary?: TypeNode<TType>['__dictionary'];
 };
 
 export interface TypeNode<TType = unknown> {
   wrap(...transforms: TypeNodeOperator<this>[]): this;
 
-  clone(tn: Partial<Pick<this, '__validate' | 'defaults' | 'translate'>>): this;
+  defaults(): TType;
+
+  __clone(tn: Partial<TypeNodeConfig<TType>>): this;
 
   __validate(value: TType): InternalValidationError[];
 
-  defaults(): TType;
-
-  translate(error: InternalValidationError): InternalValidationError;
+  __dictionary: Dictionary;
 }
 
 export type TypeNodeOperator<TTypeNode extends TypeNode> = (

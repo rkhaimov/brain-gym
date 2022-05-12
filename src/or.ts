@@ -1,12 +1,12 @@
 import { TypeNode } from './core';
-import { createTypeNode } from './type-node/createTypeNode';
+import { createAtomicTypeNode } from './type-node/createAtomicTypeNode';
 import { validate } from './validate';
 
 export const or = <TLeft, TRight>(
   left: TypeNode<TLeft>,
   right: TypeNode<TRight>
 ): TypeNode<TLeft | TRight> =>
-  createTypeNode<TLeft | TRight>({
+  createAtomicTypeNode<TLeft | TRight>({
     validate: (value) => {
       const lerrors = validate(left, value as TLeft);
 

@@ -1,12 +1,8 @@
-import {
-  InternalValidationError,
-  ToType,
-  TypeNode,
-  TypeNodeOperator,
-} from './core';
-import { validate as _validate } from './validate';
+import { ToType, TypeNode, TypeNodeOperator } from '../core';
+import { InternalValidationError } from '../translate/error';
+import { validate as _validate } from './index';
 
-export const validateConcatMap =
+export const validateSeqMap =
   <TTypeNode extends TypeNode>(
     validate: (
       value: ToType<TTypeNode>,
@@ -14,8 +10,8 @@ export const validateConcatMap =
     ) => InternalValidationError[]
   ): TypeNodeOperator<TTypeNode> =>
   (tn) =>
-    tn.clone({
-      __validate: (value) => {
+    tn.__clone({
+      validate: (value) => {
         const errors = _validate(tn as TypeNode, value);
 
         if (errors.length === 0) {

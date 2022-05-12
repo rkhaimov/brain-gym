@@ -1,23 +1,21 @@
+import { fromErrorMessage, fromKindAndPayload, prependErrorPathWith } from '../translate/error';
 import {
-  createStructTypeNode,
-  TNRecord,
-  TypeNodeRecordToType,
-} from './createStructTypeNode';
+  createRecordTypeNode,
+  TnRecord,
+  TnRecordToType,
+} from './createRecordTypeNode';
 import {
-  fromErrorMessage,
-  fromKindAndPayload,
-  prependErrorPathWith,
   validate,
 } from '../validate';
 
-declare module 'validation-messages' {
-  interface ValidationMessages {
+declare module 'errors-meta-dictionary' {
+  interface MetaDictionary {
     object: void;
   }
 }
 
-export const struct = <TRecord extends TNRecord>(record: TRecord) =>
-  createStructTypeNode<TRecord>({
+export const struct = <TRecord extends TnRecord>(record: TRecord) =>
+  createRecordTypeNode<TRecord>({
     validate: (value) => {
       if (typeof value !== 'object') {
         return [fromKindAndPayload('object')];
@@ -30,6 +28,6 @@ export const struct = <TRecord extends TNRecord>(record: TRecord) =>
     defaults: () =>
       Object.fromEntries(
         Object.entries(record).map(([key, tn]) => [key, tn.defaults()])
-      ) as TypeNodeRecordToType<TRecord>,
+      ) as TnRecordToType<TRecord>,
     record: () => record,
   });

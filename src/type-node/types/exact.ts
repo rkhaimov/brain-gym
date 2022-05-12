@@ -1,16 +1,16 @@
 import { TypeNode } from '../../core';
-import { fromKindAndPayload } from '../../validate';
-import { createTypeNode } from '../createTypeNode';
+import { fromKindAndPayload } from '../../translate/error';
+import { createAtomicTypeNode } from '../createAtomicTypeNode';
 
-declare module 'validation-messages' {
-  interface ValidationMessages {
-    exact: string;
+declare module 'errors-meta-dictionary' {
+  interface MetaDictionary {
+    exact: unknown;
   }
 }
 
-export const exact = <TType extends string>(exactTo: TType): TypeNode<TType> =>
-  createTypeNode({
-    validate: (value) => {
+export const exact = <TType>(exactTo: TType): TypeNode<TType> =>
+  createAtomicTypeNode({
+      validate: (value) => {
       if (value === exactTo) {
         return [];
       }

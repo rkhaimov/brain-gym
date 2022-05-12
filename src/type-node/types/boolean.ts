@@ -1,21 +1,21 @@
 import { TypeNode } from '../../core';
-import { fromKindAndPayload } from '../../translate/error';
+import { fromErrorMessage, fromKindAndPayload } from '../../translate/error';
 import { createAtomicTypeNode } from '../createAtomicTypeNode';
 
 declare module 'errors-meta-dictionary' {
   interface MetaDictionary {
-    nil: void;
+    boolean: void;
   }
 }
 
-export const nil = (): TypeNode<undefined | null> =>
+export const boolean = (): TypeNode<boolean> =>
   createAtomicTypeNode({
     validate: (value) => {
-      if (value === null || value === undefined) {
+      if (typeof value === 'boolean') {
         return [];
       }
 
-      return [fromKindAndPayload('nil')];
+      return [fromKindAndPayload('boolean')];
     },
-    defaults: () => undefined,
+    defaults: () => false,
   });

@@ -1,24 +1,24 @@
 import { TypeNode, TypeNodeOperator } from '../../core';
-import { defaultsMap} from '../../defaults/defaultsMap';
+import { defaultsMap } from '../../defaults/defaultsMap';
 import { fromKindAndPayload } from '../../translate/error';
 import { validateSeqMap } from '../../validate/validateSeqMap';
 
 declare module 'errors-meta-dictionary' {
   interface MetaDictionary {
-    dividableBy: number;
+    lesserThan: number;
   }
 }
 
-export const dividableBy =
-  (factor: number): TypeNodeOperator<TypeNode<number>> =>
+export const lesserThan =
+  (than: number): TypeNodeOperator<TypeNode<number>> =>
   (tn) =>
     tn.wrap(
-      defaultsMap(() => factor),
+      defaultsMap(() => than),
       validateSeqMap((value) => {
-        if (value % factor === 0) {
+        if (value < than) {
           return [];
         }
 
-        return [fromKindAndPayload('dividableBy', factor)];
+        return [fromKindAndPayload('lesserThan', than)];
       })
     );

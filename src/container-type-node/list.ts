@@ -1,5 +1,6 @@
 import { ToType, TypeNode } from '../core';
-import { fromErrorMessage, prependErrorPathWith, validate } from '../validate';
+import { fromErrorMessage, prependErrorPathWith } from '../translate/error';
+import { validate } from '../validate';
 import {
   ContainerTypeNode,
   createContainerTypeNode,

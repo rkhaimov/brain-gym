@@ -1,10 +1,10 @@
 import { TypeNode, TypeNodeOperator } from '../../core';
-import { defaultsMap} from '../../defaultsMap';
-import { fromKindAndPayload } from '../../validate';
-import { validateConcatMap } from '../../validateConcatMap';
+import { defaultsMap} from '../../defaults/defaultsMap';
+import { fromKindAndPayload } from '../../translate/error';
+import { validateSeqMap } from '../../validate/validateSeqMap';
 
-declare module 'validation-messages' {
-  interface ValidationMessages {
+declare module 'errors-meta-dictionary' {
+  interface MetaDictionary {
     biggerOrEqThan: number;
   }
 }
@@ -14,7 +14,7 @@ export const biggerOrEqThan =
   (tn) =>
     tn.wrap(
       defaultsMap(() => than),
-      validateConcatMap((value) => {
+      validateSeqMap((value) => {
         if (value >= than) {
           return [];
         }

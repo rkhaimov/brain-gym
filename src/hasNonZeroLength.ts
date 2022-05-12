@@ -1,9 +1,9 @@
 import { TypeNode, TypeNodeOperator } from './core';
-import { fromKindAndPayload } from './validate';
-import { validateConcatMap } from './validateConcatMap';
+import { fromKindAndPayload } from './translate/error';
+import { validateSeqMap } from './validate/validateSeqMap';
 
-declare module 'validation-messages' {
-  interface ValidationMessages {
+declare module 'errors-meta-dictionary' {
+  interface MetaDictionary {
     hasNonZeroLength: void;
   }
 }
@@ -15,7 +15,7 @@ export const hasNonZeroLength =
   >(): TypeNodeOperator<TTypeNode> =>
   (tn) =>
     tn.wrap(
-      validateConcatMap((value) => {
+      validateSeqMap((value) => {
         if (value.length === 0) {
           return [fromKindAndPayload('hasNonZeroLength')];
         }

@@ -1,9 +1,9 @@
 import { TypeNode } from '../../core';
-import { fromKindAndPayload } from '../../validate';
-import { createTypeNode } from '../createTypeNode';
+import { fromKindAndPayload } from '../../translate/error';
+import { createAtomicTypeNode } from '../createAtomicTypeNode';
 
-declare module 'validation-messages' {
-  interface ValidationMessages {
+declare module 'errors-meta-dictionary' {
+  interface MetaDictionary {
     oneOf: string[];
   }
 }
@@ -11,7 +11,7 @@ declare module 'validation-messages' {
 export const oneOf = <TType extends string>(
   ...types: TType[]
 ): TypeNode<TType> =>
-  createTypeNode({
+  createAtomicTypeNode({
     validate: (value) => {
       if (types.includes(value)) {
         return [];

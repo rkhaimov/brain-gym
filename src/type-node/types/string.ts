@@ -1,15 +1,15 @@
 import { TypeNode } from '../../core';
-import { fromKindAndPayload } from '../../validate';
-import { createTypeNode } from '../createTypeNode';
+import { fromKindAndPayload } from '../../translate/error';
+import { createAtomicTypeNode } from '../createAtomicTypeNode';
 
-declare module 'validation-messages' {
-  interface ValidationMessages {
+declare module 'errors-meta-dictionary' {
+  interface MetaDictionary {
     string: void;
   }
 }
 
 export const string = (): TypeNode<string> =>
-  createTypeNode({
+  createAtomicTypeNode({
     validate: (value) => {
       if (typeof value === 'string') {
         return [];
