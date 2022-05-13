@@ -1,28 +1,29 @@
 import { Dictionary } from './translate/dictionary';
 import { InternalValidationError } from './translate/error';
 
-export type TypeNodeConfig<TType = unknown> = {
-  validate: TypeNode<TType>['__validate'];
-  defaults: TypeNode<TType>['defaults'];
-  dictionary?: TypeNode<TType>['__dictionary'];
-};
+export interface TypeNode<TType = unknown, TChildren = unknown> {
+  defaults(tn: this): TType;
 
-export interface TypeNode<TType = unknown> {
-  wrap(...transforms: TypeNodeOperator<this>[]): this;
+  validate(value: TType, tn: this): InternalValidationError[];
 
-  defaults(): TType;
+  operate(...transforms: TypeNodeOperator<this>[]): this;
 
-  __clone(tn: Partial<TypeNodeConfig<TType>>): this;
+  dictionary(): Dictionary;
 
-  __validate(value: TType): InternalValidationError[];
-
-  __dictionary: Dictionary;
+  children(): TChildren;
 }
 
 export type TypeNodeOperator<TTypeNode extends TypeNode> = (
   tn: TTypeNode
 ) => TTypeNode;
 
-export type ToType<TTN extends TypeNode> = TTN extends TypeNode<infer RType>
+export type InferType<TTN extends TypeNode> = TTN extends TypeNode<infer RType>
   ? RType
+  : never;
+
+export type InferChildren<TCTN extends TypeNode> = TCTN extends TypeNode<
+  unknown,
+  infer RChildren
+>
+  ? RChildren
   : never;

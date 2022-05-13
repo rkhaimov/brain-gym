@@ -1,23 +1,23 @@
-import { rewriteContainerWith } from '../container-type-node/HOTn';
-import { list } from '../container-type-node/list';
+import { list } from '../types/list';
 import { TypeNode } from '../core';
 import { toReadableErrors } from './error';
-import { or } from '../or';
-import { extend, rewriteRecordWith } from '../record-type-node/HOTn';
-import { struct } from '../record-type-node/struct';
-import { translateTo } from './translateTo';
-import { biggerOrEqThan } from '../type-node/operators/biggerOrEqThan';
-import { dividableBy } from '../type-node/operators/dividableBy';
-import { number } from '../type-node/types/number';
-import { string } from '../type-node/types/string';
+import { or } from '../augmentors/or';
+import { struct } from '../types/struct';
+import { translateTo } from '../operators/translateTo';
+import { greaterThan } from '../operators/greaterThan';
+import { dividableBy } from '../operators/dividableBy';
+import { number } from '../types/number';
+import { string } from '../types/string';
 import { validate } from '../validate';
+import { childrenMap } from '../operators/childrenMap';
+import { extend } from '../augmentors/extend';
 
 test('allows to provide error message for primitives', () => {
-  const tn = number().wrap(
-    biggerOrEqThan(10),
+  const tn = number().operate(
+    greaterThan(10),
     dividableBy(2),
     translateTo({
-      biggerOrEqThan: (n) => `Should be greater than ${n}`,
+      greaterThan: (n) => `Should be greater than ${n}`,
       dividableBy: (n) => `Should be dividable by ${n}`,
     })
   );
@@ -26,7 +26,7 @@ test('allows to provide error message for primitives', () => {
 
   expect(tvalidate(tn, 13)).toMatchInlineSnapshot(`"Should be dividable by 2"`);
 
-  const rtn = tn.wrap(
+  const rtn = tn.operate(
     translateTo({
       dividableBy: (n) => `Please, provide value dividable by ${n}`,
     })
@@ -36,19 +36,19 @@ test('allows to provide error message for primitives', () => {
     `"Please, provide value dividable by 2"`
   );
 
-  expect(tvalidate(tn.wrap(dividableBy(5)), 12)).toMatchInlineSnapshot(
+  expect(tvalidate(tn.operate(dividableBy(5)), 12)).toMatchInlineSnapshot(
     `"Should be dividable by 5"`
   );
 });
 
 test('allows to provide error message for containers', () => {
-  const tn = list(string()).wrap(
+  const tn = list(string()).operate(
     translateTo({ string: () => 'Provide a string' })
   );
 
   expect(tvalidate(tn, [0])).toMatchInlineSnapshot(`"[0]: Provide a string"`);
 
-  const rtn = tn.wrap(
+  const rtn = tn.operate(
     translateTo({ string: () => 'Please, provide a string' })
   );
 
@@ -58,14 +58,18 @@ test('allows to provide error message for containers', () => {
 });
 
 test('allows to provide specific error messages for container`s children', () => {
-  const tn = list(string()).wrap(
+  const tn = list(string()).operate(
     translateTo({ string: () => 'Provide a string' })
   );
 
   expect(tvalidate(tn, [0])).toMatchInlineSnapshot(`"[0]: Provide a string"`);
 
-  const rtn = rewriteContainerWith(tn, (child) =>
-    child.wrap(translateTo({ string: () => 'Please, provide a string' }))
+  const rtn = tn.operate(
+    childrenMap(() =>
+      tn
+        .children()
+        .operate(translateTo({ string: () => 'Please, provide a string' }))
+    )
   );
 
   expect(tvalidate(rtn, [0])).toMatchInlineSnapshot(
@@ -74,11 +78,11 @@ test('allows to provide specific error messages for container`s children', () =>
 });
 
 it('copies translations when extending struct', () => {
-  const left = struct({ age: number(), weight: number() }).wrap(
+  const left = struct({ age: number(), weight: number() }).operate(
     translateTo({ number: () => 'left' })
   );
 
-  const right = struct({ age: number(), weight: number() }).wrap(
+  const right = struct({ age: number(), weight: number() }).operate(
     translateTo({ number: () => 'right' })
   );
 
@@ -90,13 +94,13 @@ it('copies translations when extending struct', () => {
 
 it('copies internal translations when extending struct', () => {
   const left = struct({
-    age: number().wrap(translateTo({ number: () => 'left age' })),
-    weight: number().wrap(translateTo({ number: () => 'left weight' })),
+    age: number().operate(translateTo({ number: () => 'left age' })),
+    weight: number().operate(translateTo({ number: () => 'left weight' })),
   });
 
   const right = struct({
-    age: number().wrap(translateTo({ number: () => 'right age' })),
-    height: number().wrap(translateTo({ number: () => 'right height' })),
+    age: number().operate(translateTo({ number: () => 'right age' })),
+    height: number().operate(translateTo({ number: () => 'right height' })),
   });
 
   expect(tvalidate(extend(left, right), {})).toMatchInlineSnapshot(`
@@ -108,9 +112,11 @@ it('copies internal translations when extending struct', () => {
 
 it('external messages works like fallbacks in struct', () => {
   const tn = struct({
-    age: number().wrap(translateTo({ number: () => 'Age should be a number' })),
+    age: number().operate(
+      translateTo({ number: () => 'Age should be a number' })
+    ),
     weight: number(),
-  }).wrap(translateTo({ number: () => 'Not a number' }));
+  }).operate(translateTo({ number: () => 'Not a number' }));
 
   expect(tvalidate(tn, {})).toMatchInlineSnapshot(`
     "age: Age should be a number
@@ -120,14 +126,24 @@ it('external messages works like fallbacks in struct', () => {
 
 it('tn messages in records can be rewritten', () => {
   const tn = struct({
-    age: number().wrap(translateTo({ number: () => 'Age should be a number' })),
+    age: number().operate(
+      translateTo({ number: () => 'Age should be a number' })
+    ),
     weight: number(),
-  }).wrap(translateTo({ number: () => 'Not a number' }));
+  }).operate(translateTo({ number: () => 'Not a number' }));
 
-  const rtn = rewriteRecordWith(tn, {
-    weight: (tn) =>
-      tn.wrap(translateTo({ number: () => 'Weight should be a number' })),
-  });
+  const rtn = tn.operate(
+    childrenMap(() => {
+      const { weight, ...rest } = tn.children();
+
+      return {
+        ...rest,
+        weight: weight.operate(
+          translateTo({ number: () => 'Weight should be a number' })
+        ),
+      };
+    })
+  );
 
   expect(tvalidate(rtn, {})).toMatchInlineSnapshot(`
     "age: Age should be a number
@@ -137,15 +153,15 @@ it('tn messages in records can be rewritten', () => {
 
 it('or persist original messages and provide fallbacks', () => {
   const left = struct({
-    age: number().wrap(
-      biggerOrEqThan(0),
-      translateTo({ biggerOrEqThan: () => 'Age is too small' })
+    age: number().operate(
+      greaterThan(0),
+      translateTo({ greaterThan: () => 'Age is too small' })
     ),
   });
 
-  const right = struct({ weight: number().wrap(dividableBy(2)) });
+  const right = struct({ weight: number().operate(dividableBy(2)) });
 
-  const tn = or(left, right).wrap(
+  const tn = or(left, right).operate(
     translateTo({
       number: () => 'Not a number',
       dividableBy: (factor) => `Should be dividable by ${factor}`,

@@ -1,17 +1,18 @@
-import { list } from '../container-type-node/list';
+import { list } from '../types/list';
 import { TypeNode } from '../core';
-import { or } from '../or';
-import { struct } from '../record-type-node/struct';
+import { or } from '../augmentors/or';
+import { struct } from '../types/struct';
 import { toFormValidationErrors, toReadableErrors } from '../translate/error';
-import { brand } from '../type-node/HOT/brand';
-import { biggerOrEqThan } from '../type-node/operators/biggerOrEqThan';
-import { lesserThan } from '../type-node/operators/lesserThan';
-import { boolean } from '../type-node/types/boolean';
-import { exact } from '../type-node/types/exact';
-import { nil } from '../type-node/types/nil';
-import { number } from '../type-node/types/number';
-import { string } from '../type-node/types/string';
+import { brand } from '../augmentors/brand';
+import { greaterThan } from '../operators/greaterThan';
+import { lesserThan } from '../operators/lesserThan';
+import { boolean } from '../types/boolean';
+import { exact } from '../types/exact';
+import { nil } from '../types/nil';
+import { number } from '../types/number';
+import { string } from '../types/string';
 import { narrow, validate } from './index';
+import { tree } from '../types/tree';
 
 test('validates primitives with static checking', () => {
   const tn = number();
@@ -32,9 +33,9 @@ test('narrows in assertion like manner', () => {
 });
 
 test('allows to add additional constraints', () => {
-  const tn = number().wrap(biggerOrEqThan(50));
+  const tn = number().operate(greaterThan(50));
 
-  expect(tvalidate(tn, 20)).toMatchInlineSnapshot(`"biggerOrEqThan: 50"`);
+  expect(tvalidate(tn, 20)).toMatchInlineSnapshot(`"greaterThan: 50"`);
 
   expect(tvalidate(tn, '60')).toMatchInlineSnapshot(`"number: no params"`);
 
@@ -118,13 +119,13 @@ test('Struct errors can be converted to form compatible errors', () => {
 test('Multi field validation can be described via union types', () => {
   const adult = struct({
     name: string(),
-    age: number().wrap(biggerOrEqThan(18)),
+    age: number().operate(greaterThan(18)),
     likesAlcohol: boolean(),
   });
 
   const child = struct({
     name: string(),
-    age: number().wrap(lesserThan(18)),
+    age: number().operate(lesserThan(18)),
     likesAlcohol: exact(false),
   });
 
@@ -141,7 +142,7 @@ test('Multi field validation can be described via union types', () => {
 
   expect(tvalidate(user, { name: 'John', age: 12, likesAlcohol: true }))
     .toMatchInlineSnapshot(`
-    "age: biggerOrEqThan: 18
+    "age: greaterThan: 18
     likesAlcohol: exact: false"
   `);
 
@@ -150,6 +151,31 @@ test('Multi field validation can be described via union types', () => {
   expectNoErrors(
     validate(user, { name: 'Jane', age: 10, likesAlcohol: false })
   );
+});
+
+test('recursive structures can be validated as well', () => {
+  const tn = tree(number());
+
+  expect(tvalidate(tn, '')).toMatchInlineSnapshot(`
+    "nil: no params
+    object: no params"
+  `);
+
+  expect(tvalidate(tn, { left: '', right: false })).toMatchInlineSnapshot(`
+    "nil: no params
+    value: number: no params
+    left: nil: no params
+    left: object: no params
+    right: nil: no params
+    right: object: no params"
+  `);
+
+  expect(tvalidate(tn, { value: 0, left: null, right: {} }))
+    .toMatchInlineSnapshot(`
+    "nil: no params
+    right: nil: no params
+    right.value: number: no params"
+  `);
 });
 
 function expectNoErrors(errors: unknown[]) {
