@@ -1,10 +1,12 @@
-import { InferType, TypeNode, TypeNodeOperator } from '../core';
+import { Operator } from '../core';
+
+import { TypeNode } from '../core';
 
 export const defaultsMap =
-  <TTypeNode extends TypeNode>(
-    transform: (tn: TTypeNode) => InferType<TTypeNode>
-  ) =>
-  (tn: TTypeNode) => ({
+  <TType, TReturn extends TType>(
+    transform: (defaults: TType, tn: TypeNode<TType>) => TReturn
+  ): Operator<TType> =>
+  (tn) => ({
     ...tn,
-    defaults: transform,
+    defaults: () => transform(tn.defaults(), tn),
   });

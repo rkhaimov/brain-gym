@@ -1,22 +1,32 @@
-import { InferType, TypeNode } from '../core';
-import { fromErrorMessage, prependErrorPathWith } from '../translate/error';
+import { TypeNode } from '../core';
+import { fromKindAndPayload, prependErrorPathWith } from '../translate/error';
 import { validate } from '../validate';
-import { refine } from '../augmentors/refine';
 import { unknown } from './unknown';
+import { refineMap } from '../operators/refineMap';
+import { defaultsMap } from '../operators/defaultsMap';
 
-export const list = <TChildren extends TypeNode>(
-  children: TChildren
-): TypeNode<InferType<TChildren>[], TChildren> =>
-  refine(unknown(), {
-    validate: (value, tn) => {
+declare module 'errors-meta-dictionary' {
+  interface MetaDictionary {
+    list: void;
+  }
+}
+
+export const list = <TType>(children: TypeNode<TType>) => {
+  const tn = unknown().pipe(
+    refineMap((value: TType[]) => {
       if (Array.isArray(value)) {
         return value.flatMap((element, index) =>
-          validate(tn.children(), element).map(prependErrorPathWith(index))
+          validate(children, element).map(prependErrorPathWith(index))
         );
       }
 
-      return [fromErrorMessage('Not a list')];
-    },
-    defaults: () => [],
+      return [fromKindAndPayload('list')];
+    }),
+    defaultsMap(() => [])
+  );
+
+  return {
+    ...tn,
     children: () => children,
-  });
+  };
+};

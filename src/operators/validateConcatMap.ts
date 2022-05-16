@@ -1,21 +1,18 @@
-import { InferType, TypeNode } from '../core';
+import { Operator, TypeNode } from '../core';
 import { InternalValidationError } from '../translate/error';
 import { validate } from '../validate';
 
 export const validateConcatMap =
-  <TTypeNode extends TypeNode>(
-    also: (
-      value: InferType<TTypeNode>,
-      tn: TTypeNode
-    ) => InternalValidationError[]
-  ) =>
-  (tn: TTypeNode): TTypeNode => ({
+  <T>(
+    and: (value: T, tn: TypeNode<T>) => InternalValidationError[]
+  ): Operator<T> =>
+  (tn) => ({
     ...tn,
-    validate: (value, ctn) => {
+    validate: (value) => {
       const errors = validate(tn, value);
 
       if (errors.length === 0) {
-        return also(value as InferType<TTypeNode>, ctn);
+        return and(value, tn);
       }
 
       return errors;

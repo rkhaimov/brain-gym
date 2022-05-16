@@ -1,17 +1,10 @@
-import { TypeNode } from '../core';
+import { Operator, TypeNode } from '../core';
 
-export const unknown = (): TypeNode<unknown, never> => ({
+export const unknown = (): TypeNode => ({
+  dictionary: {},
   validate: () => [],
-  dictionary: () => {
-    return {};
-  },
-  defaults: () => {
-    throw new Error('Can not provide defaults for unknown automatically');
-  },
-  children: () => {
-    throw new Error('Atomic types do not have a child');
-  },
-  operate(...transforms) {
-    return transforms.reduce((last, curr) => curr(last), this);
+  defaults: () => undefined,
+  pipe(...transforms: Array<Operator<any, any>>) {
+    return transforms.reduce((last, transform) => transform(last), this);
   },
 });

@@ -1,9 +1,9 @@
-import { TypeNode } from '../core';
+import { Operator } from '../core';
 import { Dictionary } from '../translate/dictionary';
 
 export const translateTo =
-  (dictionary: Dictionary) =>
-  <TTypeNode extends TypeNode>(tn: TTypeNode) => ({
-    ...tn,
-    dictionary: () => ({ ...tn.dictionary(), ...dictionary }),
-  });
+  <TType>(dictionary: Dictionary): Operator<TType> =>
+    (tn) => ({
+      ...tn,
+      dictionary: { ...tn.dictionary, ...dictionary }
+    });

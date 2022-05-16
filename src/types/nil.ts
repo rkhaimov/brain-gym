@@ -1,7 +1,7 @@
-import { TypeNode } from '../core';
 import { fromKindAndPayload } from '../translate/error';
-import { refine } from '../augmentors/refine';
 import { unknown } from './unknown';
+import { refineMap } from '../operators/refineMap';
+import { defaultsMap } from '../operators/defaultsMap';
 
 declare module 'errors-meta-dictionary' {
   interface MetaDictionary {
@@ -11,14 +11,14 @@ declare module 'errors-meta-dictionary' {
 
 export type Nillable<TType = never> = TType | undefined | null;
 
-export const nil = (): TypeNode<Nillable> =>
-  refine(unknown(), {
-    validate: (value) => {
+export const nil = () =>
+  unknown().pipe(
+    refineMap((value: Nillable) => {
       if (value === null || value === undefined) {
         return [];
       }
 
       return [fromKindAndPayload('nil')];
-    },
-    defaults: () => undefined,
-  });
+    }),
+    defaultsMap(() => undefined)
+  );

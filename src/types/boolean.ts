@@ -1,7 +1,7 @@
-import { TypeNode } from '../core';
 import { fromKindAndPayload } from '../translate/error';
-import { refine } from '../augmentors/refine';
 import { unknown } from './unknown';
+import { refineMap } from '../operators/refineMap';
+import { defaultsMap } from '../operators/defaultsMap';
 
 declare module 'errors-meta-dictionary' {
   interface MetaDictionary {
@@ -9,14 +9,14 @@ declare module 'errors-meta-dictionary' {
   }
 }
 
-export const boolean = (): TypeNode<boolean> =>
-  refine(unknown(), {
-    validate: (value) => {
+export const boolean = () =>
+  unknown().pipe(
+    refineMap((value: boolean) => {
       if (typeof value === 'boolean') {
         return [];
       }
 
       return [fromKindAndPayload('boolean')];
-    },
-    defaults: () => false,
-  });
+    }),
+    defaultsMap(() => false)
+  );

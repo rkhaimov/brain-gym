@@ -1,8 +1,8 @@
 import { InferType, TypeNode } from '../core';
 import { struct } from './struct';
-import { or } from '../augmentors/or';
+import { or } from '../hot/or';
 import { nil, Nillable } from './nil';
-import { lazy } from '../lazy';
+import { lazy } from '../hot/lazy';
 
 type Tree<TElement> = Nillable<{
   value: TElement;

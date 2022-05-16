@@ -1,29 +1,26 @@
 import { Dictionary } from './translate/dictionary';
 import { InternalValidationError } from './translate/error';
 
-export interface TypeNode<TType = unknown, TChildren = unknown> {
-  defaults(tn: this): TType;
+export type TypeNode<TType = unknown> = {
+  dictionary: Dictionary;
+  pipe: Pipe<TType>;
+  validate(value: TType): InternalValidationError[];
+  defaults(): TType;
+};
 
-  validate(value: TType, tn: this): InternalValidationError[];
-
-  operate(...transforms: TypeNodeOperator<this>[]): this;
-
-  dictionary(): Dictionary;
-
-  children(): TChildren;
-}
-
-export type TypeNodeOperator<TTypeNode extends TypeNode> = (
-  tn: TTypeNode
-) => TTypeNode;
+export type Operator<TA, TB = TA> = (tn: TypeNode<TA>) => TypeNode<TB>;
 
 export type InferType<TTN extends TypeNode> = TTN extends TypeNode<infer RType>
   ? RType
   : never;
 
-export type InferChildren<TCTN extends TypeNode> = TCTN extends TypeNode<
-  unknown,
-  infer RChildren
->
-  ? RChildren
-  : never;
+type Pipe<T> = {
+  (): TypeNode<T>;
+  <A>(o1: Operator<T, A>): TypeNode<A>;
+  <A, B>(o1: Operator<T, A>, o2: Operator<A, B>): TypeNode<B>;
+  <A, B, C>(
+    o1: Operator<T, A>,
+    o2: Operator<A, B>,
+    o3: Operator<B, C>
+  ): TypeNode<C>;
+};

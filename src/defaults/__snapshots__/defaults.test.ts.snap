@@ -1,3 +1,3 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`error is thrown when defaults do not pass own rules 1`] = `"greaterThan: 5"`;
+exports[`error is thrown when defaults do not pass own rules 1`] = `"moreThan: 5"`;

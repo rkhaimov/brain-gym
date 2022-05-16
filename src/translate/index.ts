@@ -9,12 +9,12 @@ export const translate = (
     return error;
   }
 
-  const translateFromDictionary = dictionary[error.kind];
+  const fromDictionary = dictionary[error.kind];
 
-  if (translateFromDictionary) {
+  if (fromDictionary) {
     return {
       ...error,
-      message: translateFromDictionary(error.params as never),
+      message: fromDictionary(error.params as never),
     };
   }
 

@@ -1,18 +1,20 @@
 import { list } from '../types/list';
 import { TypeNode } from '../core';
-import { or } from '../augmentors/or';
+import { or } from '../hot/or';
 import { struct } from '../types/struct';
 import { toFormValidationErrors, toReadableErrors } from '../translate/error';
-import { brand } from '../augmentors/brand';
-import { greaterThan } from '../operators/greaterThan';
-import { lesserThan } from '../operators/lesserThan';
+import { brand } from '../hot/brand';
+import { moreThan } from '../operators/moreThan';
+import { lessThan } from '../operators/lessThan';
 import { boolean } from '../types/boolean';
-import { exact } from '../types/exact';
 import { nil } from '../types/nil';
 import { number } from '../types/number';
 import { string } from '../types/string';
 import { narrow, validate } from './index';
 import { tree } from '../types/tree';
+import { exact } from '../operators/exact';
+import { func } from '../types/func';
+import { defaults } from '../defaults';
 
 test('validates primitives with static checking', () => {
   const tn = number();
@@ -33,9 +35,9 @@ test('narrows in assertion like manner', () => {
 });
 
 test('allows to add additional constraints', () => {
-  const tn = number().operate(greaterThan(50));
+  const tn = number().pipe(moreThan(50));
 
-  expect(tvalidate(tn, 20)).toMatchInlineSnapshot(`"greaterThan: 50"`);
+  expect(tvalidate(tn, 20)).toMatchInlineSnapshot(`"moreThan: 50"`);
 
   expect(tvalidate(tn, '60')).toMatchInlineSnapshot(`"number: no params"`);
 
@@ -73,7 +75,7 @@ test('Container types can be validated', () => {
   expectNoErrors(validate(tn, []));
   expectNoErrors(validate(tn, [42]));
 
-  expect(tvalidate(tn, '42')).toMatchInlineSnapshot(`"Not a list"`);
+  expect(tvalidate(tn, '42')).toMatchInlineSnapshot(`"list: no params"`);
 
   expect(tvalidate(tn, ['42', 42, '42'])).toMatchInlineSnapshot(`
     "[0]: number: no params
@@ -119,14 +121,14 @@ test('Struct errors can be converted to form compatible errors', () => {
 test('Multi field validation can be described via union types', () => {
   const adult = struct({
     name: string(),
-    age: number().operate(greaterThan(18)),
+    age: number().pipe(moreThan(18)),
     likesAlcohol: boolean(),
   });
 
   const child = struct({
     name: string(),
-    age: number().operate(lesserThan(18)),
-    likesAlcohol: exact(false),
+    age: number().pipe(lessThan(18)),
+    likesAlcohol: boolean().pipe(exact(false)),
   });
 
   const user = or(adult, child);
@@ -137,12 +139,12 @@ test('Multi field validation can be described via union types', () => {
     likesAlcohol: boolean: no params
     name: string: no params
     age: number: no params
-    likesAlcohol: exact: false"
+    likesAlcohol: boolean: no params"
   `);
 
   expect(tvalidate(user, { name: 'John', age: 12, likesAlcohol: true }))
     .toMatchInlineSnapshot(`
-    "age: greaterThan: 18
+    "age: moreThan: 18
     likesAlcohol: exact: false"
   `);
 
@@ -176,6 +178,44 @@ test('recursive structures can be validated as well', () => {
     right: nil: no params
     right.value: number: no params"
   `);
+});
+
+test('func validates return values', () => {
+  const tn = func([number()], number());
+
+  expect(validate(tn, () => 'Hello' as never)).toMatchInlineSnapshot(`
+    Array [
+      Object {
+        "kind": "number",
+        "params": undefined,
+        "paths": Array [],
+      },
+    ]
+  `);
+
+  expectNoErrors(validate(tn, (a) => a * a));
+});
+
+test('func allows to create wrap functions', () => {
+  const tn = func([number()], number());
+
+  const wrapped = tn.wrap((a) => {
+    if (a > 10) {
+      return 'not supported' as never;
+    }
+
+    return a * a;
+  });
+
+  expect(wrapped(2)).toMatchInlineSnapshot(`4`);
+
+  expect(() => wrapped('2' as never)).toThrowErrorMatchingInlineSnapshot(
+    `"number: no params"`
+  );
+
+  expect(() => wrapped(20)).toThrowErrorMatchingInlineSnapshot(
+    `"number: no params"`
+  );
 });
 
 function expectNoErrors(errors: unknown[]) {

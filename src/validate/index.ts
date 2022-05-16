@@ -13,4 +13,4 @@ export const narrow = <TType>(tn: TypeNode<TType>, value: unknown): TType => {
 };
 
 export const validate = <TType>(tn: TypeNode<TType>, value: TType) =>
-  tn.validate(value, tn).map((error) => translate(error, tn.dictionary()));
+  tn.validate(value).map((error) => translate(error, tn.dictionary));

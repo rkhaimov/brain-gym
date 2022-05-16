@@ -1,14 +1,15 @@
 import { TypeNode } from '../core';
 import { validate } from '../validate';
-import { refine } from './refine';
 import { unknown } from '../types/unknown';
+import { refineMap } from '../operators/refineMap';
+import { defaultsFrom } from '../operators/defaultsFrom';
 
 export const or = <TLeft, TRight>(
   left: TypeNode<TLeft>,
   right: TypeNode<TRight>
-): TypeNode<TLeft | TRight> =>
-  refine(unknown(), {
-    validate: (value) => {
+) =>
+  unknown().pipe(
+    refineMap((value: TLeft | TRight) => {
       const lerrors = validate(left, value as TLeft);
 
       if (lerrors.length === 0) {
@@ -22,6 +23,6 @@ export const or = <TLeft, TRight>(
       }
 
       return [...lerrors, ...rerrors];
-    },
-    defaults: left.defaults,
-  });
+    }),
+    defaultsFrom(left)
+  );
