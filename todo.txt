@@ -14,4 +14,5 @@ Impl fold show rails gluing (head result)
 Impl map show right rail transform (shout)
 Impl flat show both rails gluing (parse)
 Impl exhaust errors check
+Impl list traversal. Show container swapping (head and parse)
 
