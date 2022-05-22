@@ -8,4 +8,5 @@ What exceptions they are throwing
 How to collect all exceptions
 
 Show railway approach
-Introduce left and right
+Introduce left and right, types and constructors
+
