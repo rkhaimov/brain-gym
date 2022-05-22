@@ -114,33 +114,30 @@ const parse = (n: string): Either<ParseErrors, number> => {
   return right(parseInt(n, 10));
 };
 
+enum DivideErrors {
+  ZeroProvided,
+}
+
+const divide = (n: number, factor: number): Either<DivideErrors, number> => {
+  if (factor === 0) {
+    return left(DivideErrors.ZeroProvided);
+  }
+
+  return right(n / factor);
+};
+
 const input0 = ['10', '2', '1'];
 const input1 = '12';
 
-console.log(sequenceAll([head(input0), parse(input1)]));
-
-// const magic = (input: string[]) => {
-//   return flatMap(head(input), parse);
-// };
-//
-// const result = fold(
-//   magic(['123']),
-//   (error): string => {
-//     if (error === HeadErrors.ListIsEmpty) {
-//       return 'My list is empty';
-//     }
-//
-//     if (error === ParseErrors.NotValidInt) {
-//       return 'Not valid int';
-//     }
-//
-//     return error;
-//   },
-//   (result) => {
-//     return 'Your result is ' + result;
-//   }
-// );
-//
-// console.log(result);
-
-Promise.all()
+fold(
+  flatMap(
+    sequenceAll([flatMap(head(input0), parse), parse(input1)]),
+    ([n0, n1]) => divide(n0, n1)
+  ),
+  (error) => {
+    error;
+  },
+  (result) => {
+    console.log(result);
+  }
+);
