@@ -1,31 +1,33 @@
-type ContT<A, R> = {
-  run(f: (a: A) => R): R;
-  map<B>(f: (a: A) => B): ContT<B, R>;
-  flatMap<B>(f: (a: A) => ContT<B, R>): ContT<B, R>;
+const divide = (n: number, factor: number): number => {
+  if (factor === 0) {
+    throw new Error('Can not divide by zero');
+  }
+
+  return n / factor;
 };
 
-function contT<A, R>(f: (next: (a: A) => R) => R): ContT<A, R> {
-  return {
-    run: (handle) => f(handle),
-    map: (transform) => contT((next) => f((a: A) => next(transform(a)))),
-    flatMap: (transform) =>
-      contT((next) => f((a: A) => transform(a).run(next))),
-  };
-}
+const head = <T>(ns: T[]): T => {
+  if (ns.length === 0) {
+    throw new Error('List is empty');
+  }
 
-function doubleIntCont(n: number): ContT<number, number> {
-  return contT((next) => next(n * 2));
-}
+  return ns[0];
+};
 
-function squareIntCont(n: number): ContT<number, number> {
-  return contT((next) => next(Math.pow(n, 2)));
-}
+const parse = (n: string): number => {
+  if (isNaN(parseInt(n, 10))) {
+    throw new Error('Not valid integer');
+  }
 
-doubleIntCont(10)
-  .flatMap(squareIntCont)
-  .map((n) => n * 4)
-  .run((result) => {
-    console.log(result);
+  return parseInt(n, 10);
+};
 
-    return result;
-  });
+const input0 = ['10', '2', '1'];
+const input1 = '12';
+
+const firstN = head(input0);
+const secondN = parse(input1);
+
+const parsedN = parse(firstN);
+
+const result = divide(secondN, parsedN);

@@ -1,2 +1,11 @@
-add strict types for multimethod
-implement mixins?
+divide
+parse
+head
+reciprocal
+
+Are those throwing exceptions
+What exceptions they are throwing
+How to collect all exceptions
+
+Show railway approach
+Introduce left and right
