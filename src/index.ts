@@ -47,10 +47,10 @@ const map = <TLeft, TRightA, TRightB, TResult>(
   return right(transform(either.value));
 };
 
-const flatMap = <TLeft, TRightA, TRightB, TResult>(
-  either: Either<TLeft, TRightA>,
-  transform: (value: TRightA) => Either<TLeft, TRightB>
-): Either<TLeft, TRightB> => {
+const flatMap = <TLeftA, TLeftB, TRightA, TRightB, TResult>(
+  either: Either<TLeftA, TRightA>,
+  transform: (value: TRightA) => Either<TLeftB, TRightB>
+): Either<TLeftA | TLeftB, TRightB> => {
   if (either.tag === 'left') {
     return either;
   }
@@ -58,17 +58,25 @@ const flatMap = <TLeft, TRightA, TRightB, TResult>(
   return transform(either.value);
 };
 
-const head = <T>(ns: T[]): Either<string, T> => {
+enum HeadErrors {
+  ListIsEmpty,
+}
+
+const head = <T>(ns: T[]): Either<HeadErrors, T> => {
   if (ns.length === 0) {
-    return left('List is empty');
+    return left(HeadErrors.ListIsEmpty);
   }
 
   return right(ns[0]);
 };
 
-const parse = (n: string): Either<string, number> => {
+enum ParseErrors {
+  NotValidInt,
+}
+
+const parse = (n: string): Either<ParseErrors, number> => {
   if (isNaN(parseInt(n, 10))) {
-    return left('Not valid integer');
+    return left(ParseErrors.NotValidInt);
   }
 
   return right(parseInt(n, 10));
@@ -78,4 +86,22 @@ const magic = (input: string[]) => {
   return flatMap(head(input), parse);
 };
 
-console.log(magic(['0', '1']));
+const result = fold(
+  magic(['123']),
+  (error): string => {
+    if (error === HeadErrors.ListIsEmpty) {
+      return 'My list is empty';
+    }
+
+    if (error === ParseErrors.NotValidInt) {
+      return 'Not valid int';
+    }
+
+    return error;
+  },
+  (result) => {
+    return 'Your result is ' + result;
+  }
+);
+
+console.log(result);
