@@ -24,14 +24,6 @@ function right<TValue>(value: TValue): Right<TValue> {
 
 type Either<TLeft, TRight> = Left<TLeft> | Right<TRight>;
 
-const head = <T>(ns: T[]): Either<string, T> => {
-  if (ns.length === 0) {
-    return left('List is empty');
-  }
-
-  return right(ns[0]);
-};
-
 const fold = <TLeft, TRight, TResult>(
   either: Either<TLeft, TRight>,
   onLeft: (left: TLeft) => TResult,
@@ -55,8 +47,35 @@ const map = <TLeft, TRightA, TRightB, TResult>(
   return right(transform(either.value));
 };
 
-const headShout = (input: string[]) => {
-  return map(head(input), (str) => str.toUpperCase());
+const flatMap = <TLeft, TRightA, TRightB, TResult>(
+  either: Either<TLeft, TRightA>,
+  transform: (value: TRightA) => Either<TLeft, TRightB>
+): Either<TLeft, TRightB> => {
+  if (either.tag === 'left') {
+    return either;
+  }
+
+  return transform(either.value);
 };
 
-console.log(headShout([]));
+const head = <T>(ns: T[]): Either<string, T> => {
+  if (ns.length === 0) {
+    return left('List is empty');
+  }
+
+  return right(ns[0]);
+};
+
+const parse = (n: string): Either<string, number> => {
+  if (isNaN(parseInt(n, 10))) {
+    return left('Not valid integer');
+  }
+
+  return right(parseInt(n, 10));
+};
+
+const magic = (input: string[]) => {
+  return flatMap(head(input), parse);
+};
+
+console.log(magic(['0', '1']));
