@@ -90,8 +90,55 @@ const sequenceAll = <TLeft, TRight>(
   );
 };
 
+const structSequenceAll = <
+  TLeft,
+  TRight,
+  TRecord extends Record<string, Either<TLeft, TRight>>
+>(
+  record: TRecord
+): Either<
+  Partial<Record<keyof TRecord, TLeft>>,
+  Record<keyof TRecord, TRight>
+> => {
+  const entries = Object.entries(record);
+
+  if (entries.length === 0) {
+    return right({} as Record<keyof TRecord, TRight>);
+  }
+
+  const [[hkey, heither], ...tail] = entries;
+
+  return flatMap(
+    mapLeft(heither, (error) =>
+      fold(
+        structSequenceAll<TLeft, TRight, TRecord>(
+          Object.fromEntries(tail) as TRecord
+        ),
+        (errors) =>
+          ({ ...errors, [hkey]: error } as Partial<
+            Record<keyof TRecord, TLeft>
+          >),
+        () => ({ [hkey]: error } as Partial<Record<keyof TRecord, TLeft>>)
+      )
+    ),
+    (result) =>
+      map(
+        structSequenceAll<TLeft, TRight, TRecord>(
+          Object.fromEntries(tail) as TRecord
+        ),
+        (results) =>
+          ({
+            ...results,
+            [hkey]: result,
+          } as Record<keyof TRecord, TRight>)
+      )
+  );
+
+  return left({});
+};
+
 enum HeadErrors {
-  ListIsEmpty,
+  ListIsEmpty = 'ListIsEmpty',
 }
 
 const head = <T>(ns: T[]): Either<HeadErrors, T> => {
@@ -103,7 +150,7 @@ const head = <T>(ns: T[]): Either<HeadErrors, T> => {
 };
 
 enum ParseErrors {
-  NotValidInt,
+  NotValidInt = 'NotValidInt',
 }
 
 const parse = (n: string): Either<ParseErrors, number> => {
@@ -115,7 +162,7 @@ const parse = (n: string): Either<ParseErrors, number> => {
 };
 
 enum DivideErrors {
-  ZeroProvided,
+  ZeroProvided = 'ZeroProvided',
 }
 
 const divide = (n: number, factor: number): Either<DivideErrors, number> => {
@@ -129,13 +176,20 @@ const divide = (n: number, factor: number): Either<DivideErrors, number> => {
 const input0 = ['10', '2', '1'];
 const input1 = '12';
 
+console.log(
+  structSequenceAll({
+    age: parse('2'),
+    height: parse('1'),
+  })
+);
+
 fold(
   flatMap(
     sequenceAll([flatMap(head(input0), parse), parse(input1)]),
     ([n0, n1]) => divide(n0, n1)
   ),
   (error) => {
-    error;
+    console.log(error);
   },
   (result) => {
     console.log(result);

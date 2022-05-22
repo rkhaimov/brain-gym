@@ -16,3 +16,7 @@ Impl flat show both rails gluing (parse)
 Impl exhaust errors check (add str constants to errors)
 Impl list traversal. Show container swapping (head <- parse and parse)
 
+Additional:
+Migrate error throw code (fromThrowable)
+Demonstrate traversal technic on records
+
