@@ -47,6 +47,14 @@ const map = <TLeft, TRightA, TRightB, TResult>(
   return right(transform(either.value));
 };
 
+const map2 = <TLeft, TRightA0, TRightA1, TRightB, TResult>(
+  either0: Either<TLeft, TRightA0>,
+  either1: Either<TLeft, TRightA1>,
+  transform: (a0: TRightA0, a1: TRightA1) => TRightB
+): Either<TLeft, TRightB> => {
+  return flatMap(either0, (a0) => map(either1, (a1) => transform(a0, a1)));
+};
+
 const mapLeft = <TLeftA, TLeftB, TRight, TResult>(
   either: Either<TLeftA, TRight>,
   transform: (value: TLeftA) => TLeftB
@@ -69,6 +77,20 @@ const flatMap = <TLeftA, TLeftB, TRightA, TRightB, TResult>(
   return transform(either.value);
 };
 
+const List = {
+  cons: <T>(element: T, elements: T[]): T[] => [element, ...elements],
+  from: <T>(element: T): T[] => [element],
+};
+
+const Record = {
+  cons: <T>(
+    entry: [string, T],
+    record: Record<string, T>
+  ): Record<string, T> => ({ ...record, ...Object.fromEntries([entry]) }),
+  from: <T>(entry: [string, T]): Record<string, T> =>
+    Object.fromEntries([entry]),
+};
+
 const sequenceAll = <TLeft, TRight>(
   list: Array<Either<TLeft, TRight>>
 ): Either<Array<TLeft>, Array<TRight>> => {
@@ -78,63 +100,39 @@ const sequenceAll = <TLeft, TRight>(
 
   const [head, ...tail] = list;
 
-  return flatMap(
+  return map2(
     mapLeft(head, (error) =>
       fold(
         sequenceAll(tail),
-        (errors) => [error, ...errors],
-        () => [error]
+        (errors) => List.cons(error, errors),
+        () => List.from(error)
       )
     ),
-    (result) => map(sequenceAll(tail), (results) => [result, ...results])
+    sequenceAll(tail),
+    List.cons
   );
 };
 
-const structSequenceAll = <
-  TLeft,
-  TRight,
-  TRecord extends Record<string, Either<TLeft, TRight>>
->(
-  record: TRecord
-): Either<
-  Partial<Record<keyof TRecord, TLeft>>,
-  Record<keyof TRecord, TRight>
-> => {
-  const entries = Object.entries(record);
-
-  if (entries.length === 0) {
-    return right({} as Record<keyof TRecord, TRight>);
+const recordSequenceAll = <TLeft, TRight>(
+  record: Record<string, Either<TLeft, TRight>>
+): Either<Record<string, TLeft>, Record<string, TRight>> => {
+  if (Object.entries(record).length === 0) {
+    return right({});
   }
 
-  const [[hkey, heither], ...tail] = entries;
+  const [[key, head], ...tail] = Object.entries(record);
 
-  return flatMap(
-    mapLeft(heither, (error) =>
+  return map2(
+    mapLeft(head, (error) =>
       fold(
-        structSequenceAll<TLeft, TRight, TRecord>(
-          Object.fromEntries(tail) as TRecord
-        ),
-        (errors) =>
-          ({ ...errors, [hkey]: error } as Partial<
-            Record<keyof TRecord, TLeft>
-          >),
-        () => ({ [hkey]: error } as Partial<Record<keyof TRecord, TLeft>>)
+        recordSequenceAll(Object.fromEntries(tail)),
+        (errors) => Record.cons([key, error], errors),
+        () => Record.from([key, error])
       )
     ),
-    (result) =>
-      map(
-        structSequenceAll<TLeft, TRight, TRecord>(
-          Object.fromEntries(tail) as TRecord
-        ),
-        (results) =>
-          ({
-            ...results,
-            [hkey]: result,
-          } as Record<keyof TRecord, TRight>)
-      )
+    recordSequenceAll(Object.fromEntries(tail)),
+    (result, results) => Record.cons([key, result], results)
   );
-
-  return left({});
 };
 
 enum HeadErrors {
@@ -173,15 +171,11 @@ const divide = (n: number, factor: number): Either<DivideErrors, number> => {
   return right(n / factor);
 };
 
+console.log(sequenceAll([right('0'), right('2')]));
+console.log(recordSequenceAll({ age: right('1'), height: right('2') }));
+
 const input0 = ['10', '2', '1'];
 const input1 = '12';
-
-console.log(
-  structSequenceAll({
-    age: parse('2'),
-    height: parse('1'),
-  })
-);
 
 fold(
   flatMap(
