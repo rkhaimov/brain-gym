@@ -9,4 +9,7 @@ How to collect all exceptions
 
 Show railway approach
 Introduce left and right, types and constructors
+Create head and show type propagation
+Impl fold show rails gluing
+Impl map show right rail transform
 
