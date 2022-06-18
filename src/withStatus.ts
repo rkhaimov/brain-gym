@@ -1,24 +1,23 @@
-import {
-  FlagsShownSuggestedField,
-  Point,
-  StatusFlagsShownSuggestedField,
-} from './types';
-import { intersect, points, union } from './point';
+import { Field } from './types';
+import { selectMines } from './mine';
+import { intersection } from './collection';
+import { allAsShown, selectShown } from './clicked';
+import { selectFlagged } from './flagged';
 
-export function withStatus(
-  field: FlagsShownSuggestedField,
-  clicks: Point[],
-  flags: Point[]
-): StatusFlagsShownSuggestedField {
-  if (intersect(points(clicks), field.mines).size > 0) {
+export function withStatus(field: Field): Field {
+  const mines = selectMines(field.cells);
+
+  const clickedOnMines = intersection(selectShown(field.cells), mines);
+  if (clickedOnMines.size > 0) {
     return {
       ...field,
-      shown: union(field.shown, intersect(points(clicks), field.mines)),
+      cells: allAsShown(field.cells),
       status: 'lost',
     };
   }
 
-  if (intersect(points(flags), field.mines).size === field.mines.size) {
+  const flaggedMines = intersection(selectFlagged(field.cells), mines);
+  if (flaggedMines.size === mines.size) {
     return {
       ...field,
       status: 'win',

@@ -1,67 +1,60 @@
-import { Point, StatusFlagsShownSuggestedField } from './types';
-import { hasPoint, lookupPoint } from './point';
-import { allPointsInSpace } from './allPointsInSpace';
+import { Field, Point } from './types';
+import { assert, not } from './utils';
+import { selectMines } from './mine';
+import { selectFlagged } from './flagged';
 
 export function toElement(
-  field: StatusFlagsShownSuggestedField,
+  field: Field,
   toIntractable: (cell: HTMLElement, point: Point) => HTMLElement
 ): HTMLElement {
+  const game = document.createElement('div');
+
+  const status = document.createElement('div');
+  const left = selectMines(field.cells).size - selectFlagged(field.cells).size;
+  status.innerText = `Status: ${field.status}, Mines: ${left}`;
+
+  game.appendChild(status);
+
   const container = document.createElement('div');
-
-  if (field.status === 'win') {
-    container.innerText = 'WIN';
-
-    return container;
-  }
-
-  if (field.status === 'lost') {
-    container.innerText = 'LOST';
-
-    return container;
-  }
 
   container.classList.add('container');
   container.style.gridTemplateColumns = `repeat(${field.width}, 60px)`;
 
-  const cells: HTMLElement[] = allPointsInSpace(field).map(
-    (point): HTMLElement => {
-      const cell = document.createElement('div');
+  const elements = Array.from(field.cells.entries())
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([point, cell]): HTMLElement => {
+      const element = document.createElement('div');
 
-      cell.classList.add('point');
+      element.classList.add('point');
 
-      if (hasPoint(field.flags, point)) {
-        cell.classList.add('flagged');
+      if (cell.flagged) {
+        element.classList.add('flagged');
 
-        return toIntractable(cell, point);
+        return toIntractable(element, point);
       }
 
-      if (hasPoint(field.shown, point) === false) {
-        cell.classList.add('hidden');
+      if (not(cell.shown)) {
+        element.classList.add('hidden');
 
-        return toIntractable(cell, point);
+        return toIntractable(element, point);
       }
 
-      if (hasPoint(field.mines, point)) {
-        cell.classList.add('mine');
+      if (cell.kind === 'mine') {
+        element.classList.add('mine');
 
-        return cell;
+        return element;
       }
 
-      if (hasPoint(field.suggestions, point)) {
-        cell.classList.add('suggest');
+      assert(cell.kind === 'suggest');
 
-        const suggest = lookupPoint(field.suggestions, point);
+      element.classList.add('suggest');
+      element.innerText = cell.score === 0 ? '' : `${cell.score}`;
 
-        cell.innerText = `${suggest}`;
+      return element;
+    });
 
-        return cell;
-      }
+  elements.forEach((element) => container.appendChild(element));
+  game.appendChild(container);
 
-      return cell;
-    }
-  );
-
-  cells.map((cell) => container.appendChild(cell));
-
-  return container;
+  return game;
 }

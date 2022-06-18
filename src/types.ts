@@ -1,22 +1,25 @@
-export type StatusFlagsShownSuggestedField = FlagsShownSuggestedField & {
+export type Field = Size & {
+  cells: CollectionOf<Cell>;
   status: 'playing' | 'win' | 'lost';
 };
 
-export type FlagsShownSuggestedField = ShownSuggestedField & {
-  flags: Set<Point>;
+export type CollectionOf<T> = Map<Point, T>;
+
+export type Cell = MineCell | SuggestCell;
+
+export type MineCell = ShowFlagged & {
+  kind: 'mine';
 };
 
-export type ShownSuggestedField = SuggestedField & {
-  shown: Set<Point>;
+export type SuggestCell = ShowFlagged & {
+  kind: 'suggest';
+  score: number;
 };
 
-export type SuggestedField = Field & {
-  suggestions: Map<Point, number>;
-};
-
-export type Field = Size & { mines: Set<Mine> };
+type ShowFlagged =
+  | { shown: true; flagged: false }
+  | { shown: false; flagged: boolean };
 
 export type Size = { width: number; height: number };
 
-export type Mine = Point;
 export type Point = string;

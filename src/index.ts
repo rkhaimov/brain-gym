@@ -1,16 +1,14 @@
 import { createField } from './createField';
 import './style.css';
 import { toElement } from './toElement';
-import { withSuggestions } from './withSuggestions';
-import { withShown } from './withShown';
-import { withFlags } from './withFlags';
+import { clicked } from './clicked';
+import { flagged } from './flagged';
 import { withStatus } from './withStatus';
 import { Point } from './types';
 import {
-  combineLatest,
   fromEvent,
   map,
-  mapTo,
+  merge,
   noop,
   race,
   scan,
@@ -20,55 +18,40 @@ import {
   tap,
   timer,
 } from 'rxjs';
-import { points } from './point';
+
+type Action = {
+  type: 'click' | 'flag';
+  point: Point;
+};
 
 const clicks$ = new Subject<Point>();
 const flags$ = new Subject<Point>();
 
-const field = createField({ height: 15, width: 9 });
+const FIELD = createField({ height: 9, width: 9 });
 
-combineLatest([
-  clicks$.pipe(
-    scan((clicks, click) => clicks.add(click), points([])),
-    startWith(points([]))
-  ),
-  flags$.pipe(
-    scan((flags, flag) => {
-      if (flags.has(flag)) {
-        flags.delete(flag);
-
-        return flags;
-      }
-
-      return flags.add(flag);
-    }, points([])),
-    startWith(points([]))
-  ),
-])
+merge(
+  clicks$.pipe(map((point): Action => ({ type: 'click', point }))),
+  flags$.pipe(map((point): Action => ({ type: 'flag', point })))
+)
   .pipe(
-    map(([clicks, flags]) =>
-      withStatus(
-        withFlags(
-          withShown(withSuggestions(field), Array.from(clicks)),
-          Array.from(flags)
-        ),
-        Array.from(clicks),
-        Array.from(flags)
-      )
+    scan(
+      (field, action) =>
+        action.type === 'click'
+          ? clicked(field, action.point)
+          : flagged(field, action.point),
+      FIELD
     ),
-    tap((field) => console.log(field.status)),
+    map(withStatus),
+    startWith(FIELD),
     map((field) =>
       toElement(field, (cell, point) => {
         fromEvent(cell, 'mousedown')
           .pipe(
             switchMap(() =>
               race(
-                fromEvent(cell, 'mouseup').pipe(mapTo('click')),
-                timer(500).pipe(mapTo('flag'))
+                fromEvent(cell, 'mouseup').pipe(tap(() => clicks$.next(point))),
+                timer(500).pipe(tap(() => flags$.next(point)))
               )
-            ),
-            tap((kind) =>
-              kind === 'click' ? clicks$.next(point) : flags$.next(point)
             )
           )
           .subscribe(noop);
