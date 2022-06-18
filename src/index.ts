@@ -1,36 +1,83 @@
-const head = <T>(ns: T[]): T => {
-  if (ns.length === 0) {
-    throw new Error('List is empty');
-  }
+import { createField } from './createField';
+import './style.css';
+import { toElement } from './toElement';
+import { withSuggestions } from './withSuggestions';
+import { withShown } from './withShown';
+import { withFlags } from './withFlags';
+import { withStatus } from './withStatus';
+import { Point } from './types';
+import {
+  combineLatest,
+  fromEvent,
+  map,
+  mapTo,
+  noop,
+  race,
+  scan,
+  startWith,
+  Subject,
+  switchMap,
+  tap,
+  timer,
+} from 'rxjs';
+import { points } from './point';
 
-  return ns[0];
-};
+const clicks$ = new Subject<Point>();
+const flags$ = new Subject<Point>();
 
-const parse = (n: string): number => {
-  if (isNaN(parseInt(n, 10))) {
-    throw new Error('Not a number');
-  }
+const field = createField({ height: 15, width: 9 });
 
-  return parseInt(n, 10);
-};
+combineLatest([
+  clicks$.pipe(
+    scan((clicks, click) => clicks.add(click), points([])),
+    startWith(points([]))
+  ),
+  flags$.pipe(
+    scan((flags, flag) => {
+      if (flags.has(flag)) {
+        flags.delete(flag);
 
-const divide = (n: number, factor: number): number => {
-  if (factor === 0) {
-    throw new Error('Can not divide by zero');
-  }
+        return flags;
+      }
 
-  return n / factor;
-};
+      return flags.add(flag);
+    }, points([])),
+    startWith(points([]))
+  ),
+])
+  .pipe(
+    map(([clicks, flags]) =>
+      withStatus(
+        withFlags(
+          withShown(withSuggestions(field), Array.from(clicks)),
+          Array.from(flags)
+        ),
+        Array.from(clicks),
+        Array.from(flags)
+      )
+    ),
+    tap((field) => console.log(field.status)),
+    map((field) =>
+      toElement(field, (cell, point) => {
+        fromEvent(cell, 'mousedown')
+          .pipe(
+            switchMap(() =>
+              race(
+                fromEvent(cell, 'mouseup').pipe(mapTo('click')),
+                timer(500).pipe(mapTo('flag'))
+              )
+            ),
+            tap((kind) =>
+              kind === 'click' ? clicks$.next(point) : flags$.next(point)
+            )
+          )
+          .subscribe(noop);
 
-const magic = (i0: string[], i1: string): number => {
-  const first = head(i0);
-  const n0 = parse(first);
-  const n1 = parse(i1);
-
-  return divide(n0, n1);
-};
-
-const input0 = ['10', '2', '1'];
-const input1 = '12';
-
-console.log(magic(input0, input1));
+        return cell;
+      })
+    )
+  )
+  .subscribe((element) => {
+    document.body.innerHTML = '';
+    document.body.appendChild(element);
+  });
