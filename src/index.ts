@@ -1,214 +1,145 @@
-type Exact = {
-  kind: 'exact';
-  char: string;
+// 2048
+type NaturalNumber = number & { __brand: 'NaturalNumber' };
+type Size = NaturalNumber;
+
+type Row = Cell[];
+type Field = {
+  rows: Row[];
 };
 
-type Not = {
-  kind: 'not';
-  chars: Set<string>;
+type Cell = {
+  power: NaturalNumber;
 };
 
-type Never = {
-  kind: 'never';
-};
-
-type CharGuess = Exact | Not | Never;
-type WordGuess = Map<number, CharGuess>;
-
-function createGuess(word: string, matches: number): WordGuess[] {
-  const permuted = permutations(word.length, matches);
-
-  return permuted.map((permutation): WordGuess => {
-    const exacts = permutation.map((index): [number, Exact] => [
-      index,
-      createExact(word[index]),
-    ]);
-
-    const nots = subtract(numerical(word), permutation).map(
-      (index): [number, Not] => [index, createNot(word[index])]
-    );
-
-    return new Map<number, CharGuess>([...exacts, ...nots]);
-  });
+enum MoveVector {
+  Up,
+  Right,
+  Down,
+  Left,
 }
 
-function predictMany(words: WordGuess[][]): WordGuess[] {
-  if (words.length === 0) {
-    return [];
+const field = createField(natural(3));
+const field_0 = move(field, MoveVector.Down);
+
+console.log(field.rows);
+console.log(field_0.rows);
+
+function move(field: Field, vector: MoveVector): Field {
+  return { rows: [] };
+}
+
+function rotate(rows: Row[], degrees: number): Row[] {}
+
+function combineR(left: Row, right: Row): [Row, Row] {
+  return unzip(
+    zip(left, right).map(([lcell, rcell]) => {
+      if (combinable(lcell, rcell)) {
+        return [combineC(lcell, rcell), cell(zero())];
+      }
+
+      return [lcell, rcell];
+    })
+  );
+}
+
+function combineC(left: Cell, right: Cell): Cell {
+  assert(combinable(left, right));
+
+  if (left.power === zero()) {
+    return cell(right.power);
   }
 
-  if (words.length === 1) {
-    return words[0];
+  if (right.power === zero()) {
+    return cell(left.power);
   }
 
-  const [left, ...tail] = words;
-
-  return predict(left, predictMany(tail));
+  return cell(increment(left.power));
 }
 
-function predict(left: WordGuess[], right: WordGuess[]): WordGuess[] {
-  return left
-    .flatMap((lword) =>
-      right.map((rword): [WordGuess, WordGuess] => [lword, rword])
-    )
-    .map(([lword, rword]) => combineWords(lword, rword))
-    .filter((word) => isNeverWord(word) === false);
+function combinable(left: Cell, right: Cell): boolean {
+  return (
+    left.power === right.power ||
+    left.power === zero() ||
+    right.power === zero()
+  );
 }
 
-function isNeverWord(left: WordGuess): boolean {
-  return [...left.values()].some((char) => char.kind === 'never');
+function createField(size: Size): Field {
+  return {
+    rows: times(size).map(() => times(size).map(() => createRandomCell())),
+  };
 }
 
-function combineWords(left: WordGuess, right: WordGuess): WordGuess {
-  return new Map(
-    [...left.entries()].map(([lindex, lchar]): [number, CharGuess] => [
-      lindex,
-      combineChars(lchar, right.get(lindex) as CharGuess),
+function createRandomCell(): Cell {
+  return cell(
+    sample([
+      natural(0),
+      natural(0),
+      natural(0),
+      natural(0),
+      natural(0),
+      natural(0),
+      natural(1),
+      natural(2),
     ])
   );
 }
 
-function suits(word: string, guesses: WordGuess[]): boolean {
-  return guesses.some((guess) =>
-    [...guess.entries()].every(([index, char]) => {
-      if (char.kind === 'exact') {
-        return char.char === word[index];
-      }
-
-      if (char.kind === 'not') {
-        return char.chars.has(word[index]) === false;
-      }
-
-      return false;
-    })
-  );
+function cell(power: NaturalNumber): Cell {
+  return { power };
 }
 
-function combineChars(left: CharGuess, right: CharGuess): CharGuess {
-  if (left.kind === 'never' || right.kind === 'never') {
-    return createNever();
+function zip<TElement>(
+  left: TElement[],
+  right: TElement[]
+): [TElement, TElement][] {
+  assert(left.length === right.length);
+
+  return left.map((l, index) => [l, right[index]]);
+}
+
+function unzip<TElement>(
+  list: [TElement, TElement][]
+): [TElement[], TElement[]] {
+  return [list.map(([f]) => f), list.map(([, s]) => s)];
+}
+
+function times(count: NaturalNumber): NaturalNumber[] {
+  return range(zero(), count);
+}
+
+function range(from: NaturalNumber, to: NaturalNumber): NaturalNumber[] {
+  if (from === to) {
+    return [];
   }
 
-  if (left.kind === 'exact' && right.kind === 'exact') {
-    return mergeExact(left, right);
-  }
-
-  if (left.kind === 'not' && right.kind === 'not') {
-    return mergeNot(left, right);
-  }
-
-  if (left.kind === 'not' && right.kind === 'exact') {
-    return mergeExactAndNot(right, left);
-  }
-
-  assert(left.kind === 'exact' && right.kind === 'not');
-
-  return mergeExactAndNot(left, right);
+  return [from, ...range(increment(from), to)];
 }
 
-function createExact(char: string): Exact {
-  return { char, kind: 'exact' };
+function increment(n: NaturalNumber): NaturalNumber {
+  return natural(n + 1);
 }
 
-function mergeExact(left: Exact, right: Exact): Exact | Never {
-  return left.char === right.char ? left : createNever();
+function decrement(n: NaturalNumber): NaturalNumber {
+  return natural(n - 1);
 }
 
-function createNot(char: string): Not {
-  return { kind: 'not', chars: new Set(char) };
+function zero(): NaturalNumber {
+  return natural(0);
 }
 
-function mergeNot(left: Not, right: Not): Not {
-  return { ...left, chars: new Set([...left.chars, ...right.chars]) };
+function natural(n: number): NaturalNumber {
+  return n as NaturalNumber;
 }
 
-function wordsToString(words: WordGuess[]): string {
-  return words.map(wordToString).join('\n');
+function sample<T>(list: T[]): T {
+  return list[Math.floor(Math.random() * list.length)];
 }
 
-function wordToString(word: WordGuess): string {
-  return [...word.entries()]
-    .sort(([left], [right]) => left - right)
-    .map(([, char]) => {
-      if (char.kind === 'not') {
-        return notToString(char);
-      }
-
-      if (char.kind === 'exact') {
-        return exactToString(char);
-      }
-
-      return neverToString(char);
-    })
-    .join(' | ');
-}
-
-function notToString(char: Not): string {
-  return `not: ${[...char.chars].join(', ')}`;
-}
-
-function exactToString(char: Exact): string {
-  return `exact: ${char.char}`;
-}
-
-function neverToString(char: Never): string {
-  return 'never';
-}
-
-function createNever(): Never {
-  return { kind: 'never' };
-}
-
-function mergeExactAndNot(left: Exact, right: Not): Exact | Never {
-  if (right.chars.has(left.char)) {
-    return createNever();
-  }
-
-  return left;
-}
-
-function assert<T>(condition: T): asserts condition {
+function assert(condition: unknown): asserts condition {
   if (condition) {
     return;
   }
 
-  throw new Error();
+  throw new Error('Not true');
 }
-
-function numerical(word: string): number[] {
-  return new Array(word.length).fill(null).map((_, index) => index);
-}
-
-function subtract(all: number[], ns: number[]): number[] {
-  return all.filter((element) => ns.includes(element) === false);
-}
-
-function permutations(n: number, places: number): number[][] {
-  if (places === 0) {
-    return [];
-  }
-
-  if (places === 1) {
-    return range(n).map((index) => [index]);
-  }
-
-  const prev = permutations(n, places - 1);
-
-  return prev.flatMap((permutation): number[][] =>
-    range(n)
-      .slice(permutation[permutation.length - 1] + 1)
-      .map((unvisited) => [...permutation, unvisited])
-  );
-}
-
-function range(n: number): number[] {
-  return new Array(n).fill(null).map((_, index) => index);
-}
-
-const t_0 = createGuess('osmundine', 5);
-
-const guess = predictMany([t_0]);
-
-console.log(guess.length);
-console.log(wordsToString(guess));
-console.log(suits('organzine', guess));
