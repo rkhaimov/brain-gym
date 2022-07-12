@@ -83,28 +83,16 @@ function productLPTimes(product: Product, times: number): Product {
   };
 }
 
+function productExchanges(...products: Product[]): number {
+  return products.reduce((a, b) => a + b.exchangeValue(), 0);
+}
+
 // Кажется что меновая стоимость имеет смысл только относительно другого товара
 // и не присуща товару как самостоятельной единице
 function toExchangeQuantities(left: Product, right: Product): [number, number] {
   // Ценности товаров относятся друг к другу как отношение их lp
   return [right.exchangeValue() / left.exchangeValue(), 1];
 }
-
-// 10 часов требуется на изготовление одной у е пшеницы
-const wheat = createProduct('wheat', createLaborProduct(10));
-const iron = createProduct('iron', createLaborProduct(50));
-const gold = createProduct('gold', createLaborProduct(100));
-
-// Заметим, что потреб и мен стоимости могут быть разными
-const person_0 = createPerson([wheat, 10], [gold, 5], [iron, 20]);
-
-// 10 пшено === 1 золото
-// 5 пшено === 1 железа -> 10 пшено === 2 железа ->
-// -> 10 пшено === 2 железа === 1 золото
-// Товары, в которых воплощены одинаковый кол-ва труда, имеют одинаковую ценность
-console.log(toExchangeQuantities(wheat, gold));
-console.log(toExchangeQuantities(wheat, iron));
-console.log(toExchangeQuantities(iron, gold));
 
 // * В деньгах, меновая стоимость устанавливается вручную
 function createMoney(ev: number): Product {
@@ -115,23 +103,36 @@ function createMoney(ev: number): Product {
   };
 }
 
-const money_100 = createMoney(100);
+// Рабочая сила это тоже товар, который капиталист приобретает
+// Мен стоимость раб силы есть кол-во времени затрачиваемое на её воспроизводство
+// Рабочая сила создается поддержанием жизни индивидуума
+// Итого, стоимость раб силы есть стоимость средств существования,
+// необходимых для поддержания жизни её владельца
+//
+// Отметим что сами средства сущ рабочей силы зависят от окружающей среды,
+// культуры и условий класса свободных рабочих
+function createLaborForce(...needs: Product[]): Product {
+  return createProduct(
+    'рабочая сила',
+    createLaborProduct(productExchanges(...needs))
+  );
+}
 
-// Между пшеницей на 100 марок и золотом на туже сумму нет никакой разницы или различимости
-// с точки зрения мен стоимости
-const wheat_10 = productQtyTimes(wheat, 10);
-console.log(toExchangeQuantities(money_100, gold));
-console.log(toExchangeQuantities(money_100, wheat_10));
+// Каждая потребность считается с опр периода. Для нормализации, приведем все к 1 дню
+const feed = createProduct('продовольствие', createLaborProduct(3));
+const clothes = createProduct('одежда', createLaborProduct(1));
+const fuel = createProduct('топливо', createLaborProduct(1));
+const medicine = createProduct('медицина', createLaborProduct(1));
 
-// Но с точки зрения потребления, разница может быть существенной
-console.log(person_0.useValueFor(wheat_10));
-console.log(person_0.useValueFor(gold));
+// В данном примере получаем, что для воспроизведения раб силы в 12 часов,
+// требуется 6 часов другой раб силы
+// Есть стоимость рабочей силы
+const laborForce = createLaborForce(feed, clothes, fuel, medicine);
+console.log(laborForce.exchangeValue());
 
-// Ценность товара изменяется в зависимости от производительности труда
-const fast_gold = productLPTimes(gold, 1 / 2);
-// Теперь за тот же объем золота можно обменять только 5 пшеницы вместо 10
-console.log(toExchangeQuantities(wheat, fast_gold));
+// В таком случае мы говорим что стоимость труда стоит 1 у е золота
+const fast_gold = createProduct('золото', createLaborProduct(6));
+console.log(toExchangeQuantities(fast_gold, laborForce));
 
-// Вещь, в некоторых случаях, может обладать только потреб стоимостью
-const air = createProduct('air', createLaborProduct(0));
-console.log(air.exchangeValue());
+// Предположим что на изготовление 1 у е пряжи требуется 12 часов
+const yarn = createProduct('пряжа', createLaborProduct(12));
