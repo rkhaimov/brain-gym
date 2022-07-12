@@ -25,6 +25,19 @@ function createPerson(...needs: [Product, number][]): Person {
   };
 }
 
+// Без потреб стоимости, все что у нас остается - факт того что товар это продукт труда
+// Т. е. продукт израсходования чел раб силы
+type LaborProduct = {
+  quantity(): number;
+};
+
+// 1 час равен одной единицы Общественно необходимого рабочего времени
+function createLaborProduct(hours: number): LaborProduct {
+  return {
+    quantity: () => hours,
+  };
+}
+
 // Товар
 type Product = {
   name: string;
@@ -36,46 +49,59 @@ type Product = {
   exchangeValue(): number;
 };
 
-// Кажется что меновая стоимость имеет смысл только относительно другого товара
-// и не присуща товару как самостоятельной единице
-function toExchangeQuantities(left: Product, right: Product): [number, number] {
-  // x * l = r
-  // x = r / l
-  return [right.exchangeValue() / left.exchangeValue(), 1];
-}
-
-function createProduct(name: string, ev: number): Product {
-  return {
+// Ценность товара (мен стоимость) определяется кол-вом lp рабочего
+// времени потребного на его производство
+function createProduct(name: string, lp: LaborProduct): Product {
+  const product: Product = {
     name,
-    useValue: (needs) => needs,
-    exchangeValue: () => ev,
+    useValue: (needs) => {
+      // Если вещь представляет собой мен стоимость, то также обязана быть и потреб стоимость
+      if (product.exchangeValue() > 0) {
+        assert(needs > 0);
+      }
+
+      return needs;
+    },
+    exchangeValue: () => lp.quantity(),
   };
+
+  return product;
 }
 
-function productTimes(product: Product, times: number): Product {
+function productQtyTimes(product: Product, times: number): Product {
   return {
-    name: product.name,
+    ...product,
     useValue: (needs) => needs * times,
     exchangeValue: () => product.exchangeValue() * times,
   };
 }
 
-// Пока не понятно что скрывается за этим числом
-const wheat = createProduct('wheat', 10);
-const iron = createProduct('iron', 50);
-const gold = createProduct('gold', 100);
+function productLPTimes(product: Product, times: number): Product {
+  return {
+    ...product,
+    exchangeValue: () => product.exchangeValue() * times,
+  };
+}
 
-// Заметим, что потр. и мен. стоимости могут быть разными
-const person = createPerson([wheat, 10], [gold, 5], [iron, 20]);
+// Кажется что меновая стоимость имеет смысл только относительно другого товара
+// и не присуща товару как самостоятельной единице
+function toExchangeQuantities(left: Product, right: Product): [number, number] {
+  // Ценности товаров относятся друг к другу как отношение их lp
+  return [right.exchangeValue() / left.exchangeValue(), 1];
+}
 
-// Но меновые стоимости можно вычислить без участия человека
-// Это подтверждает наличие в 10 центнерах пшена и одном центнере золота чего-то равного
+// 10 часов требуется на изготовление одной у е пшеницы
+const wheat = createProduct('wheat', createLaborProduct(10));
+const iron = createProduct('iron', createLaborProduct(50));
+const gold = createProduct('gold', createLaborProduct(100));
+
+// Заметим, что потреб и мен стоимости могут быть разными
+const person_0 = createPerson([wheat, 10], [gold, 5], [iron, 20]);
+
 // 10 пшено === 1 золото
 // 5 пшено === 1 железа -> 10 пшено === 2 железа ->
 // -> 10 пшено === 2 железа === 1 золото
-// 1. Меновые стоимости выражают нечто равное (что можно сравнивать в абсолюте)
-// 2. За меновой стоимостью должно иметься известное содержание
-// 3. Потребительская стоимость не имеет никакого значения при обмене
+// Товары, в которых воплощены одинаковый кол-ва труда, имеют одинаковую ценность
 console.log(toExchangeQuantities(wheat, gold));
 console.log(toExchangeQuantities(wheat, iron));
 console.log(toExchangeQuantities(iron, gold));
@@ -93,16 +119,19 @@ const money_100 = createMoney(100);
 
 // Между пшеницей на 100 марок и золотом на туже сумму нет никакой разницы или различимости
 // с точки зрения мен стоимости
-const wheat_10 = productTimes(wheat, 10);
+const wheat_10 = productQtyTimes(wheat, 10);
 console.log(toExchangeQuantities(money_100, gold));
 console.log(toExchangeQuantities(money_100, wheat_10));
 
 // Но с точки зрения потребления, разница может быть существенной
-console.log(person.useValueFor(wheat_10));
-console.log(person.useValueFor(gold));
+console.log(person_0.useValueFor(wheat_10));
+console.log(person_0.useValueFor(gold));
 
-// Без потреб стоимости, все что у нас остается - факт того что товар это продукт труда
-// Т. е. продукт израсходования чел раб силы
-type LaborProduct = {}
+// Ценность товара изменяется в зависимости от производительности труда
+const fast_gold = productLPTimes(gold, 1 / 2);
+// Теперь за тот же объем золота можно обменять только 5 пшеницы вместо 10
+console.log(toExchangeQuantities(wheat, fast_gold));
 
-// Move next
+// Вещь, в некоторых случаях, может обладать только потреб стоимостью
+const air = createProduct('air', createLaborProduct(0));
+console.log(air.exchangeValue());
