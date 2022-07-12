@@ -68,6 +68,17 @@ function createProduct(name: string, lp: LaborProduct): Product {
   return product;
 }
 
+function createCompositeProduct(
+  name: string,
+  lp: LaborProduct,
+  ...products: Product[]
+) {
+  return createProduct(
+    name,
+    createLaborProduct(lp.quantity() + productExchanges(...products))
+  );
+}
+
 function productQtyTimes(product: Product, times: number): Product {
   return {
     ...product,
@@ -118,21 +129,36 @@ function createLaborForce(...needs: Product[]): Product {
   );
 }
 
-// Каждая потребность считается с опр периода. Для нормализации, приведем все к 1 дню
 const feed = createProduct('продовольствие', createLaborProduct(3));
 const clothes = createProduct('одежда', createLaborProduct(1));
 const fuel = createProduct('топливо', createLaborProduct(1));
 const medicine = createProduct('медицина', createLaborProduct(1));
 
-// В данном примере получаем, что для воспроизведения раб силы в 12 часов,
-// требуется 6 часов другой раб силы
-// Есть стоимость рабочей силы
 const laborForce = createLaborForce(feed, clothes, fuel, medicine);
-console.log(laborForce.exchangeValue());
 
-// В таком случае мы говорим что стоимость труда стоит 1 у е золота
-const fast_gold = createProduct('золото', createLaborProduct(6));
-console.log(toExchangeQuantities(fast_gold, laborForce));
+const cotton = createProduct('хлопок', createLaborProduct(1));
+const cotton_10 = productQtyTimes(cotton, 10);
+// Раб время на производство средств делится на время производства данного товара (пряжи)
+// * Это называется износом товара
+const meansOfProductionUsage = createProduct(
+  'изнашивание средств производства',
+  createLaborProduct(2)
+);
 
-// Предположим что на изготовление 1 у е пряжи требуется 12 часов
-const yarn = createProduct('пряжа', createLaborProduct(12));
+// Пряжа включает труд + хлопок + износ
+const yarn = createCompositeProduct(
+  'пряжа',
+  // Рабочему требуется 12 часов, для того чтобы сделать пряжу
+  createLaborProduct(12),
+  cotton_10,
+  meansOfProductionUsage
+);
+
+// Всего в продукте заключено 24 часа
+console.log(yarn.exchangeValue());
+
+// Предположим что 12 золота включают в себя 24 рабочих часа
+const gold_12 = createProduct('золото', createLaborProduct(24));
+
+// Из чего следует что в 1 у е пряди заключено 2 раб дня или 12 золотых монет
+console.log(toExchangeQuantities(yarn, gold_12));
