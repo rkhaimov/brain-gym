@@ -6,115 +6,9 @@ function assert<T extends boolean>(condition: T): asserts condition {
   throw new Error('Assertion has failed');
 }
 
-type Person = {
-  useValueFor(product: Product): number;
-};
-
-// * Полезность существует только относительно потребностей
-function createPerson(...needs: [Product, number][]): Person {
-  return {
-    useValueFor: (product) => {
-      const found = needs.find(([p]) => p.name === product.name);
-
-      if (found) {
-        return product.useValue(found[1]);
-      }
-
-      return 0;
-    },
-  };
-}
-
-// Без потреб стоимости, все что у нас остается - факт того что товар это продукт труда
-// Т. е. продукт израсходования чел раб силы
-type LaborProduct = {
-  quantity(): number;
-};
-
-// 1 час равен одной единицы Общественно необходимого рабочего времени
-function createLaborProduct(hours: number): LaborProduct {
-  return {
-    quantity: () => hours,
-  };
-}
-
-// Товар
-type Product = {
-  name: string;
-  // Товар полезен. Полезным его делают потребительные стоимости
-  // Тело товара и есть его стоимость, т. к. не имеет смысла без последнего
-  useValue(needs: number): number;
-  // Товар можно обменять на другие товары. В таком случае потр. стоимости одного рода
-  // обмениваются на потр. стоимости другого
-  exchangeValue(): number;
-};
-
-// Ценность товара (мен стоимость) определяется кол-вом lp рабочего
-// времени потребного на его производство
-function createProduct(name: string, lp: LaborProduct): Product {
-  const product: Product = {
-    name,
-    useValue: (needs) => {
-      // Если вещь представляет собой мен стоимость, то также обязана быть и потреб стоимость
-      if (product.exchangeValue() > 0) {
-        assert(needs > 0);
-      }
-
-      return needs;
-    },
-    exchangeValue: () => lp.quantity(),
-  };
-
-  return product;
-}
-
-function createCompositeProduct(
-  name: string,
-  lp: LaborProduct,
-  ...products: Product[]
-) {
-  return createProduct(
-    name,
-    createLaborProduct(lp.quantity() + productExchanges(...products))
-  );
-}
-
-function productQtyTimes(product: Product, times: number): Product {
-  return {
-    ...product,
-    useValue: (needs) => needs * times,
-    exchangeValue: () => product.exchangeValue() * times,
-  };
-}
-
-function productLPTimes(product: Product, times: number): Product {
-  return {
-    ...product,
-    exchangeValue: () => product.exchangeValue() * times,
-  };
-}
-
-function productExchanges(...products: Product[]): number {
-  return products.reduce((a, b) => a + b.exchangeValue(), 0);
-}
-
-// Кажется что меновая стоимость имеет смысл только относительно другого товара
-// и не присуща товару как самостоятельной единице
-function toExchangeQuantities(left: Product, right: Product): [number, number] {
-  // Ценности товаров относятся друг к другу как отношение их lp
-  return [right.exchangeValue() / left.exchangeValue(), 1];
-}
-
-// * В деньгах, меновая стоимость устанавливается вручную
-function createMoney(ev: number): Product {
-  return {
-    name: 'money',
-    useValue: () => 0,
-    exchangeValue: () => ev,
-  };
-}
-
 // Рабочая сила это тоже товар, который капиталист приобретает
+type LaborForce = Product;
+
 // Мен стоимость раб силы есть кол-во времени затрачиваемое на её воспроизводство
 // Рабочая сила создается поддержанием жизни индивидуума
 // Итого, стоимость раб силы есть стоимость средств существования,
@@ -122,43 +16,153 @@ function createMoney(ev: number): Product {
 //
 // Отметим что сами средства сущ рабочей силы зависят от окружающей среды,
 // культуры и условий класса свободных рабочих
-function createLaborForce(...needs: Product[]): Product {
-  return createProduct(
-    'рабочая сила',
-    createLaborProduct(productExchanges(...needs))
-  );
+function createHBLaborForce(...needs: Product[]): LaborForce {
+  // 1 час равен одной единицы Общественно необходимого рабочего времени
+  // * 12 часов есть один раб день
+  const hoursInDay = 12;
+
+  assert(productsJoinMany(...needs).exchangeValue() <= hoursInDay);
+
+  return {
+    name: 'Труд',
+    exchangeValue: () => hoursInDay,
+  };
 }
 
-const feed = createProduct('продовольствие', createLaborProduct(3));
-const clothes = createProduct('одежда', createLaborProduct(1));
-const fuel = createProduct('топливо', createLaborProduct(1));
-const medicine = createProduct('медицина', createLaborProduct(1));
+function createLaborForceFromEV(ev: number): LaborForce {
+  return {
+    name: 'Труд',
+    exchangeValue: () => ev,
+  };
+}
 
-const laborForce = createLaborForce(feed, clothes, fuel, medicine);
+// Товар
+type Product = {
+  name: string;
+  // Товар можно обменять на другие товары. В таком случае потр. стоимости одного рода
+  // обмениваются на потр. стоимости другого
+  exchangeValue(): number;
+};
 
-const cotton = createProduct('хлопок', createLaborProduct(1));
-const cotton_10 = productQtyTimes(cotton, 10);
-// Раб время на производство средств делится на время производства данного товара (пряжи)
-// * Это называется износом товара
-const meansOfProductionUsage = createProduct(
-  'изнашивание средств производства',
-  createLaborProduct(2)
+// Ценность товара (мен стоимость) определяется кол-вом lp рабочего
+// времени потребного на его производство
+function createProduct(name: string, lp: LaborForce): Product {
+  return {
+    name,
+    exchangeValue: () => lp.exchangeValue(),
+  };
+}
+
+function createCompositeProduct(
+  name: string,
+  lp: LaborForce,
+  ...products: Product[]
+) {
+  return createProduct(name, productsJoinMany(lp, ...products));
+}
+
+function productsJoin(left: Product, right: Product): Product {
+  return {
+    name: left.name + ' & ' + right.name,
+    exchangeValue: () => left.exchangeValue() + right.exchangeValue(),
+  };
+}
+
+function productTimesH(product: Product, times: number): Product {
+  return {
+    ...product,
+    name: `(${product.name})x${times}`,
+    exchangeValue: () => product.exchangeValue() * times,
+  };
+}
+
+function productsJoinMany(...products: Product[]): Product {
+  return products.reduce((a, b) => productsJoin(a, b));
+}
+
+// Кажется что меновая стоимость имеет смысл только относительно другого товара
+// и не присуща товару как самостоятельной единице
+function toExchangeQuantities(left: Product, right: Product): number {
+  // Ценности товаров относятся друг к другу как отношение их lp
+  return right.exchangeValue() / left.exchangeValue();
+}
+
+// * В деньгах, меновая стоимость устанавливается вручную
+function createMoney(ev: number): Product {
+  return {
+    name: 'money',
+    exchangeValue: () => ev,
+  };
+}
+
+const gold = createProduct('золото', createLaborForceFromEV(2));
+// Предположим: в одной марке заключено 2 раб часа
+console.log(gold.exchangeValue());
+
+// Сырье для воспроизводства труда
+const feed = createProduct('продовольствие', createLaborForceFromEV(3));
+const clothes = createProduct('одежда', createLaborForceFromEV(1));
+const fuel = createProduct('топливо', createLaborForceFromEV(1));
+const medicine = createProduct('медицина', createLaborForceFromEV(1));
+const salary = productsJoinMany(feed, clothes, fuel, medicine);
+
+const lf = createHBLaborForce(feed, clothes, fuel, medicine);
+
+// Для воспроизведения раб силы требуется 3 марки
+console.log(toExchangeQuantities(gold, salary));
+// 3 марки воспроизводят труд в 12 часов или 6 марок!
+// Где 3 марки доп марки и есть прибавочная стоимость
+console.log(toExchangeQuantities(gold, lf));
+
+const mpu = createProduct('износ', createLaborForceFromEV(2));
+const cotton_10 = productTimesH(
+  createProduct('хлопок', createLaborForceFromEV(1)),
+  10
 );
 
-// Пряжа включает труд + хлопок + износ
-const yarn = createCompositeProduct(
+const cotton_per_hour = productTimesH(cotton_10, 1 / 12);
+const mpu_per_hour = productTimesH(mpu, 1 / 12);
+const salary_per_hour = productTimesH(salary, 1 / 12);
+const lf_per_hour = productTimesH(lf, 1 / 12);
+
+// В час работник производит
+const yarn_per_hour = createCompositeProduct(
   'пряжа',
-  // Рабочему требуется 12 часов, для того чтобы сделать пряжу
-  createLaborProduct(12),
-  cotton_10,
-  meansOfProductionUsage
+  lf_per_hour,
+  cotton_per_hour,
+  mpu_per_hour
 );
 
-// Всего в продукте заключено 24 часа
-console.log(yarn.exchangeValue());
+// В час капиталист платит
+console.log(
+  productsJoinMany(
+    salary_per_hour,
+    cotton_per_hour,
+    mpu_per_hour
+  ).exchangeValue()
+);
 
-// Предположим что 12 золота включают в себя 24 рабочих часа
-const gold_12 = createProduct('золото', createLaborProduct(24));
+// В час капиталист получает
+// где 1 час труда включен в сырье и износ
+// и 1 час труда есть работа человека из которой оплачивается только половина
+console.log(yarn_per_hour.exchangeValue());
 
-// Из чего следует что в 1 у е пряди заключено 2 раб дня или 12 золотых монет
-console.log(toExchangeQuantities(yarn, gold_12));
+// Рабочий день считается рабочим если по итогу 12 часов получается
+const yarn_day = productTimesH(yarn_per_hour, 12);
+console.log(yarn_day.exchangeValue());
+
+// Или 12 марок
+console.log(toExchangeQuantities(gold, yarn_day));
+
+// Но капиталист заплатит только 9 марок
+// где 3 марки и есть прибавочная стоимость, образованная трудом работника
+console.log(
+  toExchangeQuantities(
+    gold,
+    productsJoinMany(
+      productTimesH(salary_per_hour, 12),
+      productTimesH(cotton_per_hour, 12),
+      productTimesH(mpu_per_hour, 12)
+    )
+  )
+);
