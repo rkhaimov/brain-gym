@@ -2,7 +2,7 @@ export type Product = {
   id: number;
   name: string;
   price: number;
-  description: string;
+  description?: string;
 }
 
 export const products: Product[] = [
@@ -22,7 +22,6 @@ export const products: Product[] = [
     id: 3,
     name: 'Phone Standard',
     price: 299,
-    description: ''
   }
 ];
 

@@ -4,7 +4,9 @@
   <h3>
     <a [title]="product.name + ' details'">{{ product.name }}</a>
   </h3>
-  <p *ngIf="product.description">Description: {{ product.description }}</p>
+  <p *ngIf="isT(product.description)">
+    Description: {{ a(product.description) }}
+  </p>
 </div>
 
 <!--
