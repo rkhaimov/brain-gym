@@ -1,0 +1,24 @@
+<h3>Cart</h3>
+
+<p>
+  <a routerLink="/shipping">Shipping Prices</a>
+</p>
+
+<div *ngFor="let product of cart.products$ | async" class="cart-item">
+  <span>{{ product.name }}</span>
+  <span>{{ product.price | currency }}</span>
+</div>
+
+<form (ngSubmit)="onSubmit()" [formGroup]="form">
+  <div>
+    <label for="name">Name</label>
+    <input formControlName="name" id="name" type="text" />
+  </div>
+
+  <div>
+    <label for="address">Address</label>
+    <input formControlName="address" id="address" type="text" />
+  </div>
+
+  <button class="button" type="submit">Purchase</button>
+</form>
