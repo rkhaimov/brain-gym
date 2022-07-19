@@ -4,13 +4,13 @@
   <h3>
     <a [title]="product.name + ' details'">{{ product.name }}</a>
   </h3>
-  <p *ngIf="isT(product.description)">
-    Description: {{ a(product.description) }}
-  </p>
-</div>
 
-<!--
-Copyright Google LLC. All Rights Reserved.
-Use of this source code is governed by an MIT-style license that
-can be found in the LICENSE file at https://angular.io/license
--->
+  <p *ngIf="product.description">Description: {{ product.description }}</p>
+
+  <button (click)="share()" type="button">Share</button>
+
+  <app-product-alerts
+    (notify)="share()"
+    [product]="product"
+  ></app-product-alerts>
+</div>

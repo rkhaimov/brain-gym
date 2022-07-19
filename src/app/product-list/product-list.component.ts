@@ -13,19 +13,4 @@ export class ProductListComponent {
   share() {
     window.alert('The product has been shared!');
   }
-
-  isT(el: unknown): el is number {
-    return true;
-  }
-
-  a(el: number): string {
-    return '1'
-  }
 }
-
-
-/*
-Copyright Google LLC. All Rights Reserved.
-Use of this source code is governed by an MIT-style license that
-can be found in the LICENSE file at https://angular.io/license
-*/
