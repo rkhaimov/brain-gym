@@ -1,6 +1,6 @@
-<h2>Products</h2>
+<h2 class="title">Products</h2>
 
-<div *ngFor="let product of products">
+<div *ngFor="let product of product.products$ | async">
   <h3>
     <a
       [routerLink]="['/products', product.id]"

@@ -5,7 +5,6 @@ import { FormBuilder } from '@angular/forms';
 @Component({
   selector: 'app-cart',
   templateUrl: './cart.component.html',
-  styleUrls: ['./cart.component.css'],
 })
 export class CartComponent {
   form = this.builder.group({

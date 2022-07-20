@@ -1,20 +1,23 @@
 import { Component } from '@angular/core';
-import { Product, products } from '../products';
 import { ActivatedRoute } from '@angular/router';
-import { filter, map, Observable } from 'rxjs';
+import { combineLatest, filter, map, Observable } from 'rxjs';
 import { CartService } from '../cart.service';
+import { Product, ProductService } from '../product.service';
 
 @Component({
   selector: 'app-product-details',
   templateUrl: './product-details.component.html',
-  styleUrls: ['./product-details.component.css'],
 })
 export class ProductDetailsComponent {
-  constructor(private route: ActivatedRoute, public cart: CartService) {}
+  constructor(
+    private route: ActivatedRoute,
+    public cart: CartService,
+    private product: ProductService
+  ) {}
 
   get product$(): Observable<Product> {
-    return this.route.params.pipe(
-      map((params) =>
+    return combineLatest([this.route.params, this.product.products$]).pipe(
+      map(([params, products]) =>
         products.find(
           (product) => product.id === parseInt(params['productId'], 10)
         )
