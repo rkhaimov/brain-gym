@@ -8,14 +8,13 @@ import { FormBuilder } from '@angular/forms';
 })
 export class CartComponent {
   form = this.builder.group({
-    name: '',
-    address: '',
+    name: this.builder.nonNullable.control(''),
+    address: this.builder.nonNullable.control(''),
   });
 
   constructor(public cart: CartService, private builder: FormBuilder) {}
 
   onSubmit() {
-    console.log(this.form.value);
     this.cart.clear();
     this.form.reset();
   }

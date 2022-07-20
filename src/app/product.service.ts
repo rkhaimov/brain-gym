@@ -1,5 +1,5 @@
-import { Injectable, OnInit } from '@angular/core';
-import { createStorage } from './createStorage';
+import { Injectable } from '@angular/core';
+import { createStorage } from './reusables/createStorage';
 
 export type Product = {
   id: number;
