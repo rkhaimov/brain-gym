@@ -5,11 +5,11 @@ function Identity() {
   return identity;
 }
 
-export type ComposableUtils = OnDestroy | OnInit | OnChanges;
+export type Hook = OnDestroy | OnInit | OnChanges;
 
 @Identity()
 export class ComposableComponent implements OnDestroy, OnInit, OnChanges {
-  private fns: ComposableUtils[] = [];
+  private fns: Hook[] = [];
 
   ngOnInit() {
     this.fns.forEach((fn) => 'ngOnInit' in fn && fn.ngOnInit());
@@ -23,7 +23,7 @@ export class ComposableComponent implements OnDestroy, OnInit, OnChanges {
     this.fns.forEach((fn) => 'ngOnChanges' in fn && fn.ngOnChanges(changes));
   }
 
-  protected compose(...fns: ComposableUtils[]): void {
+  protected compose(...fns: Hook[]): void {
     this.fns = fns;
   }
 }
