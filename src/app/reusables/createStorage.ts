@@ -8,10 +8,10 @@ import {
 } from 'rxjs';
 
 export function createStorage<TState>(initial: TState): Storage<TState> {
-  const actions: Storage<TState>['actions'] = new Subject();
+  const updates = new Subject<(state: TState) => TState>();
   const state$ = new BehaviorSubject<TState>(initial);
 
-  actions
+  updates
     .pipe(
       startWith(identity),
       scan((state, action) => action(state), initial)
@@ -20,11 +20,11 @@ export function createStorage<TState>(initial: TState): Storage<TState> {
 
   return {
     state$: state$.asObservable(),
-    actions,
+    update: (updater) => updates.next(updater),
   };
 }
 
 type Storage<TState> = {
-  actions: Subject<(state: TState) => TState>;
   state$: Observable<TState>;
+  update(updater: (state: TState) => TState): void;
 };

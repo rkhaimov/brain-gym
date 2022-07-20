@@ -25,10 +25,10 @@ export class CartService {
   );
 
   add(product: Product): void {
-    this.storage.actions.next((products) => [...products, product]);
+    this.storage.update((products) => [...products, product]);
   }
 
   clear(): void {
-    this.storage.actions.next(() => []);
+    this.storage.update(() => []);
   }
 }

@@ -1,0 +1,10 @@
+<h1>Countdown to liftoff</h1>
+
+<div *ngIf="storage.state$ | async as timer">
+  <button (click)="start.next()" [disabled]="timer.running">Start</button>
+  <button (click)="stop.next()" [disabled]="!timer.running">Stop</button>
+
+  <h1>{{ timer.left }}</h1>
+
+  <span>{{ timer.running ? 'Running' : 'Holding' }}</span>
+</div>

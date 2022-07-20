@@ -19,6 +19,6 @@ export class ProductService {
   constructor() {
     void fetch('/assets/products.json')
       .then((response) => response.json() as unknown as Product[])
-      .then((products) => this.storage.actions.next(() => products));
+      .then((products) => this.storage.update(() => products));
   }
 }
