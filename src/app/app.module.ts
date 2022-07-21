@@ -14,6 +14,7 @@ import { ChangesComponent } from './changes/changes.component';
 import { CountdownComponent } from './countdown/countdown.component';
 import { ProjectionComponent } from './projection/projection.component';
 import { SizerComponent } from './sizer/sizer.component';
+import { MyPipe } from './my.pipe';
 
 @NgModule({
   imports: [
@@ -41,6 +42,7 @@ import { SizerComponent } from './sizer/sizer.component';
     CountdownComponent,
     ProjectionComponent,
     SizerComponent,
+    MyPipe,
   ],
   bootstrap: [AppComponent],
 })
