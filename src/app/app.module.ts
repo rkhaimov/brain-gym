@@ -15,6 +15,7 @@ import { CountdownComponent } from './countdown/countdown.component';
 import { ProjectionComponent } from './projection/projection.component';
 import { SizerComponent } from './sizer/sizer.component';
 import { MyPipe } from './my.pipe';
+import { HighlightDirective } from './highlight.directive';
 
 @NgModule({
   imports: [
@@ -43,6 +44,7 @@ import { MyPipe } from './my.pipe';
     ProjectionComponent,
     SizerComponent,
     MyPipe,
+    HighlightDirective,
   ],
   bootstrap: [AppComponent],
 })
