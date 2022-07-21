@@ -13,6 +13,7 @@ import { ShippingComponent } from './shipping/shipping.component';
 import { ChangesComponent } from './changes/changes.component';
 import { CountdownComponent } from './countdown/countdown.component';
 import { ProjectionComponent } from './projection/projection.component';
+import { SizerComponent } from './sizer/sizer.component';
 
 @NgModule({
   imports: [
@@ -39,6 +40,7 @@ import { ProjectionComponent } from './projection/projection.component';
     ChangesComponent,
     CountdownComponent,
     ProjectionComponent,
+    SizerComponent,
   ],
   bootstrap: [AppComponent],
 })

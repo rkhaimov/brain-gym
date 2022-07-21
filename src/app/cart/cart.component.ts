@@ -7,6 +7,8 @@ import { FormBuilder } from '@angular/forms';
   templateUrl: './cart.component.html',
 })
 export class CartComponent {
+  fz = 16;
+
   form = this.builder.group({
     name: this.builder.nonNullable.control(''),
     address: this.builder.nonNullable.control(''),
