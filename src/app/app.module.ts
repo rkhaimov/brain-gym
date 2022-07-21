@@ -12,6 +12,7 @@ import { CartComponent } from './cart/cart.component';
 import { ShippingComponent } from './shipping/shipping.component';
 import { ChangesComponent } from './changes/changes.component';
 import { CountdownComponent } from './countdown/countdown.component';
+import { ProjectionComponent } from './projection/projection.component';
 
 @NgModule({
   imports: [
@@ -37,6 +38,7 @@ import { CountdownComponent } from './countdown/countdown.component';
     ShippingComponent,
     ChangesComponent,
     CountdownComponent,
+    ProjectionComponent,
   ],
   bootstrap: [AppComponent],
 })
