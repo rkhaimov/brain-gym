@@ -1,18 +1,20 @@
-import { Component } from '@angular/core';
+import { Component, Input, TemplateRef } from '@angular/core';
 import { ComposableComponent } from '../reusables/ComposableComponent';
 
 @Component({
   selector: 'app-projection',
   template: `
-    <ng-template #estimateT>
-      <div>Approximately {{ estimate }} lessons ...</div>
+    <ng-template #defaultTabButtons>
+      <div class="default-tab-buttons">...</div>
     </ng-template>
-
-    <div style="background-color: red">
-      <ng-container *ngTemplateOutlet="estimateT"></ng-container>
-    </div>
+    <ng-container
+      [ngTemplateOutlet]="headerTemplate ? headerTemplate : defaultTabButtons"
+      [ngTemplateOutletContext]="{ $implicit: secret }"
+    ></ng-container>
   `,
 })
 export class ProjectionComponent extends ComposableComponent {
-  estimate = 10;
+  @Input() headerTemplate?: TemplateRef<string>;
+
+  secret = 'It is a secret!';
 }

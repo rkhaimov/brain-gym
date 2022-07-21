@@ -1,6 +1,10 @@
 <h3>Shipping Prices</h3>
 
-<app-projection></app-projection>
+<app-projection [headerTemplate]="customTabButtons">
+  <ng-template #customTabButtons let-secret>
+    <div class="custom-class">Custom! {{ secret }}</div>
+  </ng-template>
+</app-projection>
 
 <div *ngFor="let shipping of cart.shipping$ | async" class="shipping-item">
   <span>{{ shipping.type }}</span>
