@@ -3,6 +3,7 @@ import { ProductService } from '../product.service';
 import { ComposableComponent } from '../reusables/ComposableComponent';
 import { useEffect } from '../reusables/useEffect';
 import { delay, from, switchMap, tap } from 'rxjs';
+import { useObservable } from '../reusables/useObservable';
 
 @Component({
   selector: 'app-product-list',
@@ -13,7 +14,7 @@ export class ProductListComponent extends ComposableComponent {
     super();
 
     this.compose(
-      useEffect(() =>
+      useObservable(() =>
         from(fetch('/assets/products.json')).pipe(
           delay(5_000),
           switchMap((response) => response.json()),

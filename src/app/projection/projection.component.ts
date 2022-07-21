@@ -1,12 +1,14 @@
 import {
   AfterViewInit,
   Component,
-  TemplateRef,
+  Input,
+  Type,
   ViewChild,
+  ViewContainerRef,
 } from '@angular/core';
 import { ComposableComponent } from '../reusables/ComposableComponent';
 
-export interface ChildComponent {
+export interface ProjectionChildProps {
   data: string;
 }
 
@@ -23,9 +25,17 @@ export class ProjectionComponent
   extends ComposableComponent
   implements AfterViewInit
 {
-  @ViewChild('content') content!: TemplateRef<unknown>;
+  @Input() children!: Type<ProjectionChildProps>;
+  @ViewChild('content', { read: ViewContainerRef }) content?: ViewContainerRef;
 
   ngAfterViewInit() {
-    console.log(this.content);
+    if (this.content) {
+      const child = this.content.createComponent<ProjectionChildProps>(
+        this.children
+      );
+
+      child.instance.data = 'This is a Secret!';
+      child.changeDetectorRef.detectChanges();
+    }
   }
 }
