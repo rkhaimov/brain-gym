@@ -1,20 +1,31 @@
-import { Component, Input, TemplateRef } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  TemplateRef,
+  ViewChild,
+} from '@angular/core';
 import { ComposableComponent } from '../reusables/ComposableComponent';
+
+export interface ChildComponent {
+  data: string;
+}
 
 @Component({
   selector: 'app-projection',
   template: `
-    <ng-template #defaultTabButtons>
-      <div class="default-tab-buttons">...</div>
-    </ng-template>
-    <ng-container
-      [ngTemplateOutlet]="headerTemplate ? headerTemplate : defaultTabButtons"
-      [ngTemplateOutletContext]="{ $implicit: secret }"
-    ></ng-container>
+    <div>
+      <h1>Here is yours dynamic component</h1>
+      <ng-template #content></ng-template>
+    </div>
   `,
 })
-export class ProjectionComponent extends ComposableComponent {
-  @Input() headerTemplate?: TemplateRef<string>;
+export class ProjectionComponent
+  extends ComposableComponent
+  implements AfterViewInit
+{
+  @ViewChild('content') content!: TemplateRef<unknown>;
 
-  secret = 'It is a secret!';
+  ngAfterViewInit() {
+    console.log(this.content);
+  }
 }
