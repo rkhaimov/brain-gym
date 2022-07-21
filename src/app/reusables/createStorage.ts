@@ -24,7 +24,7 @@ export function createStorage<TState>(initial: TState): Storage<TState> {
   };
 }
 
-type Storage<TState> = {
+export type Storage<TState> = {
   state$: Observable<TState>;
   update(updater: (state: TState) => TState): void;
 };

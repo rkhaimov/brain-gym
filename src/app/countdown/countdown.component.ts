@@ -1,23 +1,14 @@
 import { Component } from '@angular/core';
 import { ComposableComponent } from '../reusables/ComposableComponent';
-import {
-  map,
-  merge,
-  Observable,
-  of,
-  Subject,
-  switchMap,
-  take,
-  tap,
-  timer,
-  withLatestFrom,
-} from 'rxjs';
+import { map, Observable, of, Subject, take, timer } from 'rxjs';
 import { createStorage } from '../reusables/createStorage';
 import { useObservable } from '../reusables/useObservable';
+import {
+  AsyncUpdater,
+  bindAsyncUpdaters,
+} from '../reusables/bindAsyncUpdaters';
 
 type State = { left: number; running: boolean };
-
-type AsyncUpdater = (state: State) => Observable<State>;
 
 @Component({
   selector: 'app-countdown',
@@ -26,23 +17,23 @@ type AsyncUpdater = (state: State) => Observable<State>;
 export class CountdownComponent extends ComposableComponent {
   start = new Subject<void>();
   stop = new Subject<void>();
-  storage = createStorage<State>({ left: 10, running: false });
+  private storage = createStorage<State>({ left: 10, running: false });
 
   constructor() {
     super();
 
     this.compose(
       useObservable(() =>
-        merge(this.start$(), this.stop$()).pipe(
-          withLatestFrom(this.storage.state$),
-          switchMap(([updater, state]) => updater(state)),
-          tap((state) => this.storage.update(() => state))
-        )
+        bindAsyncUpdaters([this.start$(), this.stop$()], this.storage)
       )
     );
   }
 
-  start$ = (): Observable<AsyncUpdater> =>
+  get timer$() {
+    return this.storage.state$;
+  }
+
+  private start$ = (): Observable<AsyncUpdater<State>> =>
     this.start.pipe(
       map(
         () =>
@@ -54,6 +45,6 @@ export class CountdownComponent extends ComposableComponent {
       )
     );
 
-  stop$ = (): Observable<AsyncUpdater> =>
+  private stop$ = (): Observable<AsyncUpdater<State>> =>
     this.stop.pipe(map(() => (state) => of({ ...state, running: false })));
 }
