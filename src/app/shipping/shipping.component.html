@@ -1,9 +1,6 @@
 <h3>Shipping Prices</h3>
 
-<app-projection>
-  <p question>Is content projection cool?</p>
-  <p>Let's learn about content projection!</p>
-</app-projection>
+<app-projection></app-projection>
 
 <div *ngFor="let shipping of cart.shipping$ | async" class="shipping-item">
   <span>{{ shipping.type }}</span>

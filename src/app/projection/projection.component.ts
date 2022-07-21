@@ -4,16 +4,15 @@ import { ComposableComponent } from '../reusables/ComposableComponent';
 @Component({
   selector: 'app-projection',
   template: `
-    <h2>Single-slot content projection</h2>
-    <h2>Multi-slot content projection</h2>
+    <ng-template #estimateT>
+      <div>Approximately {{ estimate }} lessons ...</div>
+    </ng-template>
 
-    Default:
-    <ng-content></ng-content>
-
-    Question:
-    <ng-content select="[question]"></ng-content>
+    <div style="background-color: red">
+      <ng-container *ngTemplateOutlet="estimateT"></ng-container>
+    </div>
   `,
 })
 export class ProjectionComponent extends ComposableComponent {
-
+  estimate = 10;
 }
