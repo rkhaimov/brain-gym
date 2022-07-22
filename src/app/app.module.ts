@@ -18,6 +18,7 @@ import { MyPipe } from './my.pipe';
 import { HighlightDirective } from './highlight.directive';
 import { UnlessDirective } from './unless.directive';
 import { SubscribeDirective } from './subscribe.directive';
+import { GuardDirective } from './guard.directive';
 
 @NgModule({
   imports: [
@@ -49,6 +50,7 @@ import { SubscribeDirective } from './subscribe.directive';
     HighlightDirective,
     UnlessDirective,
     SubscribeDirective,
+    GuardDirective,
   ],
   bootstrap: [AppComponent],
 })
