@@ -29,9 +29,7 @@ export class CountdownComponent extends ComposableComponent {
     );
   }
 
-  get timer$() {
-    return this.storage.state$;
-  }
+  timer$ = this.storage.state$;
 
   private start$ = (): Observable<AsyncUpdater<State>> =>
     this.start.pipe(

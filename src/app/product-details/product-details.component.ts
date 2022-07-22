@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { combineLatest, filter, map, Observable } from 'rxjs';
+import { combineLatest, filter, map } from 'rxjs';
 import { CartService } from '../cart.service';
 import { Product, ProductService } from '../product.service';
 
@@ -15,14 +15,12 @@ export class ProductDetailsComponent {
     private product: ProductService
   ) {}
 
-  get product$(): Observable<Product> {
-    return combineLatest([this.route.params, this.product.products$]).pipe(
-      map(([params, products]) =>
-        products.find(
-          (product) => product.id === parseInt(params['productId'], 10)
-        )
-      ),
-      filter((product): product is Product => product !== undefined)
-    );
-  }
+  product$ = combineLatest([this.route.params, this.product.products$]).pipe(
+    map(([params, products]) =>
+      products.find(
+        (product) => product.id === parseInt(params['productId'], 10)
+      )
+    ),
+    filter((product): product is Product => product !== undefined)
+  );
 }

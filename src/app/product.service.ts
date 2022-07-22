@@ -12,9 +12,7 @@ export type Product = {
 export class ProductService {
   private storage = createStorage<Product[]>([]);
 
-  get products$() {
-    return this.storage.state$;
-  }
+  products$ = this.storage.state$;
 
   constructor() {
     void fetch('/assets/products.json')

@@ -14,9 +14,7 @@ type Shipping = {
 export class CartService {
   private storage = createStorage<Product[]>([]);
 
-  get products$() {
-    return this.storage.state$;
-  }
+  products$ = this.storage.state$;
 
   shipping$ = defer(() =>
     fetch('/assets/shipping.json').then(

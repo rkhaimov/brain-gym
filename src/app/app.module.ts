@@ -16,6 +16,8 @@ import { ProjectionComponent } from './projection/projection.component';
 import { SizerComponent } from './sizer/sizer.component';
 import { MyPipe } from './my.pipe';
 import { HighlightDirective } from './highlight.directive';
+import { UnlessDirective } from './unless.directive';
+import { SubscribeDirective } from './subscribe.directive';
 
 @NgModule({
   imports: [
@@ -45,6 +47,8 @@ import { HighlightDirective } from './highlight.directive';
     SizerComponent,
     MyPipe,
     HighlightDirective,
+    UnlessDirective,
+    SubscribeDirective,
   ],
   bootstrap: [AppComponent],
 })

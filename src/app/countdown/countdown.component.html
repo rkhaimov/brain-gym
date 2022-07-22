@@ -1,6 +1,6 @@
 <h1>Countdown to liftoff</h1>
 
-<div *ngIf="timer$ | async as timer">
+<div *subscribe="let timer of timer$">
   <button (click)="start.next()" [disabled]="timer.running">Start</button>
   <button (click)="stop.next()" [disabled]="!timer.running">Stop</button>
 
