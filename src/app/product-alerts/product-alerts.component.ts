@@ -10,10 +10,4 @@ import { useChangesEffect } from '../reusables/useChangesEffect';
 export class ProductAlertsComponent extends ComposableComponent {
   @Input() product!: Product;
   @Output() notify = new EventEmitter<void>();
-
-  constructor() {
-    super();
-
-    this.compose(useChangesEffect((changes$) => changes$, this, 'product'));
-  }
 }

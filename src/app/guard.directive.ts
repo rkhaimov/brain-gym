@@ -17,14 +17,14 @@ export class GuardDirective<T> extends ComposableComponent {
       useChangesEffect(
         (changes$) =>
           changes$.pipe(
-            tap((nullable) =>
+            tap(([nullable]) =>
               nullable
                 ? this.view.createEmbeddedView(this.template)
                 : this.view.clear()
             )
           ),
         this,
-        'guard'
+        ['guard']
       )
     );
   }

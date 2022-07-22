@@ -1,13 +1,11 @@
 import { noop, Observable, Subscription } from 'rxjs';
-import { Hook } from './ComposableComponent';
+import { createHook, Hook } from './ComposableComponent';
 
-export function useObservable(
-  factory: () => Observable<unknown>
-): Hook {
+export function useObservable(factory: () => Observable<unknown>): Hook {
   const subscription = new Subscription();
 
-  return {
+  return createHook({
     ngOnInit: () => subscription.add(factory().subscribe(noop)),
     ngOnDestroy: () => subscription.unsubscribe(),
-  };
+  });
 }

@@ -1,7 +1,7 @@
 import { Directive, Input, TemplateRef, ViewContainerRef } from '@angular/core';
 import { ComposableComponent } from './reusables/ComposableComponent';
 import { useChangesEffect } from './reusables/useChangesEffect';
-import { scan } from 'rxjs';
+import { tap } from 'rxjs';
 
 @Directive({
   selector: '[appUnless]',
@@ -19,20 +19,14 @@ export class UnlessDirective extends ComposableComponent {
       useChangesEffect(
         (changes$) =>
           changes$.pipe(
-            scan((placed, condition) => {
-              if (condition) {
-                this.view.clear();
-
-                return false;
-              }
-
-              this.view.createEmbeddedView(this.template);
-
-              return true;
-            }, false)
+            tap((condition) =>
+              condition
+                ? this.view.clear()
+                : this.view.createEmbeddedView(this.template)
+            )
           ),
         this,
-        'appUnless'
+        ['appUnless']
       )
     );
   }

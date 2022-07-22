@@ -1,23 +1,27 @@
 import { Component, Input } from '@angular/core';
 import { ComposableComponent } from '../reusables/ComposableComponent';
-import { FormControl } from '@angular/forms';
-import { useObservable } from '../reusables/useObservable';
-import { combineLatest } from 'rxjs';
+import { tap } from 'rxjs';
+import { useChangesEffect } from '../reusables/useChangesEffect';
 
 @Component({
   selector: 'app-changes',
   template: '',
 })
 export class ChangesComponent extends ComposableComponent {
-  @Input() name!: FormControl<string>;
-  @Input() address!: FormControl<string>;
+  @Input() name!: string;
+  @Input() address!: string;
 
   constructor() {
     super();
 
     this.compose(
-      useObservable(() =>
-        combineLatest([this.name.valueChanges, this.address.valueChanges])
+      useChangesEffect(
+        (changes$) =>
+          changes$.pipe(
+            tap(([name, address]) => console.log({ name, address }))
+          ),
+        this,
+        ['name', 'address']
       )
     );
   }

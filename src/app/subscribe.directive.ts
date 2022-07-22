@@ -1,5 +1,5 @@
 import { Directive, Input, TemplateRef, ViewContainerRef } from '@angular/core';
-import { identity, Observable, switchMap, tap } from 'rxjs';
+import { Observable, switchMap, tap } from 'rxjs';
 import { ComposableComponent } from './reusables/ComposableComponent';
 import { useChangesEffect } from './reusables/useChangesEffect';
 
@@ -20,25 +20,25 @@ export class SubscribeDirective<T> extends ComposableComponent {
       useChangesEffect(
         (changes$) =>
           changes$.pipe(
-            switchMap(identity),
+            switchMap(([value$]) => value$),
             tap((value) => {
               this.view.remove();
               this.view.createEmbeddedView(this.template, { $implicit: value });
             })
           ),
         this,
-        'subscribeOf'
+        ['subscribeOf']
       ),
       useChangesEffect(
         (changes$) =>
           changes$.pipe(
-            tap((ref) => {
+            tap(([ref]) => {
               this.view.remove();
               this.view.createEmbeddedView(ref);
             })
           ),
         this,
-        'subscribeElse'
+        ['subscribeElse']
       )
     );
   }
