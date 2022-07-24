@@ -17,6 +17,8 @@ export class CartComponent {
   constructor(public cart: CartService, private builder: FormBuilder) {}
 
   onSubmit() {
+    this.form.get('address')?.value;
+
     this.cart.clear();
     this.form.reset();
   }
