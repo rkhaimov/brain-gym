@@ -12,7 +12,7 @@ export class SubscribeDirective<T> extends ComposableComponent {
 
   constructor(
     private view: ViewContainerRef,
-    private template: TemplateRef<{ $implicit: T }>
+    private template: TemplateRef<Context<T>>
   ) {
     super();
 
@@ -23,7 +23,10 @@ export class SubscribeDirective<T> extends ComposableComponent {
             switchMap(([value$]) => value$),
             tap((value) => {
               this.view.remove();
-              this.view.createEmbeddedView(this.template, { $implicit: value });
+              this.view.createEmbeddedView(this.template, {
+                $implicit: value,
+                hello: false,
+              });
             })
           ),
         this,
@@ -42,4 +45,13 @@ export class SubscribeDirective<T> extends ComposableComponent {
       )
     );
   }
+
+  static ngTemplateContextGuard<T>(
+    directive: SubscribeDirective<T>,
+    context: Context<T>
+  ): context is Context<T> {
+    return true;
+  }
 }
+
+type Context<T> = { $implicit: T; hello: boolean };
