@@ -6,9 +6,10 @@ import { TopBarComponent } from './top-bar/top-bar.component';
 import { AppRoutingModule } from './app-routing.module';
 import { ProductService } from './globals/product.service';
 import { CartService } from './globals/cart.service';
+import { API } from './externals';
 
 @NgModule({
-  providers: [ProductService, CartService],
+  providers: [ProductService, CartService, API],
   imports: [BrowserModule, AppRoutingModule],
   declarations: [AppComponent, TopBarComponent],
   bootstrap: [AppComponent],

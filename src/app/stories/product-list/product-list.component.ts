@@ -1,24 +1,24 @@
-import { Component } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { ProductService } from '../../globals/product.service';
 import { ComposableComponent } from '../../reusables/utils/ComposableComponent';
-import { delay, from, switchMap, tap } from 'rxjs';
+import { delay, from, tap } from 'rxjs';
 import { useObservable } from '../../reusables/utils/useObservable';
+import { Api, API } from '../../externals';
 
 @Component({
   selector: 'app-product-list',
   templateUrl: './product-list.component.html',
 })
 export class ProductListComponent extends ComposableComponent {
-  constructor(public product: ProductService) {
+  constructor(
+    public product: ProductService,
+    @Inject(API.provide) private api: Api
+  ) {
     super();
 
     this.compose(
       useObservable(() =>
-        from(fetch('/assets/products.json')).pipe(
-          delay(5_000),
-          switchMap((response) => response.json()),
-          tap(console.log)
-        )
+        from(api.getAllProducts()).pipe(delay(5_000), tap(console.log))
       )
     );
   }

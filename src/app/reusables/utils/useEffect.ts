@@ -1,6 +1,6 @@
-import { createHook, Hook } from './ComposableComponent';
 import { useObservable } from './useObservable';
 import { noop } from 'rxjs';
+import { createHook, Hook } from './hook';
 
 export function useEffect(runEffect: () => void | (() => void)): Hook {
   let teardown = noop;

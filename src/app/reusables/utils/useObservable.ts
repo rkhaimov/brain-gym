@@ -1,5 +1,5 @@
 import { noop, Observable, Subscription } from 'rxjs';
-import { createHook, Hook } from './ComposableComponent';
+import { createHook, Hook } from './hook';
 
 export function useObservable(factory: () => Observable<unknown>): Hook {
   const subscription = new Subscription();

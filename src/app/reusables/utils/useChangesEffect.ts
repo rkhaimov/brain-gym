@@ -1,7 +1,7 @@
 import { SimpleChanges } from '@angular/core';
 import { combineLatest, Observable, ReplaySubject } from 'rxjs';
-import { createHook, Hook, joinHooks } from './ComposableComponent';
 import { useObservable } from './useObservable';
+import { createHook, Hook, joinHooks } from './hook';
 
 export const useChangesEffect = <TElement, TProp extends Array<keyof TElement>>(
   factory: (
