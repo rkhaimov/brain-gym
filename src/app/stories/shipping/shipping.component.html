@@ -1,5 +1,15 @@
 <h3>Shipping Prices</h3>
 
+<div *guard="nullable">
+  Not {{ nullable | slice: 0:4 }}
+</div>
+
+<ng-container *subscribe="let number of numbers$; else: loading">
+  <p>{{ number }}</p>
+</ng-container>
+
+<ng-template #loading>Loading!</ng-template>
+
 <app-projection [children]="child"></app-projection>
 
 <div *ngFor="let shipping of cart.shipping$ | async" class="shipping-item">

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { createStorage } from './reusables/createStorage';
+import { createStorage } from '../reusables/utils/createStorage';
 
 export type Product = {
   id: number;
@@ -8,7 +8,7 @@ export type Product = {
   description?: string;
 };
 
-@Injectable({ providedIn: 'root' })
+@Injectable()
 export class ProductService {
   private storage = createStorage<Product[]>([]);
 

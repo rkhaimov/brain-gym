@@ -1,7 +1,7 @@
 import { Directive, Input, TemplateRef, ViewContainerRef } from '@angular/core';
 import { Observable, switchMap, tap } from 'rxjs';
-import { ComposableComponent } from './reusables/ComposableComponent';
-import { useChangesEffect } from './reusables/useChangesEffect';
+import { ComposableComponent } from './utils/ComposableComponent';
+import { useChangesEffect } from './utils/useChangesEffect';
 
 @Directive({
   selector: '[subscribe]',

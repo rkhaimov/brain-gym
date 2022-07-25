@@ -1,9 +1,8 @@
 import { Component } from '@angular/core';
-import { ProductService } from '../product.service';
-import { ComposableComponent } from '../reusables/ComposableComponent';
-import { useEffect } from '../reusables/useEffect';
+import { ProductService } from '../../globals/product.service';
+import { ComposableComponent } from '../../reusables/utils/ComposableComponent';
 import { delay, from, switchMap, tap } from 'rxjs';
-import { useObservable } from '../reusables/useObservable';
+import { useObservable } from '../../reusables/utils/useObservable';
 
 @Component({
   selector: 'app-product-list',

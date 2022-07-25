@@ -1,12 +1,12 @@
 import { Component } from '@angular/core';
-import { ComposableComponent } from '../reusables/ComposableComponent';
+import { ComposableComponent } from '../../../reusables/utils/ComposableComponent';
 import { map, Observable, of, Subject, take, timer } from 'rxjs';
-import { createStorage } from '../reusables/createStorage';
-import { useObservable } from '../reusables/useObservable';
+import { createStorage } from '../../../reusables/utils/createStorage';
+import { useObservable } from '../../../reusables/utils/useObservable';
 import {
   AsyncUpdater,
   bindAsyncUpdaters,
-} from '../reusables/bindAsyncUpdaters';
+} from '../../../reusables/utils/bindAsyncUpdaters';
 
 type State = { left: number; running: boolean };
 

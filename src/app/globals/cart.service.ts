@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { defer } from 'rxjs';
-import { createStorage } from './reusables/createStorage';
+import { createStorage } from '../reusables/utils/createStorage';
 import { Product } from './product.service';
 
 type Shipping = {
@@ -8,9 +8,7 @@ type Shipping = {
   price: number;
 };
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable()
 export class CartService {
   private storage = createStorage<Product[]>([]);
 

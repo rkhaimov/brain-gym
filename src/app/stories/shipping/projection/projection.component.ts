@@ -6,7 +6,7 @@ import {
   ViewChild,
   ViewContainerRef,
 } from '@angular/core';
-import { ComposableComponent } from '../reusables/ComposableComponent';
+import { ComposableComponent } from '../../../reusables/utils/ComposableComponent';
 
 export interface ProjectionChildProps {
   data: string;

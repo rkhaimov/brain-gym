@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
-import { ComposableComponent } from '../reusables/ComposableComponent';
+import { ComposableComponent } from '../../../reusables/utils/ComposableComponent';
 import { tap } from 'rxjs';
-import { useChangesEffect } from '../reusables/useChangesEffect';
+import { useChangesEffect } from '../../../reusables/utils/useChangesEffect';
 
 @Component({
   selector: 'app-changes',

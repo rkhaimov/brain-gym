@@ -1,7 +1,7 @@
 import { Directive, Input, TemplateRef, ViewContainerRef } from '@angular/core';
-import { useChangesEffect } from './reusables/useChangesEffect';
+import { useChangesEffect } from '../../reusables/utils/useChangesEffect';
 import { tap } from 'rxjs';
-import { ComposableComponent } from './reusables/ComposableComponent';
+import { ComposableComponent } from '../../reusables/utils/ComposableComponent';
 
 @Directive({ selector: '[guard]' })
 export class GuardDirective<T> extends ComposableComponent {

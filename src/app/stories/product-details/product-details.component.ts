@@ -1,14 +1,16 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { combineLatest, filter, map } from 'rxjs';
-import { CartService } from '../cart.service';
-import { Product, ProductService } from '../product.service';
+import { CartService } from '../../globals/cart.service';
+import { Product, ProductService } from '../../globals/product.service';
 
 @Component({
   selector: 'app-product-details',
   templateUrl: './product-details.component.html',
 })
 export class ProductDetailsComponent {
+  date = new Date(1996, 5, 15);
+
   constructor(
     private route: ActivatedRoute,
     public cart: CartService,

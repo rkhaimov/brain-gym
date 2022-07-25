@@ -1,7 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { Product } from '../product.service';
-import { ComposableComponent } from '../reusables/ComposableComponent';
-import { useChangesEffect } from '../reusables/useChangesEffect';
+import { Product } from '../../../globals/product.service';
+import { ComposableComponent } from '../../../reusables/utils/ComposableComponent';
 
 @Component({
   selector: 'app-product-alerts',

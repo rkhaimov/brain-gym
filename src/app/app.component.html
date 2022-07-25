@@ -1,29 +1,5 @@
 <app-top-bar></app-top-bar>
 
-<div *guard="nullable">
-  {{ nullable | slice: 0:4 }}
-</div>
-
-<ng-container *subscribe="let number of numbers$; else: loading">
-  <p>{{ number }}</p>
-</ng-container>
-
-<ng-template #loading>Loading!</ng-template>
-
-<p *appUnless="condition" class="unless a">
-  <span class="I am container">
-    (A) This paragraph is displayed because the condition is false.
-  </span>
-</p>
-
-<p *appUnless="!condition" class="unless b">
-  (B) Although the condition is true, this paragraph is displayed because
-  appUnless is set to false.
-</p>
-
-<button (click)="condition = !condition">Swap!</button>
-
-<h1 [defaultColor]="'blue'" appHighlight>{{ date | date }}</h1>
 <div class="container">
   <router-outlet></router-outlet>
 </div>

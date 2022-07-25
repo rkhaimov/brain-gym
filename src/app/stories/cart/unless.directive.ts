@@ -1,6 +1,6 @@
 import { Directive, Input, TemplateRef, ViewContainerRef } from '@angular/core';
-import { ComposableComponent } from './reusables/ComposableComponent';
-import { useChangesEffect } from './reusables/useChangesEffect';
+import { ComposableComponent } from '../../reusables/utils/ComposableComponent';
+import { useChangesEffect } from '../../reusables/utils/useChangesEffect';
 import { tap } from 'rxjs';
 
 @Directive({
@@ -19,7 +19,7 @@ export class UnlessDirective extends ComposableComponent {
       useChangesEffect(
         (changes$) =>
           changes$.pipe(
-            tap((condition) =>
+            tap(([condition]) =>
               condition
                 ? this.view.clear()
                 : this.view.createEmbeddedView(this.template)

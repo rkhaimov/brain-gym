@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CartService } from '../cart.service';
+import { CartService } from '../../globals/cart.service';
 import { FormBuilder } from '@angular/forms';
 
 @Component({
@@ -7,6 +7,7 @@ import { FormBuilder } from '@angular/forms';
   templateUrl: './cart.component.html',
 })
 export class CartComponent {
+  condition = false;
   fz = 16;
 
   form = this.builder.group({
