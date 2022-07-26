@@ -18,6 +18,7 @@ export class CountdownComponent extends ComposableComponent {
   start = new Subject<void>();
   stop = new Subject<void>();
   private storage = createStorage<State>({ left: 10, running: false });
+  timer$ = this.storage.state$;
 
   constructor() {
     super();
@@ -28,8 +29,6 @@ export class CountdownComponent extends ComposableComponent {
       )
     );
   }
-
-  timer$ = this.storage.state$;
 
   private start$ = (): Observable<AsyncUpdater<State>> =>
     this.start.pipe(

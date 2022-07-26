@@ -10,13 +10,6 @@ import { Product, ProductService } from '../../globals/product.service';
 })
 export class ProductDetailsComponent {
   date = new Date(1996, 5, 15);
-
-  constructor(
-    private route: ActivatedRoute,
-    public cart: CartService,
-    private product: ProductService
-  ) {}
-
   product$ = combineLatest([this.route.params, this.product.products$]).pipe(
     map(([params, products]) =>
       products.find(
@@ -25,4 +18,10 @@ export class ProductDetailsComponent {
     ),
     filter((product): product is Product => product !== undefined)
   );
+
+  constructor(
+    private route: ActivatedRoute,
+    public cart: CartService,
+    private product: ProductService
+  ) {}
 }

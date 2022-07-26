@@ -6,12 +6,11 @@ import { Api, API } from '../externals';
 
 @Injectable()
 export class CartService {
+  shipping$ = defer(() => this.api.getAllShipping());
   private storage = createStorage<Product[]>([]);
+  products$ = this.storage.state$;
 
   constructor(@Inject(API.provide) private api: Api) {}
-
-  shipping$ = defer(() => this.api.getAllShipping());
-  products$ = this.storage.state$;
 
   add(product: Product): void {
     this.storage.update((products) => [...products, product]);

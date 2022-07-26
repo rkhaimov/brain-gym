@@ -5,11 +5,19 @@ import { useChangesEffect } from '../../../reusables/utils/useChangesEffect';
 
 @Component({
   selector: 'app-changes',
-  template: '',
+  template: `
+    <div>
+      <h1>{{ swapped ? name : address }}</h1>
+      <p>{{ swapped ? address : name }}</p>
+      <button (click)="swapped = !swapped">Swap</button>
+    </div>
+  `,
 })
 export class ChangesComponent extends ComposableComponent {
   @Input() name!: string;
   @Input() address!: string;
+
+  swapped = false;
 
   constructor() {
     super();
