@@ -1,22 +1,29 @@
-import { Meta, Story } from '@storybook/angular';
-import { getByRole, userEvent } from '@storybook/testing-library';
 import { ChangesComponent } from './changes.component';
+import { describe } from '../../../reusables/describe';
+import { getByRole, userEvent } from '@storybook/testing-library';
 
-export default { title: 'Changes', component: ChangesComponent } as Meta;
+const { exporting, it } = describe({
+  title: 'Changes',
+  component: ChangesComponent,
+});
 
-export const Example: Story = (args, context) => {
-  console.log(args, context);
+export default exporting;
 
-  return {
-    props: {
-      name: 'It is my name',
-      address: 'It is my address',
-    },
-  };
-};
+export const Default = it({
+  props: {
+    name: 'It is my name',
+    address: 'It is my address',
+  },
+});
 
-Example.play = (context) => {
-  const swap = getByRole(context.canvasElement, 'button', { name: 'Swap' });
+export const Swapped = it({
+  props: {
+    name: 'It is my name',
+    address: 'It is my address',
+  },
+  act: (context) => {
+    const swap = getByRole(context.canvasElement, 'button', { name: 'Swap' });
 
-  setTimeout(() => userEvent.click(swap), 5_000);
-};
+    userEvent.click(swap);
+  },
+});

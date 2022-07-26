@@ -1,5 +1,4 @@
 import { InjectionToken } from '@angular/core';
-import { Product } from '../globals/product.service';
 
 const repositories = {
   getAllShipping: () =>
@@ -22,4 +21,11 @@ export type Api = typeof repositories;
 export type Shipping = {
   type: string;
   price: number;
+};
+
+export type Product = {
+  id: number;
+  name: string;
+  price: number;
+  description?: string;
 };

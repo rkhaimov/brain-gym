@@ -2,7 +2,8 @@ import { Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { combineLatest, filter, map } from 'rxjs';
 import { CartService } from '../../globals/cart.service';
-import { Product, ProductService } from '../../globals/product.service';
+import { ProductService } from '../../globals/product.service';
+import { Product } from '../../externals';
 
 @Component({
   selector: 'app-product-details',

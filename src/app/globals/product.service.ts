@@ -1,16 +1,9 @@
 import { Inject, Injectable } from '@angular/core';
 import { createStorage } from '../reusables/utils/createStorage';
-import { Api, API } from '../externals';
+import { Api, API, Product } from '../externals';
 import { ComposableService } from '../reusables/utils/ComposableService';
 import { useObservable } from '../reusables/utils/useObservable';
 import { from } from 'rxjs';
-
-export type Product = {
-  id: number;
-  name: string;
-  price: number;
-  description?: string;
-};
 
 @Injectable()
 export class ProductService extends ComposableService {

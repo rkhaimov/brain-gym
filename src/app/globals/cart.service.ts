@@ -1,8 +1,7 @@
 import { Inject, Injectable } from '@angular/core';
 import { defer } from 'rxjs';
 import { createStorage } from '../reusables/utils/createStorage';
-import { Product } from './product.service';
-import { Api, API } from '../externals';
+import { Api, API, Product } from '../externals';
 
 @Injectable()
 export class CartService {
