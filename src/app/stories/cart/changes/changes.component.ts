@@ -9,7 +9,7 @@ import { useChangesEffect } from '../../../reusables/utils/useChangesEffect';
     <div>
       <h1>{{ swapped ? name : address }}</h1>
       <p>{{ swapped ? address : name }}</p>
-      <button (click)="swapped = !swapped">Swap</button>
+      <button (click)="swapped = !swapped">Reorder</button>
     </div>
   `,
 })

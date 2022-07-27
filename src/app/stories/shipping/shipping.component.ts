@@ -1,11 +1,15 @@
-import { Component, Input } from '@angular/core';
+import { Component } from '@angular/core';
 import { CartService } from '../../globals/cart.service';
-import { ProjectionChildProps } from './projection/projection.component';
-import { concatMap, from, map, timer } from 'rxjs';
 import { ShippingService } from './shipping.service';
+import { ProjectionChildComponent } from './projection-child.component';
 
 @Component({
   providers: [ShippingService],
+  template: '<app-shipping></app-shipping>',
+})
+export class ShippingContainer {}
+
+@Component({
   selector: 'app-shipping',
   templateUrl: './shipping.component.html',
 })
@@ -14,16 +18,5 @@ export class ShippingComponent {
 
   nullable: string | null | undefined = 'nullable';
 
-  numbers$ = from([1, 2, 3]).pipe(
-    concatMap((n) => timer(3_000).pipe(map(() => n)))
-  );
-
   constructor(public cart: CartService, private shipping: ShippingService) {}
-}
-
-@Component({
-  template: '<h3>Hello world {{ data }}</h3>',
-})
-class ProjectionChildComponent implements ProjectionChildProps {
-  @Input() data!: string;
 }

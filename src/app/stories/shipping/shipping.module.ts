@@ -1,15 +1,13 @@
 import { NgModule } from '@angular/core';
-import { ShippingComponent } from './shipping.component';
-import { ProjectionComponent } from './projection/projection.component';
-import { ReusablesModule } from '../../reusables/reusables.module';
+import { ShippingContainer } from './shipping.component';
 import { RouterModule } from '@angular/router';
-import { GuardDirective } from './guard.directive';
+import { config } from './pure-config';
 
 @NgModule({
+  ...config,
   imports: [
-    ReusablesModule,
-    RouterModule.forChild([{ path: '', component: ShippingComponent }]),
+    ...config.imports,
+    RouterModule.forChild([{ path: '', component: ShippingContainer }]),
   ],
-  declarations: [ShippingComponent, ProjectionComponent, GuardDirective],
 })
 export class ShippingModule {}

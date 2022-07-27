@@ -1,4 +1,10 @@
-import { Inject, Injectable } from '@angular/core';
+import {
+  FactoryProvider,
+  Inject,
+  Injectable,
+  Provider,
+  ValueProvider,
+} from '@angular/core';
 import { defer } from 'rxjs';
 import { createStorage } from '../reusables/utils/createStorage';
 import { Api, API, Product } from '../externals';
@@ -18,4 +24,21 @@ export class CartService {
   clear(): void {
     this.storage.update(() => []);
   }
+}
+
+export function arrangeCartService(
+  arrange: (cart: CartService) => void,
+  deps: { api: ValueProvider }
+): FactoryProvider {
+  return {
+    provide: CartService,
+    useFactory: (api: Api) => {
+      const cart = new CartService(api);
+
+      arrange(cart);
+
+      return cart;
+    },
+    deps: [Object.values(deps).map((provider) => provider.provide)],
+  };
 }

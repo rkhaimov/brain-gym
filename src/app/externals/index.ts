@@ -16,6 +16,13 @@ export const API = {
   useValue: repositories,
 };
 
+export function createMockApi(overrides?: Partial<Api>) {
+  return {
+    provide: API.provide,
+    useValue: overrides,
+  };
+}
+
 export type Api = typeof repositories;
 
 export type Shipping = {
