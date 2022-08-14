@@ -1,7 +1,9 @@
 {
   "extends": "./tsconfig.base.json",
+  "files": ["./webpack.config.ts"],
   "compilerOptions": {
     "target": "ESNext",
-    "module": "CommonJS"
+    "module": "CommonJS",
+    "incremental": true
   }
 }
