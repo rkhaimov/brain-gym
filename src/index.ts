@@ -1,12 +1,20 @@
-import { Vector } from './linalg';
+import { fromVector, Matrix, mproduct, mscale, transpose } from './linalg';
+import { l2, mvproduct, Vector } from './vector';
 
-const { drawVector, drawPoint } = createDrawers();
+const { drawVector, drawPoint, drawSpace } = createDrawers();
 
-drawVector([100, 0]);
+const a: Vector = [3 * 80, 2 * 80];
+const b: Vector = [3 * 100, 0.5 * 100];
 
-drawVector([50, 50], 'orange');
+drawVector(a, 'blue');
+drawVector(b);
 
-drawPoint([25, 25]);
+const P = mscale(
+  mproduct(fromVector(b), transpose(fromVector(b))),
+  1 / Math.pow(l2(b), 2)
+);
+
+drawVector(mvproduct(P, a), 'yellow');
 
 function createDrawers() {
   document.querySelector('html')!.style.height = '100%';
@@ -31,7 +39,24 @@ function createDrawers() {
   return {
     drawVector,
     drawPoint,
+    drawSpace,
   };
+
+  function drawSpace(matrix: Matrix, color?: string) {
+    const xs = new Array(100).fill(0).map((_, index) => (index - 50) * 10);
+    const ys = new Array(100).fill(0).map((_, index) => (index - 50) * 10);
+
+    xs.forEach((x) =>
+      ys.forEach((y) => {
+        const v = mproduct(matrix, fromVector([x, y]));
+
+        return drawPoint(
+          v.map((row) => row[0]),
+          color
+        );
+      })
+    );
+  }
 
   function drawAxis() {
     const xl = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -95,7 +120,7 @@ function createDrawers() {
     text.textContent = `[${x}, ${y}]`;
 
     canvas.appendChild(line);
-    canvas.appendChild(text);
+    // canvas.appendChild(text);
   }
 
   function toWebX(x: number) {

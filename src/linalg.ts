@@ -1,127 +1,16 @@
-export type Vector = number[];
+import { Vector } from './vector';
+
 export type Matrix = number[][];
 
-function cosAngle(left: Vector, right: Vector): number {
-  return dotProduct(left, right) / (l2(left) * l2(right));
-}
-
-function dotProduct(left: Vector, right: Vector): number {
-  const dot = product(transpose(fromVector(left)), fromVector(right));
-
-  return fold(dot, (_, n) => n, 0);
-}
-
-// Manhattan Norm
-function l1(v: Vector): number {
-  return v.map(Math.abs).reduce((r, v) => r + v);
-}
-
-// Euclidean Norm
-function l2(v: Vector): number {
-  const norm = product(transpose(fromVector(v)), fromVector(v));
-
-  return Math.sqrt(fold(norm, (_, n) => n, 0));
-}
-
-function fromVector(v: Vector): Matrix {
+export function fromVector(v: Vector): Matrix {
   return v.map((x) => [x]);
 }
 
-function inverse(m: Matrix): Matrix {
-  if (rows(m) !== cols(m)) {
-    throw new Error();
-  }
-
-  return transform(identity(cols(m)), solve(m));
-
-  function solve(
-    m: Matrix,
-    solutions: Transformation[] = []
-  ): Transformation[] {
-    if (isIdentity(m)) {
-      return solutions;
-    }
-
-    const reason = findNonPivotOrZero(m);
-
-    const transformation =
-      reason.type === 'non-pivot'
-        ? tmult(reason.row, 1 / m[reason.row][reason.col])
-        : tplus(
-          reason.row,
-          reason.col,
-          (-1 * m[reason.row][reason.col]) / m[reason.col][reason.col]
-        );
-
-    return solve(transform(m, [transformation]), [
-      ...solutions,
-      transformation,
-    ]);
-  }
-
-  function findNonPivotOrZero(
-    m: Matrix,
-    col = 0
-  ):
-    | { type: 'non-zero'; row: number; col: number }
-    | { type: 'non-pivot'; row: number; col: number } {
-    if (m[col][col] !== 1) {
-      return { type: 'non-pivot', row: col, col: col };
-    }
-
-    const nonZeroRow = m.findIndex((row, rowIndex) =>
-      rowIndex === col ? false : row[col] !== 0
-    );
-
-    if (nonZeroRow !== -1) {
-      return { type: 'non-zero', row: nonZeroRow, col };
-    }
-
-    return findNonPivotOrZero(m, col + 1);
-  }
-
-  function isIdentity(m: Matrix): boolean {
-    return equals(identity(cols(m)), m);
-  }
+export function mscale(m: Matrix, scalar: number): Matrix {
+  return map(m, (n) => scalar * n);
 }
 
-type Transformation = (matrix: Matrix) => Matrix;
-
-function tswap(rowLeft: number, rowRight: number): Transformation {
-  return (matrix) =>
-    map(matrix, (n, r, col) => {
-      if (r === rowLeft) {
-        return matrix[rowRight][col];
-      }
-
-      if (r === rowRight) {
-        return matrix[rowLeft][col];
-      }
-
-      return n;
-    });
-}
-
-function tplus(row: number, fromRow: number, scalar: number): Transformation {
-  return (matrix) =>
-    map(matrix, (n, r, col) =>
-      r === row ? n + matrix[fromRow][col] * scalar : n
-    );
-}
-
-function tmult(row: number, scalar: number): Transformation {
-  return (matrix) => map(matrix, (n, r, col) => (r === row ? n * scalar : n));
-}
-
-function transform(matrix: Matrix, transformations: Transformation[]): Matrix {
-  return transformations.reduce((m, t) => t(m), matrix);
-}
-
-function scale(matrix: Matrix, scalar: number): Matrix {
-  return map(matrix, (n) => n * scalar);
-}
-
-function product(left: Matrix, right: Matrix): Matrix {
+export function mproduct(left: Matrix, right: Matrix): Matrix {
   if (cols(left) !== rows(right)) {
     throw new Error();
   }
@@ -151,23 +40,23 @@ function sum(left: Matrix, right: Matrix): Matrix {
   return map(zeros(m, n), (n, row, col) => left[row][col] + right[row][col]);
 }
 
-function rows(m: Matrix): number {
+export function rows(m: Matrix): number {
   return m.length;
 }
 
-function cols(m: Matrix): number {
+export function cols(m: Matrix): number {
   return m[0].length;
 }
 
-function toString(m: Matrix): string {
+export function toString(m: Matrix): string {
   return m.map((row) => row.join(', ')).join('\n');
 }
 
-function transpose(matrix: Matrix): Matrix {
+export function transpose(matrix: Matrix): Matrix {
   return map(zeros(cols(matrix), rows(matrix)), (_, m, n) => matrix[n][m]);
 }
 
-function identity(size: number): Matrix {
+export function identity(size: number): Matrix {
   return map(zeros(size, size), (n, row, col) => (row === col ? 1 : 0));
 }
 
@@ -185,7 +74,7 @@ function zeros(rows: number, cols: number): Matrix {
   return [row, ...zeros(rows - 1, cols)];
 }
 
-function equals(left: Matrix, right: Matrix): boolean {
+export function equals(left: Matrix, right: Matrix): boolean {
   if (rows(left) !== rows(right)) {
     return false;
   }
@@ -205,7 +94,7 @@ function equals(left: Matrix, right: Matrix): boolean {
   return score === 0;
 }
 
-function fold<T>(
+export function fold<T>(
   matrix: Matrix,
   combine: (seed: T, value: number, row: number, col: number) => T,
   seed: T
@@ -221,7 +110,7 @@ function fold<T>(
   return result;
 }
 
-function map(
+export function map(
   matrix: Matrix,
   calc: (n: number, row: number, col: number) => number
 ): Matrix {
