@@ -1,16 +1,31 @@
-import { Vector } from './vector';
+type Matrix = number[][];
 
-export type Matrix = number[][];
+// Vector is special kind of matrix with one column
+export type Vector = [number][];
 
-export function fromVector(v: Vector): Matrix {
+export function vector(v: number[]): Vector {
   return v.map((x) => [x]);
 }
 
-export function mscale(m: Matrix, scalar: number): Matrix {
+// Manhattan Norm
+function l1(v: Vector): number {
+  return fold(
+    map(v, (value) => Math.abs(value)),
+    (r, v) => r + v,
+    0
+  );
+}
+
+// Euclidean Norm
+function l2(v: Vector): number {
+  return Math.sqrt(fold(product(transpose(v), v), (_, n) => n, 0));
+}
+
+function scale(m: Matrix, scalar: number): Matrix {
   return map(m, (n) => scalar * n);
 }
 
-export function mproduct(left: Matrix, right: Matrix): Matrix {
+function product(left: Matrix, right: Matrix): Matrix {
   if (cols(left) !== rows(right)) {
     throw new Error();
   }
@@ -40,23 +55,23 @@ function sum(left: Matrix, right: Matrix): Matrix {
   return map(zeros(m, n), (n, row, col) => left[row][col] + right[row][col]);
 }
 
-export function rows(m: Matrix): number {
+function rows(m: Matrix): number {
   return m.length;
 }
 
-export function cols(m: Matrix): number {
+function cols(m: Matrix): number {
   return m[0].length;
 }
 
-export function toString(m: Matrix): string {
+function toString(m: Matrix): string {
   return m.map((row) => row.join(', ')).join('\n');
 }
 
-export function transpose(matrix: Matrix): Matrix {
+function transpose(matrix: Matrix): Matrix {
   return map(zeros(cols(matrix), rows(matrix)), (_, m, n) => matrix[n][m]);
 }
 
-export function identity(size: number): Matrix {
+function identity(size: number): Matrix {
   return map(zeros(size, size), (n, row, col) => (row === col ? 1 : 0));
 }
 
@@ -74,27 +89,7 @@ function zeros(rows: number, cols: number): Matrix {
   return [row, ...zeros(rows - 1, cols)];
 }
 
-export function equals(left: Matrix, right: Matrix): boolean {
-  if (rows(left) !== rows(right)) {
-    return false;
-  }
-
-  if (cols(left) !== cols(right)) {
-    return false;
-  }
-
-  const score = fold(
-    map(zeros(rows(left), cols(left)), (_, m, n) =>
-      left[m][n] === right[m][n] ? 0 : 1
-    ),
-    (seed, value) => seed + value,
-    0
-  );
-
-  return score === 0;
-}
-
-export function fold<T>(
+function fold<T>(
   matrix: Matrix,
   combine: (seed: T, value: number, row: number, col: number) => T,
   seed: T
@@ -110,16 +105,16 @@ export function fold<T>(
   return result;
 }
 
-export function map(
+function map(
   matrix: Matrix,
-  calc: (n: number, row: number, col: number) => number
+  calc: (value: number, m: number, n: number) => number
 ): Matrix {
   const result: Matrix = [];
 
-  matrix.forEach((row, ri) => {
-    result[ri] = [];
+  matrix.forEach((row, m) => {
+    result[m] = [];
 
-    row.forEach((value, ci) => (result[ri][ci] = calc(value, ri, ci)));
+    row.forEach((value, n) => (result[m][n] = calc(value, m, n)));
   });
 
   return result;
