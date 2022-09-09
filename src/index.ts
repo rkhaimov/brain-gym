@@ -7,6 +7,7 @@ import {
   concatMap,
   map,
   observeOn,
+  of,
   timer,
   withLatestFrom,
 } from 'rxjs';
@@ -20,8 +21,9 @@ timer(0, 1_000 / 60)
     observeOn(animationFrameScheduler),
     withLatestFrom(points$),
     map(([, points]) => points),
-    map((points) => rotateYZ(Math.PI / 24).matMul(points)),
-    map((points) => rotateXY(Math.PI / 24).matMul(points))
+    map((points) => rotateYZ(Math.PI / (48 * 2)).matMul(points)),
+    // map((points) => rotateXY(Math.PI / (48 * 2)).matMul(points)),
+    map((points) => rotateXZ(Math.PI / (48 * 2)).matMul(points))
   )
   .subscribe(points$);
 
@@ -45,6 +47,14 @@ function rotateYZ(degree: number): Tensor2D {
     [1, 0, 0],
     [0, Math.cos(degree), -Math.sin(degree)],
     [0, Math.sin(degree), Math.cos(degree)],
+  ]);
+}
+
+function rotateXZ(degree: number): Tensor2D {
+  return tf.tensor2d([
+    [Math.cos(degree), 0, -Math.sin(degree)],
+    [0, 1, 0],
+    [Math.sin(degree), 0, Math.cos(degree)],
   ]);
 }
 
