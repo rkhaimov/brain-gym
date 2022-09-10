@@ -15,10 +15,7 @@ const { renderPoint, clearCanvas } = createRenderers();
 
 const points$ = new BehaviorSubject<Tensor>(cube(16));
 
-const sun = tf.tensor2d([0, 0, 0], [3, 1]);
-
 const SPEED = Math.PI / Math.pow(2, 10);
-
 timer(0, 1_000 / 60)
   .pipe(
     observeOn(animationFrameScheduler),
@@ -32,9 +29,6 @@ timer(0, 1_000 / 60)
 points$
   .pipe(
     map((tensors) => scale(40).matMul(tensors)),
-    map((tensors) =>
-      tensors.concat(tensors.sub(sun).norm('euclidean', 0, true), 0)
-    ),
     concatMap(renderTensors)
   )
   .subscribe();
@@ -116,10 +110,13 @@ function renderTensors(tf: Tensor) {
     .then((points) => {
       clearCanvas();
 
-      return (points as number[][]).map(([x, y, z, dsun]) => {
-        const color = 255 / (dsun / 300);
-
-        return renderPoint(x, y, z, `rgb(${color}, ${color}, ${color})`);
+      return (points as number[][]).map(([x, y, z]) => {
+        return renderPoint(
+          x,
+          y,
+          z,
+          `rgb(${Math.abs(x)}, ${Math.abs(y)}, ${Math.abs(z)})`
+        );
       });
     });
 }
