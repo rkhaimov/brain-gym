@@ -7,7 +7,6 @@ import {
   concatMap,
   map,
   observeOn,
-  of,
   timer,
   withLatestFrom,
 } from 'rxjs';
@@ -16,23 +15,31 @@ const { renderPoint, clearCanvas } = createRenderers();
 
 const points$ = new BehaviorSubject<Tensor>(cube(16));
 
+const sun = tf.tensor2d([0, 0, 0], [3, 1]);
+
+const SPEED = Math.PI / Math.pow(2, 10);
+
 timer(0, 1_000 / 60)
   .pipe(
     observeOn(animationFrameScheduler),
     withLatestFrom(points$),
     map(([, points]) => points),
-    map((points) => rotateYZ(Math.PI / (48 * 2)).matMul(points)),
-    // map((points) => rotateXY(Math.PI / (48 * 2)).matMul(points)),
-    map((points) => rotateXZ(Math.PI / (48 * 2)).matMul(points))
+    map((points) => rotateYZ(SPEED).matMul(points)),
+    map((points) => rotateXZ(SPEED).matMul(points))
   )
   .subscribe(points$);
 
 points$
   .pipe(
     map((tensors) => scale(40).matMul(tensors)),
+    map((tensors) =>
+      tensors.concat(tensors.sub(sun).norm('euclidean', 0, true), 0)
+    ),
     concatMap(renderTensors)
   )
   .subscribe();
+
+// COLORS as VECTORS
 
 function rotateXY(degree: number): Tensor2D {
   return tf.tensor2d([
@@ -66,6 +73,24 @@ function scale(scale: number): Tensor2D {
   ]);
 }
 
+function sphere(size: number): Tensor2D {
+  const grid: Tensor2D[] = new Array(size).fill(0).flatMap((_, x) =>
+    new Array(size).fill(0).flatMap((_, y) =>
+      new Array(size)
+        .fill(0)
+        .map((_, z) => [x - size / 2, y - size / 2, z - size / 2])
+        .filter(
+          ([x, y, z]) =>
+            Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2) <=
+            Math.pow(size / 2, 2)
+        )
+        .map((coords) => tf.tensor2d(coords, [3, 1]))
+    )
+  );
+
+  return concat(grid, 1);
+}
+
 function cube(size: number): Tensor2D {
   const grid: Tensor2D[] = new Array(size)
     .fill(0)
@@ -91,7 +116,11 @@ function renderTensors(tf: Tensor) {
     .then((points) => {
       clearCanvas();
 
-      return (points as number[][]).map(([x, y, z]) => renderPoint(x, y, z));
+      return (points as number[][]).map(([x, y, z, dsun]) => {
+        const color = 255 / (dsun / 300);
+
+        return renderPoint(x, y, z, `rgb(${color}, ${color}, ${color})`);
+      });
     });
 }
 
