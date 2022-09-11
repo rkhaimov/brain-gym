@@ -1,67 +1,37 @@
 import * as tf from '@tensorflow/tfjs';
 import { Tensor } from '@tensorflow/tfjs';
-import { Tensor2D } from '@tensorflow/tfjs-core/dist/tensor';
+import * as math from 'mathjs';
 
 const { renderPoint, clearCanvas } = createRenderers();
 
-const X = times(10).map((_, index) => index);
-const Y = X.map((_, index) => index * 2);
+void main();
 
-const Xt = tf
-  .ones([X.length, 1])
-  .concat(tf.tensor(X).reshape([X.length, 1]), 1);
+async function main() {
+  const X = times(10).map((_, index) => index);
+  const Y = X.map((_, index) => index * 2);
 
-const Yt = tf.tensor(Y).reshape([Y.length, 1]);
+  const Xt = tf
+    .ones([X.length, 1])
+    .concat(tf.tensor(X).reshape([X.length, 1]), 1);
 
-const theta = learn(Xt, Yt);
+  const Yt = tf.tensor(Y).reshape([Y.length, 1]);
 
-predict(tf.tensor([1, 8]).reshape([2, 1]), theta).print();
+  const theta = await learn(Xt, Yt);
 
-function learn(
-  X: Tensor,
-  Y: Tensor,
-  theta = tf.zeros([2, 1]),
-  epoch = 0
-): Tensor {
-  const lr = Math.pow(10, -3);
+  theta.print();
+}
 
-  if (epoch === 1000) {
-    return theta;
-  }
-
-  const next = theta.sub(X.transpose().matMul(X.matMul(theta).sub(Y)).mul(lr));
-
-  return learn(X, Y, next, epoch + 1);
+async function learn(X: Tensor, Y: Tensor): Promise<Tensor> {
+  return X.transpose()
+    .matMul(X)
+    .array()
+    .then((matrix) => math.inv(matrix as number[][]) as number[][])
+    .then((inverse) => tf.tensor(inverse).matMul(X.transpose()))
+    .then((pseudo) => pseudo.matMul(Y));
 }
 
 function predict(X: Tensor, theta: Tensor): Tensor {
   return X.transpose().matMul(theta).sum();
-}
-
-function scale(scale: number): Tensor2D {
-  return tf.tensor2d([
-    [scale, 0, 0],
-    [0, scale, 0],
-    [0, 0, scale],
-  ]);
-}
-
-function renderTensors(tf: Tensor) {
-  return tf
-    .transpose()
-    .array()
-    .then((points) => {
-      clearCanvas();
-
-      return (points as number[][]).map(([x, y, z]) => {
-        return renderPoint(
-          x,
-          y,
-          z,
-          `rgb(${Math.abs(x)}, ${Math.abs(y)}, ${Math.abs(z)})`
-        );
-      });
-    });
 }
 
 function createRenderers() {
@@ -78,7 +48,7 @@ function createRenderers() {
     clearCanvas: () => (canvas.innerHTML = ''),
   };
 
-  function renderPoint(x: number, y: number, z: number, color = '#000') {
+  function renderPoint(x: number, y: number, color = '#000') {
     const circle = document.createElementNS(
       'http://www.w3.org/2000/svg',
       'circle'
@@ -88,7 +58,7 @@ function createRenderers() {
 
     circle.setAttribute('cx', `${toWebX(x)}px`);
     circle.setAttribute('cy', `${toWebY(y)}px`);
-    circle.setAttribute('r', `${10 * (Math.abs(z + 200) / 400)}px`);
+    circle.setAttribute('r', `${5}px`);
 
     canvas.appendChild(circle);
   }
