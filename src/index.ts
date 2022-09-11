@@ -1,62 +1,41 @@
 import * as tf from '@tensorflow/tfjs';
-import { concat, Tensor } from '@tensorflow/tfjs';
+import { Tensor } from '@tensorflow/tfjs';
 import { Tensor2D } from '@tensorflow/tfjs-core/dist/tensor';
-import {
-  animationFrameScheduler,
-  BehaviorSubject,
-  concatMap,
-  map,
-  observeOn,
-  timer,
-  withLatestFrom,
-} from 'rxjs';
 
 const { renderPoint, clearCanvas } = createRenderers();
 
-const points$ = new BehaviorSubject<Tensor>(cube(16));
+const X = times(10).map((_, index) => index);
+const Y = X.map((_, index) => index * 2);
 
-const SPEED = Math.PI / Math.pow(2, 10);
-timer(0, 1_000 / 60)
-  .pipe(
-    observeOn(animationFrameScheduler),
-    withLatestFrom(points$),
-    map(([, points]) => points),
-    map((points) => rotateYZ(SPEED).matMul(points)),
-    map((points) => rotateXZ(SPEED).matMul(points))
-  )
-  .subscribe(points$);
+const Xt = tf
+  .ones([X.length, 1])
+  .concat(tf.tensor(X).reshape([X.length, 1]), 1);
 
-points$
-  .pipe(
-    map((tensors) => scale(40).matMul(tensors)),
-    concatMap(renderTensors)
-  )
-  .subscribe();
+const Yt = tf.tensor(Y).reshape([Y.length, 1]);
 
-// COLORS as VECTORS
+const theta = learn(Xt, Yt);
 
-function rotateXY(degree: number): Tensor2D {
-  return tf.tensor2d([
-    [Math.cos(degree), -Math.sin(degree), 0],
-    [Math.sin(degree), Math.cos(degree), 0],
-    [0, 0, 1],
-  ]);
+predict(tf.tensor([1, 8]).reshape([2, 1]), theta).print();
+
+function learn(
+  X: Tensor,
+  Y: Tensor,
+  theta = tf.zeros([2, 1]),
+  epoch = 0
+): Tensor {
+  const lr = Math.pow(10, -3);
+
+  if (epoch === 1000) {
+    return theta;
+  }
+
+  const next = theta.sub(X.transpose().matMul(X.matMul(theta).sub(Y)).mul(lr));
+
+  return learn(X, Y, next, epoch + 1);
 }
 
-function rotateYZ(degree: number): Tensor2D {
-  return tf.tensor2d([
-    [1, 0, 0],
-    [0, Math.cos(degree), -Math.sin(degree)],
-    [0, Math.sin(degree), Math.cos(degree)],
-  ]);
-}
-
-function rotateXZ(degree: number): Tensor2D {
-  return tf.tensor2d([
-    [Math.cos(degree), 0, -Math.sin(degree)],
-    [0, 1, 0],
-    [Math.sin(degree), 0, Math.cos(degree)],
-  ]);
+function predict(X: Tensor, theta: Tensor): Tensor {
+  return X.transpose().matMul(theta).sum();
 }
 
 function scale(scale: number): Tensor2D {
@@ -65,42 +44,6 @@ function scale(scale: number): Tensor2D {
     [0, scale, 0],
     [0, 0, scale],
   ]);
-}
-
-function sphere(size: number): Tensor2D {
-  const grid: Tensor2D[] = new Array(size).fill(0).flatMap((_, x) =>
-    new Array(size).fill(0).flatMap((_, y) =>
-      new Array(size)
-        .fill(0)
-        .map((_, z) => [x - size / 2, y - size / 2, z - size / 2])
-        .filter(
-          ([x, y, z]) =>
-            Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2) <=
-            Math.pow(size / 2, 2)
-        )
-        .map((coords) => tf.tensor2d(coords, [3, 1]))
-    )
-  );
-
-  return concat(grid, 1);
-}
-
-function cube(size: number): Tensor2D {
-  const grid: Tensor2D[] = new Array(size)
-    .fill(0)
-    .flatMap((_, x) =>
-      new Array(size)
-        .fill(0)
-        .flatMap((_, y) =>
-          new Array(size)
-            .fill(0)
-            .map((_, z) =>
-              tf.tensor2d([x - size / 2, y - size / 2, z - size / 2], [3, 1])
-            )
-        )
-    );
-
-  return concat(grid, 1);
 }
 
 function renderTensors(tf: Tensor) {
@@ -157,4 +100,8 @@ function createRenderers() {
   function toWebY(y: number) {
     return window.innerHeight / 2 - y;
   }
+}
+
+function times(n: number): number[] {
+  return new Array(n).fill(0);
 }
