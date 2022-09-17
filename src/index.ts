@@ -1,41 +1,83 @@
-import { Tensor } from '@tensorflow/tfjs';
-///<reference path="module.ts"/>
-import Plotly from 'plotly.js-dist';
+import * as tf from '@tensorflow/tfjs';
 
-document.body.innerHTML = '<div id="charts"></div>';
+const network = layers([input(2), output()]);
 
-void main();
+network[0].weights = tf.tensor2d([[-10, 20, 20]]);
 
-async function main() {
-  Plotly.newPlot('charts', []);
+const Y = tf.tensor2d([[1], [1], [0], [1]]);
+const X = tf.tensor2d([
+  [1, 0],
+  [0, 1],
+  [0, 0],
+  [1, 1],
+]);
+
+predict(X, network).print();
+
+activate(X, network);
+
+type Layer = {
+  units: number;
+  weights: tf.Tensor;
+};
+
+type ActivatedLayer = {
+  activations: tf.Tensor;
+  weights: tf.Tensor;
+};
+
+function predict(xs: tf.Tensor, layers: Layer[]): tf.Tensor {
+  const activated = activate(xs, layers);
+
+  return activated[activated.length - 1].activations;
 }
 
-function lines(tensor: Tensor, color: string) {
-  const list = tensor.arraySync() as number[][];
+function activate(xs: tf.Tensor, layers: Layer[]): ActivatedLayer[] {
+  if (layers.length === 1) {
+    return [{ activations: xs, weights: layers[0].weights }];
+  }
 
+  const [input, ...rest] = layers;
+
+  const biased = tf.concat([tf.ones([xs.shape[0], 1]), xs], 1);
+
+  const z = biased.dot(input.weights.transpose());
+
+  const activations = z.sigmoid();
+
+  return [
+    { activations: xs, weights: input.weights },
+    ...activate(activations, rest),
+  ];
+}
+
+function layers(elements: Layer[]): Layer[] {
+  if (elements.length < 2) {
+    return elements;
+  }
+
+  const [first, second, ...rest] = elements;
+
+  first.weights = tf.ones([
+    second.units,
+    // Including bias term
+    first.units + 1,
+  ]);
+
+  return [first, ...layers([second, ...rest])];
+}
+
+function input(units: number): Layer {
+  return layer(units);
+}
+
+function layer(units: number): Layer {
   return {
-    x: list.map(([x]) => x),
-    y: list.map(([, y]) => y),
-    mode: 'line',
-    line: {
-      color,
-    },
+    units,
+    weights: tf.ones([0]),
   };
 }
 
-function markers(tensor: Tensor, color: string) {
-  const list = tensor.arraySync() as number[][];
-
-  return {
-    x: list.map(([x]) => x),
-    y: list.map(([, y]) => y),
-    mode: 'markers',
-    marker: {
-      color,
-    },
-  };
-}
-
-function times(n: number): number[] {
-  return new Array(n).fill(0).map((_, index) => index);
+function output(): Layer {
+  return layer(1);
 }
