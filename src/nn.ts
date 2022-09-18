@@ -7,8 +7,8 @@ export function network(layers: Layer[]): Layer[] {
 
   const [first, second, ...tail] = layers;
 
-  first.bias = tf.ones([second.units, 1]);
-  first.weights = tf.ones([second.units, first.units]);
+  first.bias = tf.randomUniform([second.units, 1]);
+  first.weights = tf.randomUniform([second.units, first.units]);
 
   return [first, ...network([second, ...tail])];
 }
@@ -135,12 +135,14 @@ function propagate(y: tf.Tensor, network: ActivatedLayer[]): Layer[] {
   return [...rest, ...configured];
 }
 
+const LR = 1;
+
 function output(y: tf.Tensor, network: ActivatedLayer[]) {
   const curr = network.length - 1;
   const curr_x = network[curr].activations;
 
   const curr_delta = curr_x
-    .add(y.mul(-1))
+    .add(y.transpose().mul(-1))
     .mul(curr_x)
     .mul(tf.scalar(1).add(curr_x.mul(-1)));
 
@@ -153,8 +155,8 @@ function output(y: tf.Tensor, network: ActivatedLayer[]) {
     configured: [
       {
         units: network[prev].units,
-        weights: network[prev].weights.add(prev_weights_slope.mul(-1)),
-        bias: network[prev].bias.add(prev_b_slope.mul(-1)),
+        weights: network[prev].weights.add(prev_weights_slope.mul(LR).mul(-1)),
+        bias: network[prev].bias.add(prev_b_slope.mul(LR).mul(-1)),
       },
       {
         units: network[curr].units,
@@ -193,8 +195,8 @@ function hidden(
     ...hidden(network, curr_delta, prev),
     {
       units: network[prev].units,
-      weights: network[prev].weights.add(prev_weights_slope.mul(-1)),
-      bias: network[prev].bias.add(prev_b_slope.mul(-1)),
+      weights: network[prev].weights.add(prev_weights_slope.mul(LR).mul(-1)),
+      bias: network[prev].bias.add(prev_b_slope.mul(LR).mul(-1)),
     },
   ];
 }
