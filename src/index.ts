@@ -1,10 +1,11 @@
 import * as tf from '@tensorflow/tfjs';
 
-const network = layers([input(2), output()]);
+const network = layers([input(2), output(1)]);
 
-network[0].weights = tf.tensor2d([[-10, 20, 20]]);
+// network[0].weights = tf.tensor2d([[-10, 20, 20]]);
 
 const Y = tf.tensor2d([[1], [1], [0], [1]]);
+
 const X = tf.tensor2d([
   [1, 0],
   [0, 1],
@@ -12,9 +13,11 @@ const X = tf.tensor2d([
   [1, 1],
 ]);
 
-predict(X, network).print();
+const configured = learn(X, Y, network);
 
-activate(X, network);
+cost(X, Y, configured).print();
+
+predict(X, configured).print();
 
 type Layer = {
   units: number;
@@ -26,27 +29,73 @@ type ActivatedLayer = {
   weights: tf.Tensor;
 };
 
-function predict(xs: tf.Tensor, layers: Layer[]): tf.Tensor {
-  const activated = activate(xs, layers);
+function predict(xs: tf.Tensor, network: Layer[]): tf.Tensor {
+  const activated = activate(xs, network);
 
   return activated[activated.length - 1].activations;
 }
 
-function activate(xs: tf.Tensor, layers: Layer[]): ActivatedLayer[] {
-  if (layers.length === 1) {
-    return [{ activations: xs, weights: layers[0].weights }];
+function learn(
+  xs: tf.Tensor,
+  y: tf.Tensor,
+  network: Layer[],
+  epoch = 0,
+  total = 100
+): Layer[] {
+  if (epoch === total) {
+    return network;
   }
 
-  const [input, ...rest] = layers;
+  const activations = activate(xs, network);
+
+  const curr = activations[activations.length - 1];
+  const prev = activations[activations.length - 2];
+
+  const weights = on2(curr, prev, y);
+
+  const updated = network.map((layer, index) =>
+    index === activations.length - 2 ? { ...layer, weights } : layer
+  );
+
+  return learn(xs, y, updated, epoch + 1);
+}
+
+function on2(
+  curr: ActivatedLayer,
+  prev: ActivatedLayer,
+  y: tf.Tensor
+): tf.Tensor {
+  const dc = curr.activations.add(y.mul(-1)).mul(2);
+
+  const ds = curr.activations.mul(tf.scalar(1).add(curr.activations.mul(-1)));
+
+  const dz = prev.activations;
+
+  const slope = dz.mul(ds.mul(dc)).sum(0).mul(-1);
+
+  return prev.weights.add(slope);
+}
+
+function cost(xs: tf.Tensor, y: tf.Tensor, network: Layer[]): tf.Tensor {
+  const activations = activate(xs, network);
+  const output = activations[activations.length - 1].activations;
+
+  return output.add(y.mul(-1)).square().mean();
+}
+
+function activate(xs: tf.Tensor, network: Layer[]): ActivatedLayer[] {
+  if (network.length === 1) {
+    return [{ activations: xs, weights: network[0].weights }];
+  }
+
+  const [input, ...rest] = network;
 
   const biased = tf.concat([tf.ones([xs.shape[0], 1]), xs], 1);
-
   const z = biased.dot(input.weights.transpose());
-
   const activations = z.sigmoid();
 
   return [
-    { activations: xs, weights: input.weights },
+    { activations: biased, weights: input.weights },
     ...activate(activations, rest),
   ];
 }
@@ -78,6 +127,6 @@ function layer(units: number): Layer {
   };
 }
 
-function output(): Layer {
-  return layer(1);
+function output(units: number): Layer {
+  return layer(units);
 }
