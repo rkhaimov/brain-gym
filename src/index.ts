@@ -1,32 +1,62 @@
 import * as tf from '@tensorflow/tfjs';
 
-const network = layers([input(2), output(1)]);
+const network: Layer[] = [
+  {
+    units: 2,
+    bias: tf.ones([3, 1]),
+    weights: tf.ones([3, 2]),
+  },
+  {
+    units: 3,
+    bias: tf.ones([1, 1]),
+    weights: tf.ones([1, 3]),
+  },
+  {
+    units: 1,
+    bias: tf.scalar(0),
+    weights: tf.ones([0]),
+  },
+];
 
-// network[0].weights = tf.tensor2d([[-10, 20, 20]]);
+const x = tf.tensor([1, 0]).reshape([-1, 1]);
+const y = tf.tensor([0]).reshape([-1, 1]);
 
-const Y = tf.tensor2d([[1], [1], [0], [1]]);
+cost(x, y, network).print();
+const configured = learn(x, y, network, 0, 100);
+cost(x, y, configured).print();
 
-const X = tf.tensor2d([
-  [1, 0],
-  [0, 1],
-  [0, 0],
-  [1, 1],
-]);
+function activate(x: tf.Tensor, network: Layer[]): ActivatedLayer[] {
+  if (network.length === 1) {
+    return [{ activations: x, ...network[0] }];
+  }
 
-const configured = learn(X, Y, network);
+  const [input, ...rest] = network;
 
-cost(X, Y, configured).print();
+  const z = input.weights.dot(x).add(input.bias);
+  const activations = z.sigmoid();
 
-predict(X, configured).print();
+  return [{ activations: x, ...input }, ...activate(activations, rest)];
+}
+
+function cost(xs: tf.Tensor, y: tf.Tensor, network: Layer[]): tf.Tensor {
+  const activations = activate(xs, network);
+  const output = activations[activations.length - 1].activations;
+
+  return output
+    .add(y.mul(-1))
+    .norm('euclidean')
+    .square()
+    .mul(1 / 2);
+}
 
 type Layer = {
   units: number;
+  bias: tf.Tensor;
   weights: tf.Tensor;
 };
 
-type ActivatedLayer = {
+type ActivatedLayer = Layer & {
   activations: tf.Tensor;
-  weights: tf.Tensor;
 };
 
 function predict(xs: tf.Tensor, network: Layer[]): tf.Tensor {
@@ -47,86 +77,50 @@ function learn(
   }
 
   const activations = activate(xs, network);
+  const updated = propagate(y, activations);
 
-  const curr = activations[activations.length - 1];
-  const prev = activations[activations.length - 2];
-
-  const weights = on2(curr, prev, y);
-
-  const updated = network.map((layer, index) =>
-    index === activations.length - 2 ? { ...layer, weights } : layer
-  );
-
-  return learn(xs, y, updated, epoch + 1);
+  return learn(xs, y, updated, epoch + 1, total);
 }
 
-function on2(
-  curr: ActivatedLayer,
-  prev: ActivatedLayer,
-  y: tf.Tensor
-): tf.Tensor {
-  const dc = curr.activations.add(y.mul(-1)).mul(2);
+function propagate(y: tf.Tensor, network: ActivatedLayer[]): Layer[] {
+  const x_2 = network[2].activations;
+  const d_2 = x_2
+    .add(y.mul(-1))
+    .mul(x_2)
+    .mul(tf.scalar(1).add(x_2.mul(-1)));
 
-  const ds = curr.activations.mul(tf.scalar(1).add(curr.activations.mul(-1)));
+  const x_1 = network[1].activations;
+  const w_2_slope = d_2.dot(x_1.transpose());
+  const b_1_slope = d_2;
 
-  const dz = prev.activations;
+  const w_2 = network[1].weights;
+  const d_1 = w_2
+    .transpose()
+    .dot(d_2)
+    .mul(x_1)
+    .mul(tf.scalar(1).add(x_1.mul(-1)));
 
-  const slope = dz.mul(ds.mul(dc)).sum(0).mul(-1);
+  const x_0 = network[0].activations;
+  const w_1_slope = d_1.dot(x_0.transpose());
+  const b_0_slope = d_1;
 
-  return prev.weights.add(slope);
-}
-
-function cost(xs: tf.Tensor, y: tf.Tensor, network: Layer[]): tf.Tensor {
-  const activations = activate(xs, network);
-  const output = activations[activations.length - 1].activations;
-
-  return output.add(y.mul(-1)).square().mean();
-}
-
-function activate(xs: tf.Tensor, network: Layer[]): ActivatedLayer[] {
-  if (network.length === 1) {
-    return [{ activations: xs, weights: network[0].weights }];
-  }
-
-  const [input, ...rest] = network;
-
-  const biased = tf.concat([tf.ones([xs.shape[0], 1]), xs], 1);
-  const z = biased.dot(input.weights.transpose());
-  const activations = z.sigmoid();
+  const lr = 1;
 
   return [
-    { activations: biased, weights: input.weights },
-    ...activate(activations, rest),
+    {
+      units: network[0].units,
+      weights: network[0].weights.add(w_1_slope.mul(lr).mul(-1)),
+      bias: network[0].bias.add(b_0_slope.mul(lr).mul(-1)),
+    },
+    {
+      units: network[1].units,
+      weights: network[1].weights.add(w_2_slope.mul(lr).mul(-1)),
+      bias: network[1].bias.add(b_1_slope.mul(lr).mul(-1)),
+    },
+    {
+      units: network[2].units,
+      weights: network[2].weights,
+      bias: network[2].bias,
+    },
   ];
-}
-
-function layers(elements: Layer[]): Layer[] {
-  if (elements.length < 2) {
-    return elements;
-  }
-
-  const [first, second, ...rest] = elements;
-
-  first.weights = tf.ones([
-    second.units,
-    // Including bias term
-    first.units + 1,
-  ]);
-
-  return [first, ...layers([second, ...rest])];
-}
-
-function input(units: number): Layer {
-  return layer(units);
-}
-
-function layer(units: number): Layer {
-  return {
-    units,
-    weights: tf.ones([0]),
-  };
-}
-
-function output(units: number): Layer {
-  return layer(units);
 }
