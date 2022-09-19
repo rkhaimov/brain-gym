@@ -21,6 +21,7 @@
   "homepage": "https://github.com/rkhaimov/thegame#readme",
   "dependencies": {
     "@tensorflow/tfjs": "^3.20.0",
+    "@tensorflow/tfjs-vis": "^1.5.1",
     "@types/mathjs": "^9.4.2",
     "mathjs": "^11.1.0",
     "plotly.js-dist": "^2.14.0",
