@@ -421,7 +421,7 @@ function compute(n: number): IsEvenNegative | NumberPositive {
     return 'n is even';
   }
 
-  return n * k + 2;
+  return n * n0 + 2;
 }
 ```
 
@@ -459,7 +459,7 @@ function compute(n: number): Either<'n is even', number> {
     return left('n is even');
   }
 
-  return right(n * k + 2);
+  return right(n * n0 + 2);
 }
 ```
 
