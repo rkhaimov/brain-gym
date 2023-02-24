@@ -1,107 +1,138 @@
-// Type is a set
-// k is an element of that set
-declare const n0: number
-
-// Assigment succeeds only when a value belongs to given set (or type)
-const n1: number = 1;
-
-// Sets can vary in size. It often will be infinite, but in some cases there is a limit
-// Only -1 is assignable, because it is the only element in this set
-const n2: -1 = -1;
-
-// Multiple "values" can be united in one set
-const n3: -1 | 2 | 3 = 2;
-
-// String are not an exception
-declare const s0: string;
-
-// Particular string can be assigned
-const s1: 'particular string' = 'particular string';
-const s2: 'particular string' | 'one' = 'one';
-const s_2: string = s2;
-
-// Not only values can be united, but types (or sets) as well
-declare let stringOrNumber: number | string;
-
-stringOrNumber = 1;
-stringOrNumber = '1';
-
-// We can operate on them only with functions, defined for numbers
-// For example f maintains type, it is called CLOSURE property
-declare const f: (l: number | string) => string;
-const s3 = f(stringAndNumber)
-
-// Types can be intersected
-declare let stringAndNumber: number & string;
-
-// Never is equal to an empty set
-stringAndNumber = '1'
-stringAndNumber = 1
-
-// Never is a subtype of any type
-const s: string & number = stringAndNumber;
-
-declare let t0: number | never;
-declare let t1: number & never;
-
-// Function can not be executed
-type WhatAwaitsUsAfterDeath = 1;
-declare const absurd: (a: never) => WhatAwaitsUsAfterDeath;
-
-// It never ends its execution
-declare const hang: () => never;
-
-// Because it never ends, caller can return anything
-function hello(): number {
-  hang()
-}
-
-absurd(hang())
-
-const hangImpl = (): never => {
-  return hangImpl();
-}
-
-// void
-const v: void = undefined;
-
-declare const t2: string | void;
-declare const t3: string & void;
-
-// unknown
-declare let u: unknown;
-
 type Apple = {
   sweetness: number;
 };
 
-declare let a1: Apple
-
-// Structural typing
-const example = {
+// Exhaustive type check
+const candidate = {
   sweetness: 1,
-  additional: true
 };
 
-a1 = example
+// Type is valid, even though it contains properties that do not exist
+const a0: Apple = candidate;
 
-type RedColored = {
-  color: 'red'
-}
-
-type RedApple = Apple & RedColored;
-
-// Intersection works like union!
-const a: RedApple = {
-  sweetness: 1,
+type Red = {
   color: 'red'
 };
 
-type BlueColored = {
+// Extraction via intersection
+type RedApple = Red;
+
+type Blue = {
   color: 'blue'
 };
 
-type BlueApple = Apple & BlueColored
+type BlueApple = Blue;
+
+type Infected = {
+  worm: {
+    name: string;
+    age: number;
+  }
+}
+
+const tt0: (Apple & Infected) | Apple = {
+  sweetness: 0,
+};
+
+type WormyApple = Infected & Apple;
+
+declare let a: {}; // unknown from the world of structs
+
+const c0 = {a: 1, d: 0};
+
+a = c0;
+
+type AA = {} & Apple;
+
+// Type union provides property intersections
+type A = { a: number };
+type B = { b: number };
+
+// What if A and B
+function handleAOrB(value: A | B): string {
+  if ('a' in value && 'b' in value) {
+    return 'It is a monster!';
+  }
+
+  if ('a' in value) {
+    return 'It is A!';
+  }
+
+  if ('b' in value) {
+    return 'It is B';
+  }
+
+  value;
+}
+
+handleAOrB({a: 1, b: 1});
+
+function handleRedOrBlue(r: Red | Blue): string {
+  if (r.color === 'red') {
+    return 'red';
+  }
+
+  if (r.color === 'blue') {
+    return 'blue';
+  }
+}
+
+declare const s: Red & Blue;
+
+type LocalOptionsSelect = {
+  type: 'local'
+  options: string[]
+};
+
+type RemoteOptionsSelect = {
+  type: 'remote'
+  getOptions(): Promise<string[]>
+};
+
+type SelectProps = LocalOptionsSelect | RemoteOptionsSelect;
+
+const p: SelectProps = {
+  type: 'remote',
+  getOptions: async () => ['wdawd'],
+};
+
+if (p.type === 'remote') {
+  p.getOptions()
+}
+
+// handleRedOrBlue({ color });
+
+type Colored = Red | Blue;
+type ProbablyWormy = {} | Infected;
+
+type GardenApple = Apple & Colored & ProbablyWormy;
+
+declare const apples: GardenApple[];
+
+type RichPeopleApples = Extract<GardenApple, Red>;
+
+type QueenApples = Blue & Apple;
+
+type OtherApples = ExcludeExact<ExcludeExact<GardenApple, QueenApples>, RichPeopleApples>;
+
+type ExcludeExact<TLeft, TRight> = TLeft extends TRight ? TRight extends TLeft ? never : TLeft : TLeft;
+
+abstract class Animal {
+  abstract toName(): string;
+}
+
+class Bottle {
+  toName(): string {
+    return '1'
+  };
+}
+
+const aaa: Animal = new Bottle();
+
+type PersonID = string & { __brand: 'PersonID' };
+type DogID = string & { __brand: 'DogID' };
+
+declare const ddd: PersonID & DogID;
 
 // number string
 // brands using classes and tags
