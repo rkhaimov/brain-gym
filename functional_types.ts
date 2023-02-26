@@ -1,138 +1,110 @@
-type Apple = {
-  sweetness: number;
-};
+enum Colors {
+  red = 'red',
+  blue = 'blue',
+  green = 'green',
+}
 
-// Exhaustive type check
-const candidate = {
-  sweetness: 1,
-};
+c(Colors.red);
 
-// Type is valid, even though it contains properties that do not exist
-const a0: Apple = candidate;
+function c(cc: Colors) {
+}
 
-type Red = {
-  color: 'red'
-};
+// Add two is polymorphic function working on infinite possibilities of n
+function addTwo(n: number) {
+  return n + 2;
+}
 
-// Extraction via intersection
-type RedApple = Red;
+addTwo(2);
 
-type Blue = {
-  color: 'blue'
-};
+addTwo(3);
 
-type BlueApple = Blue;
+addTwo(10);
 
-type Infected = {
-  worm: {
-    name: string;
-    age: number;
+addTwo(202);
+
+// There is no explicit type for TType
+type Nullable<TType> = TType | undefined;
+
+type T0 = Nullable<number>;
+type T1 = Nullable<string>;
+type T2 = Nullable<boolean>;
+
+function onGeneric<T, E>(value: T, other: E) {
+  let n: number = 2;
+
+  n = value;
+
+  value = n;
+
+  other = value;
+
+  value = value;
+}
+
+function onGeneric0<T>(value: T) {
+  if (onGeneric) {
+    return value;
   }
 }
 
-const tt0: (Apple & Infected) | Apple = {
-  sweetness: 0,
+const val = onGeneric0(2);
+
+function addTwo2(n: number) {
+  return n + 2;
+}
+
+function onGenerics3<T, E extends T>(value: T, other: E) {
+  value = other;
+}
+
+// Contravariance (narrow to wider)
+type Reader<out T> = {
+  get(): T;
+}
+
+function contravariance(value: Reader<{ name: string }>) {
+  const v: Reader<{}> = value;
+
+  v.get();
+}
+
+type Writer<in T> = {
+  set(value: T): void;
 };
 
-type WormyApple = Infected & Apple;
+function covariance(value: Writer<{ name: string }>) {
+  const v: Writer<{ name: string, surname: string }> = value;
 
-declare let a: {}; // unknown from the world of structs
-
-const c0 = {a: 1, d: 0};
-
-a = c0;
-
-type AA = {} & Apple;
-
-// Type union provides property intersections
-type A = { a: number };
-type B = { b: number };
-
-// What if A and B
-function handleAOrB(value: A | B): string {
-  if ('a' in value && 'b' in value) {
-    return 'It is a monster!';
-  }
-
-  if ('a' in value) {
-    return 'It is A!';
-  }
-
-  if ('b' in value) {
-    return 'It is B';
-  }
-
-  value;
+  v.set({name: '', surname: ''})
 }
 
-handleAOrB({a: 1, b: 1});
-
-function handleRedOrBlue(r: Red | Blue): string {
-  if (r.color === 'red') {
-    return 'red';
+covariance({
+  set(value) {
+    value.name;
   }
+});
 
-  if (r.color === 'blue') {
-    return 'blue';
-  }
-}
-
-declare const s: Red & Blue;
-
-type LocalOptionsSelect = {
-  type: 'local'
-  options: string[]
+type ReadWrite<in out T> = {
+  set(value: T): void;
+  get(): T;
 };
 
-type RemoteOptionsSelect = {
-  type: 'remote'
-  getOptions(): Promise<string[]>
+function invariance(rw: ReadWrite<{ name: string }>) {
+  const value: ReadWrite<{ name: string }> = rw;
+}
+
+type SelectProps<in out TOption> = {
+  onChange(option: TOption): void;
+  options: TOption[];
 };
 
-type SelectProps = LocalOptionsSelect | RemoteOptionsSelect;
-
-const p: SelectProps = {
-  type: 'remote',
-  getOptions: async () => ['wdawd'],
-};
-
-if (p.type === 'remote') {
-  p.getOptions()
+function FancySelect<TOption extends { label: string; value: unknown; }>(props: SelectProps<TOption>) {
+  props.options[0].value
 }
 
-// handleRedOrBlue({ color });
-
-type Colored = Red | Blue;
-type ProbablyWormy = {} | Infected;
-
-type GardenApple = Apple & Colored & ProbablyWormy;
-
-declare const apples: GardenApple[];
-
-type RichPeopleApples = Extract<GardenApple, Red>;
-
-type QueenApples = Blue & Apple;
-
-type OtherApples = ExcludeExact<ExcludeExact<GardenApple, QueenApples>, RichPeopleApples>;
-
-type ExcludeExact<TLeft, TRight> = TLeft extends TRight ? TRight extends TLeft ? never : TLeft : TLeft;
-
-abstract class Animal {
-  abstract toName(): string;
-}
-
-class Bottle {
-  toName(): string {
-    return '1'
-  };
-}
-
-const aaa: Animal = new Bottle();
-
-type PersonID = string & { __brand: 'PersonID' };
-type DogID = string & { __brand: 'DogID' };
-
-declare const ddd: PersonID & DogID;
+FancySelect<{ label: string, value: unknown, flag: boolean }>({onChange(option) {
+    option;
+  }});
 
 // number string
 // brands using classes and tags
@@ -147,3 +119,5 @@ declare const ddd: PersonID & DogID;
 // generics
 // constraints
 // in out
+// type narrowing
+// mapped types
