@@ -1,110 +1,129 @@
-enum Colors {
-  red = 'red',
-  blue = 'blue',
-  green = 'green',
+type Apple = {
+  sweetness: number;
+  color: string;
+};
+
+// Duplication
+function createApple(sweetness: number) {
+  return {sweetness, color: 'blue'};
 }
 
-c(Colors.red);
+declare const t0: typeof createApple;
 
-function c(cc: Colors) {
+type Apple0 = ReturnType<typeof createApple>;
+
+function createRedApple(sweetness: number) {
+  return {sweetness, color: 'red' as const};
 }
 
-// Add two is polymorphic function working on infinite possibilities of n
-function addTwo(n: number) {
-  return n + 2;
+function createBlueApple(sweetness: number) {
+  return {sweetness, color: 'blue' as const};
 }
 
-addTwo(2);
+type RedApple = ReturnType<typeof createRedApple>;
+type BlueApple = ReturnType<typeof createBlueApple>;
 
-addTwo(3);
+type GardenApple = RedApple | BlueApple;
 
-addTwo(10);
+declare const t2: GardenApple;
 
-addTwo(202);
-
-// There is no explicit type for TType
-type Nullable<TType> = TType | undefined;
-
-type T0 = Nullable<number>;
-type T1 = Nullable<string>;
-type T2 = Nullable<boolean>;
-
-function onGeneric<T, E>(value: T, other: E) {
-  let n: number = 2;
-
-  n = value;
-
-  value = n;
-
-  other = value;
-
-  value = value;
+function infectWithWorm(apple: GardenApple) {
+  return {...apple, worm: 'Jimmy'};
 }
 
-function onGeneric0<T>(value: T) {
-  if (onGeneric) {
-    return value;
+infectWithWorm(createRedApple(10));
+
+type InfectedApple = ReturnType<typeof infectWithWorm>;
+
+function nopeWhenRed(color: GardenApple['color']) {
+  if (color === 'red') {
+    return 'NOPE';
+  }
+
+  return color;
+}
+
+function nopeWhenRed0<T extends string>(color: T) {
+  if (color === 'red') {
+    return 'NOPE';
+  }
+
+  return color as Exclude<T, 'red'>;
+}
+
+declare const t3: 'red' | 'blue' | 'green' | 'purple'
+
+nopeWhenRed0(t3)
+
+declare const t4: Exclude<1 | 2 | 3 | 4, unknown>;
+declare const t5: Exclude<{ name: string } | { surname: string }, { name?: string }>;
+
+type Identity<T> = T;
+
+declare const t6: Identity<1 | 2 | 3>;
+
+type OnlyNumbers0<T> = T extends number ? T : never;
+
+declare const t7: OnlyNumbers0<1 | 2 | 3 | '222'>;
+
+type OnlyNumbers1<T> = T extends number ? T : never;
+
+declare const t8: OnlyNumbers1<1 | 'string'>;
+
+// Expand
+declare const t9: 1 | never;
+
+// Try to implement differently
+type MyExtract<TCandidate, TPattern> = TCandidate extends TPattern ? TCandidate : never;
+type MyExclude<TCandidate, TPattern> = TCandidate extends TPattern ? never : TCandidate;
+
+declare const t10: MyExclude<1 | 2 | 3, 2 | 3 | 10>;
+
+function toOnlyRedApples0(apples: Array<GardenApple>): Array<RedApple> {
+  const result: Array<RedApple> = [];
+
+  for (const apple of apples) {
+    if (isRedApple(apple)) {
+      result.push(apple);
+    }
+  }
+
+  return result;
+}
+
+function toOnlyRedApples1(apples: Array<GardenApple>): Array<RedApple> {
+  return apples.filter(isRedApple);
+}
+
+function isRedApple(apple: GardenApple): apple is RedApple {
+  return apple.color === 'red';
+}
+
+function hang(): never {
+  return hang();
+}
+
+function ensureIsRedApple(apple: GardenApple) {
+  if (isRedApple(apple)) {
+    return apple;
+  }
+
+  return hang();
+}
+
+declare const t11: GardenApple;
+
+const redApple = ensureIsRedApple(t11);
+
+assertIsRedApple(t11)
+
+t11;
+
+function assertIsRedApple(apple: GardenApple): asserts apple is RedApple {
+  if (!isRedApple(apple)) {
+    throw new Error('Not Red!!!')
   }
 }
-
-const val = onGeneric0(2);
-
-function addTwo2(n: number) {
-  return n + 2;
-}
-
-function onGenerics3<T, E extends T>(value: T, other: E) {
-  value = other;
-}
-
-// Contravariance (narrow to wider)
-type Reader<out T> = {
-  get(): T;
-}
-
-function contravariance(value: Reader<{ name: string }>) {
-  const v: Reader<{}> = value;
-
-  v.get();
-}
-
-type Writer<in T> = {
-  set(value: T): void;
-};
-
-function covariance(value: Writer<{ name: string }>) {
-  const v: Writer<{ name: string, surname: string }> = value;
-
-  v.set({name: '', surname: ''})
-}
-
-covariance({
-  set(value) {
-    value.name;
-  }
-});
-
-type ReadWrite<in out T> = {
-  set(value: T): void;
-  get(): T;
-};
-
-function invariance(rw: ReadWrite<{ name: string }>) {
-  const value: ReadWrite<{ name: string }> = rw;
-}
-
-type SelectProps<in out TOption> = {
-  onChange(option: TOption): void;
-  options: TOption[];
-};
-
-function FancySelect<TOption extends { label: string; value: unknown; }>(props: SelectProps<TOption>) {
-  props.options[0].value
-}
-
-FancySelect<{ label: string, value: unknown, flag: boolean }>({onChange(option) {
-    option;
-  }});
 
 // number string
 // brands using classes and tags
@@ -121,3 +140,6 @@ FancySelect<{ label: string, value: unknown, flag: boolean }>({onChange(option) 
 // in out
 // type narrowing
 // mapped types
+// conditions
+// inferable
+// tuples
