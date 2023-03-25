@@ -1,3 +1,13 @@
+# Primitive types
+
+# Compound types
+
+# Generics
+
+# Infer and Conditions
+
+# High order types
+
 # Functional typing. Practical view
 
 # Pure functions. Practical view

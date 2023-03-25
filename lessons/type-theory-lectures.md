@@ -291,7 +291,7 @@ nonzero categories.
 ## One object
 
 Category having one object is also possible. It is just A id -> A. It has special name "
-Monoid" ![img_5.png](./assets/img_5.png)
+Monoid" ![img_5.png](../assets/img_5.png)
 In general, category can have any number of objects.
 
 ## Graph vs Category
@@ -301,7 +301,7 @@ Category structure is very similar to graph, but there are some subtle differenc
 * Graph might not have any arrows at all
 * Every object should have identity arrows
 * Every pair of composable arrows, there should be another arrow joining (composing) for
-  result ![img.png](./assets/img.png)
+  result ![img.png](../assets/img.png)
 
 This construction in which we keep adding stuff in order to satisfy certain axioms is a very common construction in
 category theory and is called "Free construction".
@@ -309,21 +309,21 @@ category theory and is called "Free construction".
 ## Order
 
 Order is a category where arrows are not functions. An arrow represents a relation. For example <=
-relation. ![img_1.png](./assets/img_1.png)
+relation. ![img_1.png](../assets/img_1.png)
 In other way we could say that A comes before B in some *order*. There are some conditions which Order must fulfill.
 
 ### Preorder
 
 This kind of order satisfies minimum joining condition:
 
-![img_2.png](./assets/img_2.png)
+![img_2.png](../assets/img_2.png)
 
 It is also associative (must be proven).
 
 This relation also has to be reflexive, meaning that it contains an identity arrows for every
-object. ![img_3.png](./assets/img_3.png)
+object. ![img_3.png](../assets/img_3.png)
 
-It can only have one arrow for each of two possible directions. ![img_4.png](./assets/img_4.png)
+It can only have one arrow for each of two possible directions. ![img_4.png](../assets/img_4.png)
 
 There can be objects with no relation at all.
 
@@ -361,7 +361,7 @@ In monoid, any two morphisms are composable. In programming, it means we can joi
 typed languages, any value has one exact type that corresponds to one object in a category, so any must operate on that
 type meaning that it can be composed easily.
 
-![img_6.png](./assets/img_6.png)
+![img_6.png](../assets/img_6.png)
 
 # Kleisli category 3.2
 
@@ -372,7 +372,7 @@ auditing trail. By logging for example input and output data. Now go and rewrite
 ## Imperative solution
 
 For that case we could have global log function which could be use inside every procedure our library
-contains. ![img_7.png](./assets/img_7.png)
+contains. ![img_7.png](../assets/img_7.png)
 
 That what managers says, because this is the simplest solution. But what does it mean?
 Functional programmers think that something is wrong with a solution. How we can explain that? It is really simple, it
@@ -389,14 +389,14 @@ environment comes in place.
 ## Functional solution
 
 It can be implemented like pure function as well. It may look more complex at first glance, but it is just an effect of
-making things more explicit. ![img_8.png](./assets/img_8.png)
+making things more explicit. ![img_8.png](../assets/img_8.png)
 
 Memoization is a problem though, because it is now depends on `log` var. It is like making it to be depended on any
 possible history of calls. Another problem is log concatenation. Now function have additional responsibility (e.g.
 reason of change). For example, logging logic might change more often and with different reasons comparing with `negate`
 function.
 
-![img_9.png](./assets/img_9.png)
+![img_9.png](../assets/img_9.png)
 
 Now, responsibilities look clearer. But now the question - Who appends these logs?
 
@@ -418,7 +418,7 @@ Identity is also satisfied because there is an identity function and identity st
 
 Logging will work for any monoid
 
-![img.png](img.png)
+![img.png](../assets/img--1.png)
 
 It has a name called Kleisli category. Monad is just a way of composing special kinds of functions. In imperative
 programming we do not think in terms of composing functions. It is like okay I am calling this function and do something
@@ -427,17 +427,17 @@ of composing functions. What if we use different kind of composition.
 
 Imagine a construction consisting of basis category and kleisli category:
 
-![img_10.png](./assets/img_10.png)
+![img_10.png](../assets/img_10.png)
 
 These two contain completely same objects. But morphisms are different!
 
 A m -> (A, string). m is a mapping that maps objects to objects or types to types. It can be represented as follows
 
-![img_11.png](./assets/img_11.png)
+![img_11.png](../assets/img_11.png)
 
 The key thing is that in C category these objects are not composable but in Kleisli they do.
 
-![img_12.png](./assets/img_12.png)
+![img_12.png](../assets/img_12.png)
 
 Kleisli category has, as objects, the types of the underlying programming language. Morphisms from type A to type B
 are functions that go from A to a type derived from B using the particular embellishment. Each Kleisli category defines
@@ -454,15 +454,15 @@ best" match.
 
 How to define such set in terms of other sets? Without talking about elements. Try to describe it in terms of morphisms.
 
-* It has an arrow from any other set (including id) ![img_13.png](./assets/img_13.png)
+* It has an arrow from any other set (including id) ![img_13.png](../assets/img_13.png)
 * Unit type (or singleton set) it has one and only one arrow (morphism) from any other set
 
-This object is called terminal ![img_14.png](./assets/img_14.png)
+This object is called terminal ![img_14.png](../assets/img_14.png)
 
 * Existence
 * Uniqueness
 
-![img_15.png](./assets/img_15.png)
+![img_15.png](../assets/img_15.png)
 
 ## Defining empty set
 
@@ -475,24 +475,24 @@ Morphism from terminal object to any other object is like picking concrete eleme
 in category theory has inverse construction! For any category we can always create another category with all arrows
 reversed.
 
-![img_16.png](./assets/img_16.png)
+![img_16.png](../assets/img_16.png)
 
 # Products 4.2
 
 What are the properties of cartesian product? For every cartesian product there are two methods possible (or two
-morphisms) `fst` `snd` s.t. ![img_17.png](./assets/img_17.png)
+morphisms) `fst` `snd` s.t. ![img_17.png](../assets/img_17.png)
 
 Any object allowing those methods can be called cartesian product.
 
-![img_18.png](./assets/img_18.png)
+![img_18.png](../assets/img_18.png)
 
 How to tell if an object is cartesian product? By using universal construction. Let's start from ranking them.
 
 `c` is better than `c'` if there is a morphism between.
 
-![img_19.png](./assets/img_19.png)
+![img_19.png](../assets/img_19.png)
 
-![img_20.png](./assets/img_20.png)
+![img_20.png](../assets/img_20.png)
 
 ```typescript
 // Real product is expressed like
@@ -522,33 +522,33 @@ This function shrinks stuff, meaning that it loses some valuable information fro
 
 ## Triple
 
-![img_21.png](./assets/img_21.png)
+![img_21.png](../assets/img_21.png)
 
 ## Categorical product
 
 Categorical product is two objects `a` `b` s.t.
 
-![img_22.png](./assets/img_22.png)
+![img_22.png](../assets/img_22.png)
 
 # Coproducts, sum types 5.1
 
 Product and coproduct:
 
-![img_23.png](./assets/img_23.png)
+![img_23.png](../assets/img_23.png)
 
 We want `i` and `j` to be injection (meaning it does not shrink anything). From set theory it means `a` and `b` to be a
 subset of `c`. Even more, we want `(a & b) = c`. These are conditions of universal construction. `c` has to be
 discriminated for morphism `m` to be able to map precisely.
 
-![img_24.png](./assets/img_24.png)
+![img_24.png](../assets/img_24.png)
 
 Otherwise, there is no possible solution (function can not return two objects simultaneously)
 
-![img_25.png](./assets/img_25.png)
+![img_25.png](../assets/img_25.png)
 
 To extract information from `Either`, two functions must be defined:
 
-![img_26.png](./assets/img_26.png)
+![img_26.png](../assets/img_26.png)
 
 # Algebraic data types
 
@@ -558,22 +558,22 @@ Is there a product in types? Can we define monoid like behaviour?
 
 In general types are not symmetric (they are not the same)
 
-![img_27.png](./assets/img_27.png)
+![img_27.png](../assets/img_27.png)
 
 But the interesting thing is - they are isomorphic. Meaning there is a function converting in both ways (which is
 injective and surjective)
 
-![img_28.png](./assets/img_28.png)
+![img_28.png](../assets/img_28.png)
 
 Let's look at associative property. Situation here is same - types are not equal but completely isomorphic.
 
-![img_29.png](./assets/img_29.png)
+![img_29.png](../assets/img_29.png)
 
-![img_30.png](./assets/img_30.png)
+![img_30.png](../assets/img_30.png)
 
 Does it have a unit? It has to have only one element. And such type is called `Unit`
 
-![img_31.png](./assets/img_31.png)
+![img_31.png](../assets/img_31.png)
 
 To repeat, these are not the same types! But they are isomorphic.
 
@@ -583,7 +583,7 @@ So as we have shown, types can be multiplied (using product) and all standard al
 
 `Either` type is symmetric (commutative)
 
-![img_32.png](./assets/img_32.png)
+![img_32.png](../assets/img_32.png)
 
 It does not matter in which pairs they are evaluated due to associativity.
 
@@ -593,13 +593,13 @@ Unit of a sum is a `Void`.
 
 In algebra, we can for example multiply by zero:
 
-![img_33.png](./assets/img_33.png)
+![img_33.png](../assets/img_33.png)
 
 What about distributive law?
 
 `a * (b + c)=a * b + a * c`
 
-![img_34.png](./assets/img_34.png)
+![img_34.png](../assets/img_34.png)
 
 It is again, completely isomorphic.
 
@@ -616,7 +616,7 @@ But what about equations?
 
 `l(a) = 1 + a * l(a)`
 
-![img_35.png](./assets/img_35.png)
+![img_35.png](../assets/img_35.png)
 
 # Functors 6.1
 
@@ -635,7 +635,7 @@ preserve structure? Category embodies structure. Is there a category that repres
 
 For example, discrete category:
 
-![img_36.png](./assets/img_36.png)
+![img_36.png](../assets/img_36.png)
 
 It corresponds to a Set. Every category that is not discrete (i.e. has arrows) has structure.
 
@@ -643,11 +643,11 @@ So to preserve structure, we must preserve all morphisms between objects.
 
 Functor must map all arrows (home set, C(a, b)):
 
-![img_38.png](./assets/img_38.png)
+![img_38.png](../assets/img_38.png)
 
-![img_39.png](./assets/img_39.png)
+![img_39.png](../assets/img_39.png)
 
-![img_40.png](./assets/img_40.png)
+![img_40.png](../assets/img_40.png)
 
 Endofunction (endo means inside). Endfunctor acts inside category of types (programming).
 
@@ -672,7 +672,7 @@ const countChars = (a: A): B => a.length
 fmap(countChars)
 ```
 
-![img_41.png](./assets/img_41.png)
+![img_41.png](../assets/img_41.png)
 
 # Functors in programming 6.2
 
@@ -683,7 +683,7 @@ not express these conditions.
 
 `fmap (g * f) = fmap g * fmap f` - preserve composition rule
 
-![img_42.png](./assets/img_42.png)
+![img_42.png](../assets/img_42.png)
 
 Functions are equal when they have equal results on equal arguments. Function usually described as an equality, meaning
 it can be replaced anywhere (inlined, or reference transparent).
@@ -706,7 +706,7 @@ Equational reasoning is another word for that. Let's try and apply it here.
 
 ## Lifting
 
-![img_43.png](./assets/img_43.png)
+![img_43.png](../assets/img_43.png)
 
 `fmap` is high order polymorphic function. For every specific function, different fmap is defined. It can not be defined
 unconditionally. So depending on concrete case, implementation differs. This is an example of ad hoc polymorphism. Type
@@ -724,7 +724,7 @@ map :: (a -> b) -> (f a -> f b) // f is a type constructor
 
 `data List a = Nil | Cons a (List a) // List of a is a coproduct of null and special recursive type`
 
-![img_44.png](./assets/img_44.png)
+![img_44.png](../assets/img_44.png)
 
 Functors are very much like containers, because they "contain" something related to wrapped type. Value in functor is
 like radioactive, meaning we can not operate on it directly, only via function. Such restriction gives us unified way to
@@ -734,17 +734,17 @@ describe a lot of ideas (like Futures and Streams).
 
 Functors map objects and connections between them, thus preserving original category structure.
 
-![img_45.png](./assets/img_45.png)
+![img_45.png](../assets/img_45.png)
 
 Algebraic data structures are formed using product or sums. Unit, never or some struct types are used like objects.
 
-![img_46.png](./assets/img_46.png)
+![img_46.png](../assets/img_46.png)
 
-![img_47.png](./assets/img_47.png)
+![img_47.png](../assets/img_47.png)
 
 # Monoidal Categoies, Functoriality of ADTs, Profunctors 7.2
 
-![img_48.png](./assets/img_48.png)
+![img_48.png](../assets/img_48.png)
 
 Categorical product for every pair of object and terminal object - together provide monoidal structure on objects shown
 above.
@@ -757,7 +757,7 @@ That is usual functor, where directions of morphisms are the same. It provides y
 
 This functor implements separate method called contramap
 
-![img_49.png](./assets/img_49.png)
+![img_49.png](../assets/img_49.png)
 
 It not like container, it is more like requires a value. For example, we could say that instead of 'A' type values we
 will be providing 'B' type. Quite obviously for a function to continue to work, it needs to know the way of converting '
@@ -765,6 +765,6 @@ B' into an 'A'.
 
 ## Invariant
 
-![img_50.png](./assets/img_50.png)
+![img_50.png](../assets/img_50.png)
 
-![img_51.png](./assets/img_51.png)
+![img_51.png](../assets/img_51.png)
