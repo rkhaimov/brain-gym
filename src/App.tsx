@@ -1,23 +1,23 @@
-import React from 'react';
-import { PedestrianLight } from './PedestrianLight';
-import { LightsBody } from './LightsBody';
+import React, { useState } from 'react';
+import { World } from './World';
+import { Controls } from './Controls';
+import { PedestrianTrafficLight } from './PedestrianTrafficLight';
 
 export const App = () => {
+  const [standing, setStanding] = useState(false);
+  const [walking, setWalking] = useState(false);
+
   return (
-    <div>
-      <PedestrianTrafficLight standing walking />
-    </div>
+    <World>
+      <Controls>
+        <Controls.Control onClick={() => setStanding(true)}>
+          STANDING
+        </Controls.Control>
+        <Controls.Control onClick={() => setWalking(true)}>
+          WALKING
+        </Controls.Control>
+      </Controls>
+      <PedestrianTrafficLight standing={standing} walking={walking} />
+    </World>
   );
 };
-
-type Props = {
-  walking: boolean;
-  standing: boolean;
-};
-
-const PedestrianTrafficLight: React.FC<Props> = ({ standing, walking }) => (
-  <LightsBody>
-    <PedestrianLight color="red" active={standing} />
-    <PedestrianLight color="green" active={walking} />
-  </LightsBody>
-);
