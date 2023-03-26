@@ -22,5 +22,3 @@
 
 # Kleisli category (3.2)
 
-# Making invalid states not representable
-
