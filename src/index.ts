@@ -23,21 +23,59 @@ type Task<T> = {
   run(onDone: (result: Either<Error, T>) => void): void;
 };
 
-function all<T>(tasks: Task<T>[]): Task<T[]> {}
+function all<T>(tasks: Task<T>[]): Task<T[]> {
+  if (tasks.length === 0) {
+    return {
+      run(onDone) {
+        onDone({ type: 'right', value: [] });
+      },
+    };
+  }
 
-function flatMap<T>(tasks: Task<Task<T>>): Task<T> {}
+  const [head, ...tail] = tasks;
+
+  return flatMap(
+    map(head, (result) => map(all(tail), (results) => [result, ...results]))
+  );
+}
+
+function flatMap<T>(tasks: Task<Task<T>>): Task<T> {
+  return {
+    run(onDone) {
+      tasks.run((result) => {
+        if (result.type === 'left') {
+          onDone(result);
+        } else {
+          result.value.run((final) => onDone(final));
+        }
+      });
+    },
+  };
+}
 
 function map<TCurrent, TTransformed>(
   task: Task<TCurrent>,
   transform: (it: TCurrent) => TTransformed
-): Task<TTransformed> {}
+): Task<TTransformed> {
+  return {
+    run(onDone) {
+      task.run((result) => {
+        if (result.type === 'left') {
+          onDone(result);
+        } else {
+          onDone({ type: 'right', value: transform(result.value) });
+        }
+      });
+    },
+  };
+}
 
 function getUsers(): Task<User[]> {
   return {
     run(onDone) {
       setTimeout(
         () =>
-          onDone({ type: 'right', value: [{ name: 'John', surname: 'Doe' }] }),
+          onDone({ type: 'right', value: [{ name: 'John', surname: 'Doe' }, { name: 'Ivan', surname: 'Pen' }] }),
         1_000
       );
     },
