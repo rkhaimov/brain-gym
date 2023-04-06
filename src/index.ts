@@ -2,7 +2,7 @@ main();
 
 // Define function fetching data from backend
 async function main() {
-  getFromApi('/users', (result) => {
+  getUsers((result) => {
     if (result.type === 'left') {
       console.log(`Receive error ${result.value.message}`);
     } else {
@@ -11,10 +11,16 @@ async function main() {
   });
 }
 
-function getFromApi(
-  url: string,
-  onDone: (result: Either<Error, unknown>) => void
-): void {}
+function capitalizeUser(user: User): User {
+  return { name: user.name.toUpperCase(), surname: user.surname.toUpperCase() };
+}
+
+function getUsers(onDone: (result: Either<Error, User[]>) => void): void {}
+
+type User = {
+  name: string;
+  surname: string;
+};
 
 function assert(condition: boolean) {}
 
