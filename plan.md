@@ -10,7 +10,9 @@
 
 # Functional typing. Practical view
 
-# Pure functions. Practical view
+# Pure functions. Definitions
+
+# Pure functions. Real applications
 
 # Category definition (0 to 2.1)
 

@@ -1,17 +1,26 @@
 main();
 
+// Define function fetching data from backend
 async function main() {
+  getFromApi('/users', (result, error) => {
+    // result = [{124124}], error = Error('404')
+    // Error is there, but it is just null!
+    // result = null, error = null
+    assert((error instanceof Error && result === undefined) || error === null);
 
+    if (result !== undefined) {
+      console.log(`Receive result ${result}`);
+    }
+
+    if (error === null) {
+      console.log(`Receive error ${error}`);
+    }
+  });
 }
 
-function divide(n: number, by: number): Either<void, number> {
-  if (by === 0) {
-    return { type: 'left', value: undefined };
-  }
+function getFromApi(
+  url: string,
+  onDone: (result: unknown, error: Error | null) => void
+): void {}
 
-  return { type: 'right', value: n / by };
-}
-
-type Either<TLeft, TRight> =
-  | { type: 'left'; value: TLeft }
-  | { type: 'right'; value: TRight };
+function assert(condition: boolean) {}
