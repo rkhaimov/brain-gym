@@ -9,22 +9,19 @@ type TODO = {
 async function main() {
   const todos = await getAllTodos();
 
-  let total = 0;
-  for (const todo of todos) {
-    if (todo.completed) {
-      if (todo.title.includes('a')) {
-        total -= todo.score;
-      } else {
-        total += todo.score;
-      }
-    }
-  }
+  const total = todos
+    .filter((it) => it.completed)
+    .reduce((total, todo) => total + toScore(todo), 0);
 
   if (total % 2 == 0) {
     console.log('Score is even');
   } else {
     console.log('Score is odd');
   }
+}
+
+function toScore(todo: TODO): number {
+  return todo.title.includes('a') ? -1 * todo.score : todo.score;
 }
 
 async function getAllTodos(): Promise<TODO[]> {
