@@ -9,9 +9,10 @@ type TODO = {
 async function main() {
   const todos = await getAllTodos();
 
-  const total = todos
-    .filter((it) => it.completed)
-    .reduce((total, todo) => total + toScore(todo), 0);
+  const program = (todos: TODO[]) =>
+    calcTotal(toTargetScores(takeCompleted(todos)));
+
+  const total = program(todos);
 
   if (total % 2 == 0) {
     console.log('Score is even');
@@ -20,8 +21,16 @@ async function main() {
   }
 }
 
-function toScore(todo: TODO): number {
-  return todo.title.includes('a') ? -1 * todo.score : todo.score;
+function takeCompleted(todos: TODO[]): TODO[] {
+  return todos.filter((it) => it.completed);
+}
+
+function toTargetScores(todos: TODO[]): number[] {
+  return todos.map((it) => (it.title.includes('a') ? -1 * it.score : it.score));
+}
+
+function calcTotal(scores: number[]): number {
+  return scores.reduce((total, score) => total + score, 0);
 }
 
 async function getAllTodos(): Promise<TODO[]> {
