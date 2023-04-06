@@ -1,54 +1,20 @@
 main();
 
-type TODO = {
-  title: string;
-  completed: boolean;
-  score: number;
-};
-
 async function main() {
-  const todos = await getAllTodos();
+  console.log(head([]));
+  console.log(head([{ type: 'left', value: undefined }]));
+}
 
-  const program = (todos: TODO[]) =>
-    calcTotal(toTargetScores(takeCompleted(todos)));
-
-  const total = program(todos);
-
-  if (total % 2 == 0) {
-    console.log('Score is even');
-  } else {
-    console.log('Score is odd');
+// T | Error != a + 1 (Might have intersection)
+// Either<void, T> = a + 1;
+function head<T>(elements: T[]): Either<void, T> {
+  if (elements.length === 0) {
+    return { type: 'left', value: undefined };
   }
+
+  return { type: 'right', value: elements[0] };
 }
 
-function takeCompleted(todos: TODO[]): TODO[] {
-  return todos.filter((it) => it.completed);
-}
-
-function toTargetScores(todos: TODO[]): number[] {
-  return todos.map((it) => (it.title.includes('a') ? -1 * it.score : it.score));
-}
-
-function calcTotal(scores: number[]): number {
-  return scores.reduce((total, score) => total + score, 0);
-}
-
-async function getAllTodos(): Promise<TODO[]> {
-  return [
-    {
-      title: 'Complete homework',
-      completed: true,
-      score: 10,
-    },
-    {
-      title: 'Program an example',
-      completed: false,
-      score: 2,
-    },
-    {
-      title: 'Write a function',
-      completed: true,
-      score: 29,
-    },
-  ];
-}
+type Either<TLeft, TRight> =
+  | { type: 'left'; value: TLeft }
+  | { type: 'right'; value: TRight };
