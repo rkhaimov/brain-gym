@@ -1,12 +1,12 @@
 main();
 
-// Define function fetching data from backend
 async function main() {
   getUsers((result) => {
     if (result.type === 'left') {
       console.log(`Receive error ${result.value.message}`);
     } else {
-      console.log(`Receive result ${result.value}`);
+      const userWithRole: Array<[User, string]> = [];
+      result.value.map(capitalizeUser).map(user => getUserRole(user, role => userWithRole.push()));
     }
   });
 }
@@ -16,6 +16,8 @@ function capitalizeUser(user: User): User {
 }
 
 function getUsers(onDone: (result: Either<Error, User[]>) => void): void {}
+
+function getUserRole(user: User, onDone: (result: Either<Error, string>) => void) {}
 
 type User = {
   name: string;
