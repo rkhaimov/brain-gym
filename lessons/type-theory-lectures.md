@@ -1,126 +1,18 @@
-# Category theory 1.1
+What is programming? At the most basic level, programming is about telling the computer what to do. But even when we
+program in assembly, the instructions we give the computer are an expression of something more meaningful. And how do we
+solve problems? We decompose bigger problems into smaller problems. If the smaller problems are still too big, we
+decompose them further, and so on. Finally, we write code that solves all the small problems. And then comes the essence
+of programming: we compose those pieces of code to create solutions to larger problems. Decomposition wouldn’t make
+sense if we weren’t able to put the pieces back together.
 
-Category theory is the most abstract branch of mathematics
-
-Firstly there were assembly languages - very lowed level, imperative way to write a program. Main problem of which are -
-they are hard to understand by human, and it is very hard to scale such programs
-
-Then, procedural paradigm came - its main purpose is to provide ability to divide big problem into smaller pieces called
-procedures. It can compute a value based on other values, or it can do a side effect.
-
-Next, people came up with an idea of object-oriented paradigm, and it's even more abstract. Now we have stuff that is
-hidden inside objects. These can then be composed together to implement more complex behaviours. Encapsulation improves
-readability and maintainability by hiding implementation details behind small and concise interface.
-
-## Important idea
-
-All these paradigm provide certain ways to divide complex problems into smaller ones, solve them separately and combine
-the solutions together. There is a name for that - Compatibility.
-
-There is another idea though - abstraction (subtraction). It means getting read of details. Details are among main
-sources of complexity and fragility.
-
-Compatibility and abstraction in union provide reusable blocks of code.
-
-## Something is wrong
-
-OOP exhibits problems when working with concurrent code.
-
-This paradigm hides two things that are very important:
-
-* Mutations - object can change its state over time, and it is hidden from the client
-* Share - object often contain pointer to other objects. These are often hidden.
-
-Both create surface for side effects and non-deterministic behaviour. Main causes for rigid and immobile code to exist.
-
-## Solutions
-
-Category theory is a high level language. It provides abstract ideas that can be translated into practical tools.
-It unifies a lot of things making for example all programming languages to look the same. It even unifies certain areas
-of mathematics which describes rules of logic and universe (presented with human minds).
-
-## Types
-
-People used to work with data as a collection of bytes with pointers between. And again it is low level. Type theory
-came to help us, it describes all categories of data structures. Again, it classifies them all at higher level of
-abstraction making it to be language independent.
-
-Types were first invented to solve paradoxes in math (like Russelses paradox)
-
-## Logic
-
-There is logic that were created long time ago. At some point people realized that all these distinct areas of
-mathematics are exactly the same. Whatever you do logic can be directly translated into type theory (and vice versa).
-
-They are said to be isomorphic.
-
-## Divisibility
-
-There might be a reason for category theory to be ubiquitous. People solve complex problems by dividing them into
-smaller ones and combine a solution later. So if a problem is complex, and it can be chopped - then it is not solved and
-theory is not born. That may be the reason why all the branches of mathematics can be abstracted via certain categories
-with composition abstractions. It does not mean that all universe has is structured in exactly that way.
-
-Maybe it's just our brains that love structure so much. Maybe we are able to understand something only if it has
-particular rules describing how inner parts are communicating together former final architecture of a thing.
-
-Category theory is not about mathematics or physics, it is about human minds.
-
-# What is a category 1.2
-
-These are the main tools for solving problems by decomposing into simpler questions:
-
-* Abstraction
-* Composition
-* Identity
-
-The last one is especially important. Abstraction removes unnecessary details from objects thus casting them to simpler,
-higher level entities. It often results in different in details objects to become *identical*.
-
-Composition and Identity in union define category theory. It encompasses those two.
-
-## Category insides
-
-Category consists of objects and morphisms (arrows, operations or functions transforming one object to another within
-same category). Object has no properties or structures. It is like a point, just some primitive. Morphism is also a
-primitive. The only property it has is that an arrow has start and end points.
-
-Objects in that case serve the only purpose to define both ends of arrows (morphisms)
-
-Interestingly enough, so-called spatial relationship and movement were among the first ways primitive man were
-communicating with each other.
-
-* There can be zero or more number of arrows between objects.
-* Arrows can be reference to itself. A -> A
-* Arrows can be bidirectional. A -> B -> A
-
-## Composition
-
-It is a property that if A f -> B g -> C than there always must exist an arrow such that A g * f -> C.
-
-## Identity
-
-Category is identified by all possible compositions of all morphisms between objects (multiplication table). Different
-tables will give different categories.
-
-For every object A there is a morphism s.t. A id -> A. id is called *identity* morphism.
-
-* id * f = f = f * id
-
-Every category must have an identity element.
-
-## Associativity
-
-Suppose we have A f -> B g -> C h -> D then there are two options:
-
-* A g * f -> C h -> D = h * (g * f)
-* A f -> B h * g -> D = (h * g) * f
-* h * (g * f) = (h * g) * f
-
-It means that parentheses can be moved freely thus they are not important. It means that morphisms can be *composed* in
-any order.
-
-Every category must be associative
+This process of hierarchical decomposition and recomposition is not imposed on us by computers. It reflects the
+limitations of the human mind. Our brains can only deal with a small number of concepts at a time. The details of our
+understanding of the human short-term memory might be changing, but we know for sure that it’s limited. The bottom line
+is that we are unable to deal with the soup of objects or the spaghetti of code. We need structure not because
+well-structured programs are pleasant to look at, but because otherwise our brains can’t process them efficiently. We
+often describe some piece of code as elegant or beautiful, but what we really mean is that it’s easy to process by our
+limited human minds. Elegant code creates chunks that are just the right size and come in just the right number for our
+mental digestive system to assimilate them.
 
 ## Closure
 
