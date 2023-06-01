@@ -4,9 +4,9 @@ type AreEqual<A, B> = A extends B ? (B extends A ? true : false) : false;
 declare const expect: <T extends true>() => void;
 
 interface Compose {
-  <A, B, C>(g: (x: B) => C, f: (x: A) => B): (x: A) => C;
+    <A, B, C>(g: (x: B) => C, f: (x: A) => B): (x: A) => C;
 
-  <A, B, C, D>(h: (x: C) => D, g: (x: B) => C, f: (x: A) => B): (x: A) => D;
+    <A, B, C, D>(h: (x: C) => D, g: (x: B) => C, f: (x: A) => B): (x: A) => D;
 }
 
 declare const compose: Compose;
@@ -282,13 +282,13 @@ const fact = (n: number) => product(range(1, n));
 
 ```typescript
 function fact(n: number): number {
-  const result = 1;
+    const result = 1;
 
-  for (const i = 2; i <= n; ++i) {
-    result *= i;
-  }
+    for (const i = 2; i <= n; ++i) {
+        result *= i;
+    }
 
-  return result;
+    return result;
 }
 ```
 
@@ -454,8 +454,8 @@ definition of a monoid.
 
 ```typescript
 type Monoid<M> = {
-  empty: M;
-  combine(left: M, right: M): M;
+    empty: M;
+    combine(left: M, right: M): M;
 }
 ```
 
@@ -464,8 +464,8 @@ mappend is associative). It’s the responsibility of the programmer to make sur
 
 ```typescript
 const concatM: Monoid<string> = {
-  empty: '',
-  combine: (left, right) => left + right,
+    empty: '',
+    combine: (left, right) => left + right,
 };
 ```
 
@@ -527,9 +527,9 @@ global state
 declare let logger: string;
 
 const not = (flag: boolean) => {
-  logger += `not ${flag}`;
+    logger += `not ${flag}`;
 
-  return !flag;
+    return !flag;
 };
 ```
 
@@ -564,13 +564,13 @@ words, all the while producing a log of those actions.
 
 ```typescript
 const composeWriter =
-  <A, B, C>(g: (input: B) => [C, string], f: (input: A) => [B, string]) =>
-    (input: A) => {
-      const [b, fLog] = f(input);
-      const [c, gLog] = g(b);
+    <A, B, C>(g: (input: B) => [C, string], f: (input: A) => [B, string]) =>
+        (input: A) => {
+            const [b, fLog] = f(input);
+            const [c, gLog] = g(b);
 
-      return [c, gLog + fLog] as const;
-    };
+            return [c, gLog + fLog] as const;
+        };
 ```
 
 We have accomplished our goal: The aggregation of the log is no longer the concern of the individual functions. They
@@ -653,3 +653,35 @@ a function that returns an embellished type optional
   from zero.
 * Compose the functions safe_root and safe_reciprocal to implement safe_root_reciprocal that calculates sqrt(1/x)
   whenever possible.
+
+# Products and Coproducts
+
+We are defined by our relationships.
+
+```typescript
+// How is that?
+```
+
+Nowhere is this more true than in category theory. If we want to single out a particular object in a category, we can
+only do this by describing its pattern of relationships with other objects (and itself). These relationships are defined
+by morphisms.
+
+There is a common construction in category theory called the universal construction for defining objects in terms of
+their relationships. One way of doing this is to pick a pattern defining particular shape (consisting of objects and
+morphisms) and then find its occurrences in a category. Often, there will be many such hits, so we need to filter them
+such that there will be only one left. It can be accomplished by ranking them in a certain way.
+
+## Initial Object
+
+The simplest shape is a single object. We could generalize that notion of object precedence by saying that object 𝑎 is
+“more initial” than object 𝑏, if there is an arrow (a morphism) going from 𝑎 to 𝑏. We would then define the initial
+object as one that has arrows going to all other objects. Obviously there is no guarantee that such an object exists,
+and that’s okay. A bigger problem is that there may be too many such objects: The recall is good, but precision is
+lacking. The solution is to take a hint from ordered categories — they allow at most one arrow between any two objects:
+there is only one way of being less-than or equal-to another object. Which leads us to this definition of the initial
+object:
+
+The initial object is the object that has one and only one morphism going to any object in the category
+
+However, even that doesn’t guarantee the uniqueness of the initial object (if one exists). But it guarantees the next
+best thing: uniqueness up to isomorphism.
