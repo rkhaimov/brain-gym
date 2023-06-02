@@ -3,6 +3,8 @@ type AreEqual<A, B> = A extends B ? (B extends A ? true : false) : false;
 
 declare const expect: <T extends true>() => void;
 
+declare const identity: <T>(input: T) => T;
+
 interface Compose {
     <A, B, C>(g: (x: B) => C, f: (x: A) => B): (x: A) => C;
 
@@ -685,3 +687,88 @@ The initial object is the object that has one and only one morphism going to any
 
 However, even that doesn’t guarantee the uniqueness of the initial object (if one exists). But it guarantees the next
 best thing: uniqueness up to isomorphism.
+
+Here are some examples: The initial object in a partially ordered set (often called a poset) is its least element. Some
+posets don’t have an initial object — like the set of all integers, positive and negative, with less-than-or-equal
+relation for morphisms.
+
+It’s this family of morphisms that makes Void the initial object in the category of types.
+
+```typescript
+const absurd = <T>(input: never): T => input;
+```
+
+## Terminal Object
+
+Let’s continue with the single-object pattern, but let’s change the way we rank the objects. We’ll say that object 𝑎 is
+“more terminal” than object 𝑏 if there is a morphism going from 𝑏 to 𝑎 (notice the reversal of direction). We’ll be
+looking for an object that’s more terminal than any other object in the category. Again, we will insist on uniqueness up
+to isomorphism:
+
+The terminal object is the object with one and only one morphism coming to it from any object in the category.
+
+```typescript
+// Any singleton set will suffice
+const unit = <T>(input: T): void => {
+};
+```
+
+Notice that in this example the uniqueness condition is crucial, because there are other sets (actually, all of them,
+except for the empty set) that have incoming morphisms from every set. For instance, there is a Boolean-valued
+function (a predicate) defined for every type:
+
+```typescript
+const yes = <T>(input: T) => true;
+```
+
+But Bool is not a terminal object. There is at least one more Bool-valued function from every type:
+
+```typescript
+const no = <T>(input: T) => false;
+```
+
+Insisting on uniqueness gives us just the right precision to narrow down the definition of the terminal object to just
+one type.
+
+## Duality
+
+You can’t help but to notice the symmetry between the way we defined the initial object and the terminal object. The
+only difference between the two was the direction of morphisms. It turns out that for any category 𝐂 we can define the
+opposite category 𝐂 𝑜𝑝 just by reversing all the arrows.
+
+For every construction you come up with, there is its opposite; and for every theorem you prove, you get one for free.
+The constructions in the opposite category are often prefixed with “co”.
+
+It follows then that a terminal object is the initial object in the opposite category.
+
+Union
+
+![img_3.png](img_3.png)
+
+Intersection
+
+![img_4.png](img_4.png)
+
+## Isomorphisms
+
+As programmers, we are well aware that defining equality is a nontrivial task. You’d think that mathematicians would
+have figured out the meaning of equality, but they haven’t.
+
+Mathematically it means that there is a mapping from object 𝑎 to object 𝑏, and there is a mapping from object 𝑏 back to
+object 𝑎, and they are the inverse of each other. In category theory we replace mappings with morphisms. An isomorphism
+is an invertible morphism; or a pair of morphisms, one being the inverse of the other.
+
+Morphism 𝑔 is the inverse of morphism 𝑓 if their composition is the identity morphism:
+
+```typescript
+declare const numberToString: (n: number) => string;
+declare const stringToNumber: (s: string) => number;
+
+const nToN = compose(stringToNumber, numberToString);
+const sToS = compose(numberToString, stringToNumber);
+
+expect<AreEqual<typeof nToN, typeof identity<number>>>();
+expect<AreEqual<typeof sToS, typeof identity<string>>>();
+```
+
+## Products
