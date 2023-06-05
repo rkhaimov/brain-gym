@@ -1,0 +1,1717 @@
+```typescript
+type AreEqual<A, B> = A extends B ? (B extends A ? true : false) : false;
+
+declare const expect: <T extends true>() => void;
+
+declare const identity: <T>(input: T) => T;
+
+interface Compose {
+  <A, B, C>(g: (x: B) => C, f: (x: A) => B): (x: A) => C;
+
+  <A, B, C, D>(h: (x: C) => D, g: (x: B) => C, f: (x: A) => B): (x: A) => D;
+}
+
+declare const compose: Compose;
+```
+
+# Category theory
+
+It is the most abstract branch of mathematics
+
+Firstly there were assembly languages - very lowed level, imperative way to write a program. Main problem of which are -
+they are hard to understand by human, and it is very hard to scale such programs
+
+Then, procedural paradigm came - its main purpose is to provide ability to divide big problem into smaller pieces called
+procedures. It can compute a value based on other values, or it can do a side effect.
+
+Next, people came up with an idea of object-oriented paradigm, and it's even more abstract. Now we have stuff that is
+hidden inside objects. These can then be composed together to implement more complex behaviours. Encapsulation improves
+readability and maintainability by hiding implementation details behind small and concise interface.
+
+## Important idea
+
+All these paradigm provide certain ways to divide complex problems into smaller ones, solve them separately and combine
+the solutions together. There is a name for that - Compatibility.
+
+There is another idea though - abstraction (subtraction). It means getting read of details. Details are among main
+sources of complexity and fragility.
+
+Compatibility and abstraction in union provide reusable blocks of code.
+
+## Something is wrong
+
+OOP exhibits problems when working with concurrent code.
+
+This paradigm hides two things that are very important:
+
+* Mutations - object can change its state over time, and it is hidden from the client
+* Share - object often contain pointer to other objects. These are often hidden.
+
+Both create surface for side effects and non-deterministic behaviour. Main causes for rigid and immobile code to exist.
+
+## Solutions
+
+Category theory is a high level language. It provides abstract ideas that can be translated into practical tools.
+It unifies a lot of things making for example all programming languages to look the same. It even unifies certain areas
+of mathematics which describes rules of logic and universe (presented with human minds).
+
+## Types
+
+People used to work with data as a collection of bytes with pointers between. And again it is low level. Type theory
+came to help us, it describes all categories of data structures. Again, it classifies them all at higher level of
+abstraction making it to be language independent.
+
+## Logic
+
+There is logic that were created long time ago. At some point people realized that all these distinct areas of
+mathematics are exactly the same. Whatever you do logic can be directly translated into type theory (and vice versa).
+
+They are said to be isomorphic. We will define that later
+
+## Divisibility
+
+There might be a reason for category theory to be ubiquitous. People solve complex problems by dividing them into
+smaller ones and combine a solution later. So if a problem is complex, and it can be chopped - then it is not solved and
+theory is not born. That may be the reason why all the branches of mathematics can be abstracted via certain categories
+with composition abstractions. It does not mean that all universe is structured in exactly that way.
+
+Maybe it's just our brains that love structure so much. Maybe we are able to understand something only if it has
+particular rules describing how inner parts are communicating together former final architecture of a thing.
+
+Category theory is not about mathematics or physics, it is about human minds.
+
+## What is a category
+
+These are the main tools for solving problems by decomposing into simpler questions:
+
+* Abstraction
+* Composition
+* Identity
+
+The last one is especially important. Abstraction removes unnecessary details from objects thus casting them to simpler,
+higher level entities. It often results in different in details objects to become *identical*.
+
+Composition and Identity in union define category theory. It encompasses those two.
+
+## Category insides
+
+Category consists of objects and morphisms (arrows, operations or functions transforming one object to another within
+same category). Object has no properties or structures. It is like a point, just some primitive. Morphism is also a
+primitive. The only property it has is that an arrow has start and end points.
+
+Objects in that case serve the only purpose to define both ends of arrows (morphisms)
+
+Interestingly enough, so-called spatial relationship and movement were among the first ways primitive man were
+communicating with each other.
+
+* There can be zero or more number of arrows between objects.
+* Arrows can be reference to itself. A -> A
+
+```typescript
+declare const id: (x: number) => number;
+```
+
+* Arrows can be bidirectional (cycles). A -> B -> A
+
+```typescript
+declare const t1: (x: number) => string;
+declare const t2: (x: string) => number;
+```
+
+## Composition
+
+It is a property that if A f -> B g -> C than there always must exist an arrow such that A g * f -> C.
+declare const t3: (x: number) => string;
+declare const t4: (x: string) => boolean;
+const t5 = compose(t4, t3);
+
+## Identity
+
+Category is identified by all possible compositions of all morphisms between objects (multiplication table). Different
+tables will give different categories.
+
+For every object A there is a morphism s.t. A id -> A. id is called *identity* morphism.
+
+* id * f = f = f * id
+  declare const id: <T>(x: T) => T;
+
+id * f = f * id
+declare const t11: (x: number) => string;
+
+const t12 = compose(id, t11);
+const t13 = compose(t11, id<number>);
+
+expect<AreEqual<typeof t12, typeof t13>>();
+
+Every category must have an identity element. When dealing with functions, the identity arrow is implemented as the
+identity function that just returns back its argument. The implementation is the same for every type, which means this
+function is universally polymorphic
+
+## Associativity
+
+Suppose we have A f -> B g -> C h -> D then there are two options:
+declare const t6: (x: number) => string;
+declare const t7: (x: string) => boolean;
+declare const t8: (x: boolean) => number[];
+
+* A g * f -> C h -> D = h * (g * f)
+  const t9 = compose(t8, compose(t7, t6));
+* A f -> B h * g -> D = (h * g) * f
+  const t10 = compose(compose(t8, t7), t6);
+* h * (g * f) = (h * g) * f
+  expect<AreEqual<typeof t9, typeof t10>>();
+
+It means that parentheses can be moved freely thus they are not important. It means that morphisms can be *composed* in
+any order.
+
+To summarize: A category consists of objects and arrows (morphisms). Arrows can be composed, and the composition is
+associative.
+Every object has an identity arrow that serves as a unit under composition.
+
+## QUESTIONS
+
+Is the world-wide web a category in any sense? Are links morphisms?
+Objects in this category are web-sites
+Morphisms are links between them
+
+* Composition -> link from Yandex to Google and from Google to YouTube can be composed into a new link from Yandex to
+  YouTube
+* Identity -> link can refer to _blank and do nothing by result
+
+Is Facebook a category, with people as objects and friendships as morphisms?
+Objects in this category are people
+Morphisms are friendship between them
+
+* Composition -> if Jorge is friend of Mike and Mike is friend of Zoe, it does not mean Jorge is going well with Zoe
+* Identity -> Jorge might not go well with himself
+
+When is a directed graph a category?
+
+* Composition -> every head and tail of three connected nodes should be connected with an arrow
+* Identity -> every node should have an arrow to itself
+
+# Types and Functions
+
+In a dynamically typed language, type mismatches would be discovered at runtime, in strongly typed
+statically checked languages type mismatches are discovered at compile time, eliminating lots of incorrect programs
+before they have a chance to run.
+
+## Types Are About Composability
+
+Category theory is about composing arrows. But not any two arrows can be composed. The target object of one arrow must
+be the same as the source object of the next arrow. In programming we pass the results of one function to another. The
+program will not work if the target function is not able to correctly interpret the data produced by the source
+function. The two ends must fit for the composition to work. The stronger the type system of the language, the better
+this match can be described and mechanically verified.
+
+In Haskell, except on rare occasions, type annotations are purely optional. Programmers tend to use them anyway, because
+they can tell a lot about the semantics of code, and they make compilation errors easier to understand. It’s a common
+practice in Haskell to start a project by designing the types. Later, type annotations drive the implementation
+and become compiler-enforced comments.
+
+Unit testing may catch some mismatches, but testing is almost always a probabilistic rather than a deterministic
+process. Testing is a poor substitute for proof.
+
+## What Are Types?
+
+The simplest intuition for types is that they are sets of values. Sets can be finite or infinite. The type of String,
+which is a synonym for a list of Char, is an example of an infinite set.
+
+There are some subtleties that make this identification of types and sets tricky. There are problems with polymorphic
+functions that involve circular definitions, and with the fact that you can’t have a set of all sets.
+
+```typescript
+// Why We can not have sets of all sets?
+```
+
+𝐒𝐞𝐭 is a very special category, because we can actually peek inside its objects and get a lot of intuitions from doing
+that.
+
+* We know that an empty set has no elements.
+* We know that there are special one-element sets.
+* We know that functions map elements of one set to elements of another set. They can map two elements to one, but not
+  one element to two.
+* We know that an identity function maps each element of a set to itself.
+
+The plan is to gradually forget all this information and instead express all those notions in purely categorical terms,
+that is in terms of objects and arrows.
+
+A mathematical function does not execute any code — it just knows the answer. A function has to calculate the
+answer. It’s not a problem if the answer can be obtained in a finite number of steps — however big that number might be.
+But there are some calculations that involve recursion, and those might never terminate. We can’t just ban
+non-terminating functions from Haskell because distinguishing between terminating and non-terminating functions is
+undecidable — the famous halting problem.
+
+That’s why computer scientists came up with a brilliant idea, or a major hack, depending on your point of view, to
+extend every type by one more special value called the bottom and denoted by _|_, or Unicode ⊥. This “value” corresponds
+to a non-terminating computation.
+
+Functions that may return bottom are called partial, as opposed to total functions, which return valid results for every
+possible argument.
+
+```typescript
+declare const hang: () => never;
+
+const n: number = hang();
+```
+
+## Why Do We Need a Mathematical Model?
+
+There are formal tools for describing the semantics of a language but, because of their complexity, they are mostly used
+with simplified academic languages, not real-life programming behemoths. One such tool called operational semantics
+describes the mechanics of program execution.
+
+The problem is that it’s very hard to prove things about programs using operational semantics. To show a property of a
+program you essentially have to “run it” through the idealized interpreter.
+
+```typescript
+// What is operational semantics?
+```
+
+We think that the code we write will perform certain actions that will produce desired results. We are usually quite
+surprised when it doesn’t. That means we do reason about programs we write, and we usually do it by running an
+interpreter in our heads. It’s just really hard to keep track of all the variables. Computers are good at running
+programs — humans are not! If we were, we wouldn’t need computers.
+
+But there is an alternative. It’s called denotational semantics, and it’s based on math. In denotational semantics every
+programming construct is given its mathematical interpretation. With that, if you want to prove a property of a program,
+you just prove a mathematical theorem.
+
+```typescript
+// Denotational friendly syntax
+const fact = (n: number) => product(range(1, n));
+```
+
+```typescript
+function fact(n: number): number {
+  const result = 1;
+
+  for (const i = 2; i <= n; ++i) {
+    result *= i;
+  }
+
+  return result;
+}
+```
+
+Okay, I’ll be the first to admit that this was a cheap shot! A factorial function has an obvious mathematical
+denotation. An astute reader might ask: What’s the mathematical model for reading a character from the keyboard or
+sending a packet across the network? For the longest time that would have been an awkward question leading to a rather
+convoluted explanation. It seemed like denotational semantics wasn’t the best fit for a considerable number of important
+tasks that were essential for writing useful programs, and which could be easily tackled by operational semantics. The
+breakthrough came from category theory. Eugenio Moggi discovered that computational effect can be mapped to monads. This
+turned out to be an important observation that not only gave denotational semantics a new lease on life and made pure
+functional programs more usable, but also shed new light on traditional programming.
+
+This might not seem so important when you’re writing consumer software, but there are areas of programming where the
+price of failure may be exorbitant, or where human life is at stake. But even when writing web applications for the
+health system, you may appreciate the thought that functions and algorithms from the Haskell standard library come with
+proofs of correctness.
+
+## Pure and Dirty Functions
+
+The things we call functions in C++ or any other imperative language, are not the same things mathematicians call
+functions. A mathematical function is just a mapping of values to values.
+
+We can implement a mathematical function in a programming language: Such a function, given an input value will calculate
+the output value. A function to produce a square of a number will probably multiply the input value by itself. It will
+do it every time it’s called, and it’s guaranteed to produce the same output every time it’s called with the same input.
+The square of a number doesn’t change with the phases of the Moon.
+
+Also, calculating the square of a number should not have a side effect of dispensing a tasty treat for your dog. A
+“function” that does that cannot be easily modelled as a mathematical function.
+
+In programming languages, functions that always produce the same result given the same input and have no side effects
+are called pure functions. In a pure functional language like Haskell all functions are pure. Because of that, it’s
+easier to give these languages denotational semantics and model them using category theory. As for other languages, it’s
+always possible to restrict yourself to a pure subset, or reason about side effects separately.
+
+## Examples of Types
+
+It’s a type that’s not inhabited by any values. You can define a function that takes Void, but you can never call it. To
+call it, you would have to provide a value of the type Void, and there just aren’t any. As for what this function can
+return, there are no restrictions whatsoever.
+
+```typescript
+const absurd = <T>(input: never): T => input;
+```
+
+The name is not coincidental. There is deeper interpretation of types and functions in terms of logic called the
+Curry-Howard isomorphism. The type Void represents falsity, and the type of the function absurd corresponds to the
+statement that from falsity follows anything.
+
+Next is the type that corresponds to a singleton set. It’s a type that has only one possible value. This value just
+“is.”
+
+Think of functions from and to this type. A function from void can always be called. If it’s a pure function, it will
+always return the same result.
+
+```typescript
+const a42 = (input: void) => 42;
+const b42 = () => 42;
+
+// a42 === b42
+```
+
+Conceptually, it takes a dummy value of which there is only one instance ever, so we don’t have to mention it
+explicitly. In Haskell, however, there is a symbol for this value: an empty pair of parentheses, ().
+
+Notice that every function of unit is equivalent to picking a single element from the target type. In fact, you could
+think of pick as a different representation for the value of a set. This is an example of how we can replace explicit
+mention of elements of a set by talking about functions (arrows) instead. Functions from unit to any type 𝐴 are in
+one-to-one correspondence with the elements of that set 𝐴.
+
+Mathematically, a function from a set 𝐴 to a singleton set maps every element of 𝐴 to the single element of that
+singleton set.
+
+```typescript
+const unit = <T>(input: T): void => {
+};
+```
+
+Functions that can be implemented with the same formula for any type are called parametrically polymorphic. This is in
+fact a constructor of unit.
+
+Pure functions from Bool just pick two values from the target type, one corresponding to True and another to False.
+Functions to Bool are called predicates.
+
+```typescript
+type Bool = true | false;
+
+// number^2
+const oneOrTwo = (input: boolean) => input ? 1 : 2;
+
+// 2^number
+const isEven = (input: number) => input % 2 === 0
+```
+
+## QUESTIONS
+
+* Define a higher-order function (or a function object) memoize in your favorite language.
+* Try to memoize a function from your standard library that you normally use to produce random numbers.
+* Implement a function that takes a seed, calls the random number generator with that seed, and returns the result.
+  Memoize that function.
+* How many functions are there from Bool to Bool?
+* Draw a picture of a category whose only objects are the types Void, () (unit), and Bool; with arrows corresponding to
+  all possible functions between these types. Label the arrows with the names of the functions.
+
+# Categories Great and Small
+
+Categories come in all shapes and sizes and often pop up in unexpected places.
+
+## No Objects
+
+The most trivial category is one with zero objects and, consequently, zero morphisms.
+
+## Simple Graphs
+
+A category can be generated from directed graph. Such a category is called a free category generated by a given graph.
+It’s an example of a free construction, a process of completing a given structure by extending it with a minimum number
+of items to satisfy its laws (here, the laws of a category).
+
+## Orders
+
+A category where a morphism is a relation between objects: the relation of being less than or equal. Do we have identity
+morphisms? Every object is less than or equal to itself: check! Do we have composition? If 𝑎 ⩽ 𝑏 and 𝑏 ⩽ 𝑐 then 𝑎 ⩽ 𝑐:
+check! Is composition associative? Check! A set with a relation like this is called a preorder, so a preorder is indeed
+a category.
+
+You can also have a stronger relation, that satisfies an additional condition that, if 𝑎 ⩽ 𝑏 and 𝑏 ⩽ 𝑎 then 𝑎 must be
+the same as 𝑏. That’s called a partial order.
+
+Finally, you can impose the condition that any two objects are in a relation with each other, one way or another; and
+that gives you a linear order or total order.
+
+A preorder is a category where there is at most one morphism going from any object 𝑎 to any object 𝑏. Another name for
+such a category is “thin.” A preorder is a thin category.
+
+A set of morphisms from object 𝑎 to object 𝑏 in a category 𝐂 is called a hom-set and is written as 𝐂(𝑎, 𝑏) (or,
+sometimes, Hom𝐂(𝑎, 𝑏)). So every hom-set in a preorder is either empty or a singleton. That includes the hom-set 𝐂(𝑎,
+𝑎), the set of morphisms from 𝑎 to 𝑎, which must be a singleton, containing only the identity, in any preorder.
+
+![Preorder](img.png)
+
+Cycles are forbidden in a partial order.
+
+## Monoid as Set
+
+It’s the concept behind basic arithmetics: Both addition and multiplication form a monoid. Monoids are ubiquitous in
+programming. They show up as strings, lists, foldable data structures, futures in concurrent programming, events in
+functional reactive programming, and so on.
+
+Traditionally, a monoid is defined as a set with a binary operation (as a closure). All that’s required from this
+operation is that it’s associative, and that there is one special element that behaves like a unit with respect to it.
+
+For instance, natural numbers with zero form a monoid under addition. Associativity means that:
+
+* (𝑎 + 𝑏) + 𝑐 = 𝑎 + (𝑏 + 𝑐)
+
+The neutral element is zero, because:
+
+* 0 + 𝑎 = 𝑎
+* 𝑎 + 0 = 𝑎
+
+The second equation is redundant, because addition is commutative (𝑎+ 𝑏 = 𝑏 + 𝑎), but commutativity is not part of the
+definition of a monoid.
+
+```typescript
+type Monoid<M> = {
+  empty: M;
+  combine(left: M, right: M): M;
+}
+```
+
+There is no way to express the monoidal properties of mempty and mappend (i.e., the fact that mempty is neutral and that
+mappend is associative). It’s the responsibility of the programmer to make sure they are satisfied.
+
+```typescript
+const concatM: Monoid<string> = {
+  empty: '',
+  combine: (left, right) => left + right,
+};
+```
+
+## Monoid as Category
+
+In category theory we try to get away from sets and their elements, and instead talk about objects and morphisms.
+
+So let’s change our perspective a bit and think of the application of the binary operator as “moving” or “shifting”
+things around the set. For instance, there is the operation of adding 5 to every natural number. It maps 0 to 5, 1 to 6,
+2 to 7, and so on. That’s a function defined on the set of natural numbers. That’s good: we have a function and a set.
+In general, for any number n there is a function of adding 𝑛 — the “adder” of 𝑛.
+
+* The composition of the function that adds 5 with the function that adds 7 is a function that adds 12.
+* There is also the adder for the neutral element, zero. Adding zero doesn’t move things around, so it’s the identity
+  function in the set of natural numbers.
+
+Now I want you to forget that you are dealing with the set of natural numbers and just think of it as a single object, a
+blob with a bunch of morphisms — the adders. A monoid is a single object category. In fact the name monoid comes from
+Greek mono, which means single. Every monoid can be described as a single object category with a set of morphisms that
+follow appropriate rules of composition.
+
+![img_1.png](img_1.png)
+
+You might ask whether every categorical monoid — a one-object category — defines a unique
+set-with-binary-operator monoid. It turns out that we can always extract a set from a single-object category. This set
+is the set of morphisms — the adders in our example. In other words, we have the hom-set 𝐌(𝑚, 𝑚) of the single object 𝑚
+in the category 𝐌.
+
+![img_2.png](img_2.png)
+
+```typescript
+// It tells about isomorphism between monoid set (set of all elements and binary operation) and category monoid (an object and morphisms)
+```
+
+## QUESTIONS
+
+* Generate a free category from
+    * A graph with one node and no edges
+    * A graph with one node and one (directed) edge (hint: this edge can be composed with itself)
+    * A graph with two nodes and a single arrow between them
+    * A graph with a single node and 26 arrows marked with the letters of the alphabet: a, b, c … z.
+* What kind of order is this
+    * A set of sets with the inclusion relation: 𝐴 is included in 𝐵 if every element of 𝐴 is also an element of 𝐵.
+    * C++ types with the following subtyping relation: T1 is a subtype of T2 if a pointer to T1 can be passed to a
+      function that expects a pointer to T2 without triggering a compilation error.
+* Considering that Bool is a set of two values True and False, show that it forms two (set-theoretical) monoids with
+  respect to, respectively, operator && (AND) and || (OR).
+* Represent the Bool monoid with the AND operator as a category: List the morphisms and their rules of composition
+* Represent addition modulo 3 as a monoid category.
+
+# Kleisli Categories
+
+There is a way to model side effects, or nonpure functions, in category theory. Let’s have a look at one such example:
+functions that log or trace their execution. Something that, in an
+imperative language, would likely be implemented by mutating some
+global state
+
+```typescript
+declare let logger: string;
+
+const not = (flag: boolean) => {
+  logger += `not ${flag}`;
+
+  return !flag;
+};
+```
+
+This function has side effects.
+
+In general, we try to stay away from global mutable state as much as possible — if only because of the complications of
+concurrency.
+
+Let's make it pure
+
+```typescript
+const not = (flag: boolean, logger: string) => [!flag, `${logger} not ${flag}`] as const;
+```
+
+This function is pure, it has no side effects, it returns the same pair every time it’s called with the same arguments.
+The callers are free to ignore the string in the return type, so that’s not a huge burden; but they are forced to pass a
+string as input, which might be inconvenient.
+
+Granted, the message that is logged is specific to the function, but the task of aggregating the messages into one
+continuous log is a separate concern.
+
+```typescript
+const not = (flag: boolean) => [!flag, `not ${flag}`] as const;
+
+const id = (flag: boolean) => [flag, `id ${flag}`] as const;
+
+compose(not, id) // Error
+```
+
+We want to compose these two functions into another embellished function that uppercases a string and splits it into
+words, all the while producing a log of those actions.
+
+```typescript
+const composeWriter =
+  <A, B, C>(g: (input: B) => [C, string], f: (input: A) => [B, string]) =>
+    (input: A) => {
+      const [b, fLog] = f(input);
+      const [c, gLog] = g(b);
+
+      return [c, gLog + fLog] as const;
+    };
+```
+
+We have accomplished our goal: The aggregation of the log is no longer the concern of the individual functions. They
+produce their own messages, which are then, externally, concatenated into a larger log. Now imagine a whole program
+written in this style. It’s a nightmare of repetitive, error-prone code. But we are programmers. We know how to deal
+with repetitive code: we abstract it! This is, however, not your run of the mill abstraction — we have to abstract
+function composition itself. But composition is the essence of category theory, so before we write more code, let’s
+analyze the problem from the categorical point of view.
+
+## The Writer Category
+
+The idea of embellishing the return types of a bunch of functions in
+order to piggyback some additional functionality turns out to be very
+fruitful.
+
+For instance, suppose that we want to embellish the function isEven
+that goes from int to bool. We turn it into a morphism that is represented by an embellished function. The important
+point is that this morphism is still considered an arrow between the objects int and bool,
+even though the embellished function returns a pair:
+
+```typescript
+const isEven = (n: number) => [n % 2 === 0, `isEven ${n}`];
+```
+
+By the laws of a category, we should be able to compose this morphism with another morphism that goes from the object
+bool to whatever. In particular, we should be able to compose it with our earlier not
+
+```typescript
+const not = (flag: boolean) => [!flag, `not ${flag}`] as const;
+```
+
+If we want to abstract this composition as a higher order function:
+
+```typescript
+const notIsEven = composeWriter(not, isEven)
+```
+
+But we are not finished yet. We have defined composition in our new category, but what are the identity morphisms?
+
+They have to behave like units with respect to composition. If you look at our definition of composition, you’ll see
+that an identity morphism should pass its argument without change, and only contribute an empty string to the log:
+
+```typescript
+const id = <T>(input: T) => [input, ''];
+```
+
+You can easily convince yourself that the category we have just defined is indeed a legitimate category. In particular,
+our composition is trivially associative. If you follow what’s happening with the first component of each pair, it’s
+just a regular function composition, which is associative. The second components are being concatenated, and
+concatenation is also associative.
+
+An astute reader may notice that it would be easy to generalize this construction to any monoid, not just the string
+monoid.
+
+## Kleisli Categories
+
+You might have guessed that I haven’t invented this category on the spot. It’s an example of the so called Kleisli
+category — a category based on a monad.
+
+For our limited purposes, a Kleisli category has, as objects, the types of the underlying programming language.
+Morphisms from type 𝐴 to type 𝐵 are functions that go from 𝐴 to a type derived from 𝐵 using the particular
+embellishment. Each Kleisli category defines its own way of composing such morphisms, as well as the identity morphisms
+with respect to that composition.
+
+You’ve seen previously that we could model programming-language types and functions in the category of sets (
+disregarding bottoms, as usual). Here we have extended this model to a slightly different category, a category where
+morphisms are represented by embellished functions, and their composition does more than just pass the output of one
+function to the input of another. We have one more degree of freedom to play with: the composition itself. It turns out
+that this is exactly the degree of freedom which makes it possible to give simple denotational semantics to programs
+that in imperative languages are traditionally implemented using side effects.
+
+## QUESTIONS
+
+A function that is not defined for all possible values of its argument is called a partial function. It’s not really a
+function in the mathematical sense, so it doesn’t fit the standard categorical mold. It can, however, be represented by
+a function that returns an embellished type optional
+
+* Construct the Kleisli category for partial functions (define composition and identity).
+* Implement the embellished function safe_reciprocal that returns a valid reciprocal of its argument, if it’s different
+  from zero.
+* Compose the functions safe_root and safe_reciprocal to implement safe_root_reciprocal that calculates sqrt(1/x)
+  whenever possible.
+
+# Products and Coproducts
+
+We are defined by our relationships.
+
+```typescript
+// How is that?
+```
+
+Nowhere is this more true than in category theory. If we want to single out a particular object in a category, we can
+only do this by describing its pattern of relationships with other objects (and itself). These relationships are defined
+by morphisms.
+
+There is a common construction in category theory called the universal construction for defining objects in terms of
+their relationships. One way of doing this is to pick a pattern defining particular shape (consisting of objects and
+morphisms) and then find its occurrences in a category. Often, there will be many such hits, so we need to filter them
+such that there will be only one left. It can be accomplished by ranking them in a certain way.
+
+## Initial Object
+
+The simplest shape is a single object. We could generalize that notion of object precedence by saying that object 𝑎 is
+“more initial” than object 𝑏, if there is an arrow (a morphism) going from 𝑎 to 𝑏. We would then define the initial
+object as one that has arrows going to all other objects. Obviously there is no guarantee that such an object exists,
+and that’s okay. A bigger problem is that there may be too many such objects: The recall is good, but precision is
+lacking. The solution is to take a hint from ordered categories — they allow at most one arrow between any two objects:
+there is only one way of being less-than or equal-to another object. Which leads us to this definition of the initial
+object:
+
+The initial object is the object that has one and only one morphism going to any object in the category
+
+However, even that doesn’t guarantee the uniqueness of the initial object (if one exists). But it guarantees the next
+best thing: uniqueness up to isomorphism.
+
+Here are some examples: The initial object in a partially ordered set (often called a poset) is its least element. Some
+posets don’t have an initial object — like the set of all integers, positive and negative, with less-than-or-equal
+relation for morphisms.
+
+It’s this family of morphisms that makes Void the initial object in the category of types.
+
+```typescript
+const absurd = <T>(input: never): T => input;
+```
+
+## Terminal Object
+
+Let’s continue with the single-object pattern, but let’s change the way we rank the objects. We’ll say that object 𝑎 is
+“more terminal” than object 𝑏 if there is a morphism going from 𝑏 to 𝑎 (notice the reversal of direction). We’ll be
+looking for an object that’s more terminal than any other object in the category. Again, we will insist on uniqueness up
+to isomorphism:
+
+The terminal object is the object with one and only one morphism coming to it from any object in the category.
+
+```typescript
+// Any singleton set will suffice
+const unit = <T>(input: T): void => {
+};
+```
+
+Notice that in this example the uniqueness condition is crucial, because there are other sets (actually, all of them,
+except for the empty set) that have incoming morphisms from every set. For instance, there is a Boolean-valued
+function (a predicate) defined for every type:
+
+```typescript
+const yes = <T>(input: T) => true;
+```
+
+But Bool is not a terminal object. There is at least one more Bool-valued function from every type:
+
+```typescript
+const no = <T>(input: T) => false;
+```
+
+Insisting on uniqueness gives us just the right precision to narrow down the definition of the terminal object to just
+one type.
+
+## Duality
+
+You can’t help but to notice the symmetry between the way we defined the initial object and the terminal object. The
+only difference between the two was the direction of morphisms. It turns out that for any category 𝐂 we can define the
+opposite category 𝐂 𝑜𝑝 just by reversing all the arrows.
+
+For every construction you come up with, there is its opposite; and for every theorem you prove, you get one for free.
+The constructions in the opposite category are often prefixed with “co”.
+
+It follows then that a terminal object is the initial object in the opposite category.
+
+Union
+
+![img_3.png](img_3.png)
+
+Intersection
+
+![img_4.png](img_4.png)
+
+## Isomorphisms
+
+As programmers, we are well aware that defining equality is a nontrivial task. You’d think that mathematicians would
+have figured out the meaning of equality, but they haven’t.
+
+Mathematically it means that there is a mapping from object 𝑎 to object 𝑏, and there is a mapping from object 𝑏 back to
+object 𝑎, and they are the inverse of each other. In category theory we replace mappings with morphisms. An isomorphism
+is an invertible morphism; or a pair of morphisms, one being the inverse of the other.
+
+Morphism 𝑔 is the inverse of morphism 𝑓 if their composition is the identity morphism:
+
+```typescript
+declare const numberToString: (n: number) => string;
+declare const stringToNumber: (s: string) => number;
+
+const nToN = compose(stringToNumber, numberToString);
+const sToS = compose(numberToString, stringToNumber);
+
+expect<AreEqual<typeof nToN, typeof identity<number>>>();
+expect<AreEqual<typeof sToS, typeof identity<string>>>();
+```
+
+## Products
+
+The next universal construction is that of a product. We know what a Cartesian product of two sets is: it’s a set of
+pairs. But what’s the pattern that connects the product set with its constituent sets? If we can figure that out, we’ll
+be able to generalize it to other categories. All we can say is that there are two functions, the projections, from the
+product to each of the constituents.
+
+*Intersection is used as an operation there*
+
+![img_5.png](img_5.png)
+
+![img_6.png](img_6.png)
+
+There is another candidate for a product
+
+![img_7.png](img_7.png)
+
+We want to be able to compare two instances of our pattern. We want to compare one candidate object 𝑐 and its two
+projections 𝑝 and 𝑞 with another candidate object 𝑐′ and its two projections 𝑝′ and 𝑞′. We would like to say that 𝑐
+is “better” than 𝑐′ if there is a morphism 𝑚 from 𝑐′ to 𝑐 — but that’s too weak. We also want its projections to be
+“better,” or “more universal,” than the projections of 𝑐′ . What it means is that the projections 𝑝′ and 𝑞′ can be
+reconstructed from 𝑝 and 𝑞 using 𝑚:
+
+*Intersection is used as an operation there*
+![img_8.png](img_8.png)
+
+*Intersection is used as an operation there*
+![img_9.png](img_9.png)
+
+Another way of looking at these equations is that 𝑚 factorizes 𝑝′ and 𝑞′ . Just pretend that these equations are in
+natural numbers, and the dot is multiplication: 𝑚 is a common factor shared by 𝑝′ and 𝑞′.
+
+Putting it all together, given any type c with two projections p and q, there is a unique m from c to the Cartesian
+product (a, b) that factorizes them. In fact, it just combines p and q into a pair.
+
+That makes the Cartesian product (a, b) our best match, which means that this universal construction works in the
+category of sets. It picks the product of any two sets. Now let’s forget about sets and define a product of two objects
+in any category using the same universal construction. Such a product doesn’t always exist, but when it does, it is
+unique up to a unique isomorphism
+
+A product of two objects 𝑎 and 𝑏 is the object 𝑐 equipped with two projections such that for any other object 𝑐′
+equipped with two projections there is a unique morphism 𝑚 from 𝑐′ to 𝑐 that factorizes those projections.
+
+A (higher order) function that produces the factorizing function m from two candidates is sometimes called the
+factorizer. In our case, it would be the function:
+
+```typescript
+declare const factorizer: <C, A, B>(first: (arg: C) => A) => (second: (arg: C) => B) => (arg: C) => [A, B];
+```
+
+## Coproduct
+
+Like every construction in category theory, the product has a dual, which is called the coproduct. When we reverse the
+arrows in the product pattern, we end up with an object 𝑐 equipped with two injections, i and j: morphisms from 𝑎 and 𝑏
+to 𝑐.
+
+![img_10.png](img_10.png)
+
+![img_11.png](img_11.png)
+
+The ranking is also inverted: object 𝑐 is “better” than object 𝑐′ that is equipped with the injections 𝑖′ and 𝑗′ if
+there is a morphism 𝑚 from 𝑐 to 𝑐′ that factorizes the injections:
+
+![img_12.png](img_12.png)
+
+The “best” such object, one with a unique morphism connecting it to
+any other pattern, is called a coproduct and, if it exists, is unique up to
+unique isomorphism.
+
+A coproduct of two objects 𝑎 and 𝑏 is the object 𝑐 equipped with two injections such that for any other object 𝑐′
+equipped with two injections there is a unique morphism 𝑚 from 𝑐 to 𝑐′ that factorizes those injections.
+
+In the category of sets, the coproduct is the disjoint union of two sets.
+
+```typescript
+// Why it has to be disjoint?
+```
+
+Just as we’ve defined the factorizer for a product, we can define one for the coproduct. Given a candidate type c and
+two candidate injections i and j, the factorizer for Either produces the factoring function:
+
+```typescript
+type Either<TLeft, TRight> = Left<TLeft> | Right<TRight>;
+
+type Left<TValue> = { type: 'left'; value: TValue };
+type Right<TValue> = { type: 'right'; value: TValue };
+
+expect<AreEqual<Left<unknown> & Right<unknown>, never>>();
+
+declare function left<TValue>(value: TValue): Either<TValue, never>;
+
+declare function right<TValue>(value: TValue): Either<never, TValue>;
+
+declare const factorizer: <C, A, B>(first: (arg: A) => C) => (second: (arg: B) => C) => (arg: Either<A, B>) => C;
+```
+
+## Asymmetry
+
+Functions are, in general, asymmetric. Let me explain. A function must be defined for every element of its domain set (
+in programming, we call it a total function), but it doesn’t have to cover the whole codomain.
+
+When the size of the domain is much smaller than the size of the codomain, we often think of such functions as embedding
+the domain in the codomain.
+
+For instance, we can think of a function from a singleton set as embedding its single element in the codomain. I call
+them embedding functions, but mathematicians prefer to give a name to the opposite: functions that tightly fill their
+codomains are called surjective or onto.
+
+The other source of asymmetry is that functions are allowed to map many elements of the domain set into one element of
+the codomain. They can collapse them. The extreme case are functions that map whole sets into a singleton.
+
+A composition of two collapsing functions is even more collapsing than the individual functions. Mathematicians have a
+name for noncollapsing functions: they call them injective or one-to-one.
+
+Of course there are some functions that are neither embedding nor collapsing. They are called bijections and they are
+truly symmetric, because they are invertible. In the category of sets, an isomorphism is the same as a bijection.
+
+## QUESTIONS
+
+* Show that the terminal object is unique up to unique isomorphism
+
+```typescript
+function terminal<T>(input: T): unknown {
+  return input;
+}
+
+function toUnknown(input: void): unknown {
+  return input;
+}
+
+function toVoid(input: unknown): void {
+}
+
+// Unknown and Void are isomorphic in this sense. But one is expanding and other is collapsing
+```
+
+* What is a product of two objects in a poset? Hint: Use the universal construction.
+
+By definition, poset is pair (A, <=) that satisfies following conditions:
+
+1. Reflexivity (Identity) x <= x
+2. Transitivity (Composition) x <= y and y <= z -> x <= z
+3. Anti-symmetric (Bijection) x <= y and y <= x -> x = y
+
+![img_13.png](img_13.png)
+
+In such category, product of two objects will be greatest lower bound of both objects (often represented as min(a, b))
+
+* What is a coproduct of two objects in a poset?
+
+![img_14.png](img_14.png)
+
+It is the lowest upper bound of two objects (defined as max(a, b))
+
+* Show that Either is a “better” coproduct than int equipped with two injections:
+
+```typescript
+function i(n: number): number {
+  return n;
+}
+
+function j(b: boolean): number {
+  return b ? 0 : 1;
+}
+
+function m(e: Either<number, boolean>): number {
+  return e.type === 'left' ? i(e.value) : j(e.value);
+}
+```
+
+* Continuing the previous problem: How would you argue that int with the two injections i and j cannot be “better” than
+  Either?
+
+By universal construction (and ranking in particular). We can define morphism from Either to number. It means we can
+only implement basic mappings p and q and then, reuse them across system with any other coproduct-like data structure
+just by composing with m, thus avoiding duplication and maintaining symmetry.
+
+# Simple Algebraic Data Types
+
+We’ve seen two basic ways of combining types: using a product and a coproduct. It turns out that a lot of data
+structures in everyday programming can be built using just these two mechanisms. This fact has important practical
+consequences. Many properties of data structures are composable. For instance, if you know how to compare values of
+basic types for equality, and you know how to generalize these comparisons to product and coproduct types, you can
+automate the derivation of equality operators for composite types.
+
+## Product Types
+
+The canonical implementation of a product of two types in a programming language is a pair. Indeed, we can define
+morphisms: frst and scnd such that both objects can be extracted from a product. Obviously, ranking here works as well:
+any triple, four, five and more elements array can be mapped to a pair making latter the best candidate.
+
+Pairs are not strictly commutative: a pair (Int, Bool) cannot be substituted for a pair (Bool, Int), even though they
+carry the same information. They are, however, commutative up to isomorphism. You can think of the two pairs as simply
+using a different format for storing the same data.
+
+You can combine an arbitrary number of types into a product by nesting pairs inside pairs, but there is an easier way:
+nested pairs are equivalent to tuples. It’s the consequence of the fact that different ways of nesting pairs are
+isomorphic. If you want to combine three types in a product, a, b, and c, in this order, you can do it in two ways:
+
+```typescript
+function main<A, B, C>(a: A, b: B, c: C) {
+  [a, b, c] === [a, [b, c]] === [[a, b], c]
+}
+```
+
+These types are different — you can’t pass one to a function that expects the other — but their elements are in
+one-to-one correspondence. There is a function that maps one to another:
+
+```typescript
+function alpha<A, B, C>([[a, b], c]: [[A, B], C]) {
+  return [a, [b, c]];
+}
+
+function alphaInv<A, B, C>([a, [b, c]]: [A, [B, C]]) {
+  return [[a, b], c];
+}
+```
+
+You can interpret the creation of a product type as a binary operation on types. From that perspective, the above
+isomorphism looks very much like the associativity law we’ve seen in monoids:
+
+(𝑎 ∗ 𝑏) ∗ 𝑐 = 𝑎 ∗ (𝑏 ∗ 𝑐)
+
+If we can live with isomorphisms, and don’t insist on strict equality, we can go even further and show that the unit
+type, (), is the unit of the product the same way 1 is the unit of multiplication. Indeed, the pairing of a value of
+some type a with a unit doesn’t add any information:
+
+```typescript
+function main<A>(a: A, unit: void) {
+  [a, unit] === a
+}
+```
+
+## Records
+
+It can be shown easily that tuples and records are isomorphic. Notice that the names of record fields also serve as
+functions to access these fields.
+
+```typescript
+type UserR = {
+  name: string;
+  age: number;
+};
+
+type UserT = [string, number]
+```
+
+## Sum Types
+
+Eithers are commutative (up to isomorphism), can be nested, and the nesting order is irrelevant (up to isomorphism). So
+we can, for instance, define a sum equivalent of a triple:
+
+```typescript
+type EitherThree<A, B, C> = Either<A, Either<B, C>>;
+```
+
+The role of the binary operation is played by the disjoint sum, and the role of the unit element is played by the
+initial object. In terms of types, we have Either as the monoidal operator and Void, the uninhabited type, as its
+neutral element. You can think of Either as plus, and Void as zero. Indeed, adding Void to a sum type doesn’t change its
+content. For instance:
+
+```typescript
+type AlwaysRight<TLeft, TRight> = Either<never, TRight>; // a + 0 = a
+
+type Maybe<T> = Either<void, T> // a + 1
+```
+
+More complex sum types are often faked in C++ using pointers. A pointer can be either null, or point to a value of
+specific type. For instance, a Haskell list type, which can be defined as a (recursive) sum type:
+
+```typescript
+type List<T> = { head: T, tail: List<T> } | null;
+```
+
+The main difference, though, between Haskell and C++ types is that Haskell data structures are immutable. If you create
+an object using one particular constructor, the object will forever remember which constructor was used and what
+arguments were passed to it. So a Maybe object that was created as Just "energy" will never turn into Nothing.
+Similarly, an empty list will forever be empty, and a list of three elements will always have the same three elements.
+
+It’s this immutability that makes construction reversible. Given an object, you can always disassemble it down to parts
+that were used in its construction. This deconstruction is done with pattern matching and it reuses constructors as
+patterns. Constructor arguments, if any, are replaced with variables (or other patterns).
+
+## Algebra of Types
+
+Let’s summarize what we’ve discovered so far. We’ve seen two commutative monoidal structures underlying the type system:
+We have the sum types with Void as the neutral element, and the product types with the unit type, (), as the neutral
+element. We’d like to think of them as analogous to addition and multiplication. In this analogy, Void would correspond
+to zero, and unit, (), to one.
+
+Let’s see how far we can stretch this analogy. For instance, does multiplication by zero give zero? In other words, is a
+product type with one component being Void isomorphic to Void? For example, is it possible to create a pair of, say Int
+and Void? To create a pair you need two values. Although you can easily come up with an integer, there is no value of
+type Void.Therefore, for any type a, the type (a, Void) is uninhabited — has no values — and is therefore equivalent to
+Void. In other words, 𝑎 × 0 = 0.
+
+Another thing that links addition and multiplication is the distributive property:
+
+𝑎 × (𝑏 + 𝑐) = 𝑎 × 𝑏 + 𝑎 × 𝑐
+
+```typescript
+type Dist<A, B, C> = [A, Either<B, C>]
+
+function toRight<A, B, C>(input: [A, Either<B, C>]): Either<[A, B], [A, C]> {
+  return input[1].fold((l) => left([input[0], l]), (r) => right([input[0], r]));
+}
+```
+
+I’m not going to prove that these two functions are the inverse of each other, but if you think about it, they must be!
+They are just trivially re-packing the contents of the two data structures. It’s the same data, only different format.
+
+Mathematicians have a name for two such intertwined monoids: it’s called a semiring. It’s not a full ring, because we
+can’t define subtraction of types. That’s why a semiring is sometimes called a rig, which is a pun on “ring without an
+n” (negative). But barring that, we can get a lot of mileage from translating statements about, say, natural numbers,
+which form a rig, to statements about types. Here’s a translation table with some entries of interest:
+
+![img_15.png](img_15.png)
+
+The list type is quite interesting, because it’s defined as a solution to an equation. The type we are defining appears
+on both sides of the equation:
+
+```typescript
+type List<A> = Either<void, [A, List<A>]>;
+
+// Substitute
+// x = 1 + a * x (0)
+// x = 1 + a * (1 + a * x) (1)
+// x = 1 + a * (1 + a * (1 + a * x)) (2)
+// 1 + a + a * a * (1 + a * x)
+// 1 + a + a * a + a * a * a...
+
+// List<A> = x
+// x = 1 + a * x
+// x - a * x = 1
+// x * (1 - a) = 1
+// x = 1 / (1 - a)
+```
+
+We end up with an infinite sum of products (tuples), which can be interpreted as: A list is either empty, 1; or a
+singleton, a; or a pair, a*a; or a triple, a*a*a; etc… Well, that’s exactly what a list is — a string of as!
+
+Finally, I should mention one very important interpretation of the algebra of types. Notice that a product of two types
+a and b must contain both a value of type a and a value of type b, which means both types must be inhabited. A sum of
+two types, on the other hand, contains either a value of type a or a value of type b, so it’s enough if one of them is
+inhabited. Logical and and or also form a semiring, and it too can be mapped into type theory:
+
+![img_16.png](img_16.png)
+
+## QUESTIONS
+
+* Show the isomorphism between Maybe a and Either () a.
+
+```typescript
+function fromEitherToMaybe<A>(e: Either<void, A>): Maybe<A> {
+  return e.fold(Maybe.none, Maybe.some);
+}
+
+function fromMaybeToEither<A>(m: Maybe<A>): Either<void, A> {
+  return m.fold(() => Either.left(undefined), Either.right);
+}
+```
+
+* Here’s a sum type using fp:
+
+```typescript
+type Shape =
+  | { type: 'circle'; r: number }
+  | { type: 'rectangle'; w: number; h: number };
+
+function area(input: Shape): number {
+  switch (input.type) {
+    case 'circle':
+      return Math.PI * input.r * input.r;
+    case 'rectangle':
+      return input.w * input.h;
+  }
+}
+```
+
+Implement Shape using standard OO approach using template method
+
+```typescript
+abstract class Shape {
+  abstract area(): number;
+}
+
+class Circle extends Shape {
+  constructor(public r: number) {
+    super();
+  }
+
+  area(): number {
+    return Math.PI * this.r * this.r;
+  }
+}
+
+class Rectangle extends Shape {
+  constructor(public h: number, public w: number) {
+    super();
+  }
+
+  area(): number {
+    return this.w * this.h;
+  }
+}
+```
+
+* Continuing with the previous example: We can easily add a new function circ that calculates the circumference of a
+  Shape. We can do it without touching the definition of Shape:
+
+```typescript
+type Shape =
+  | { type: 'circle'; r: number }
+  | { type: 'rectangle'; w: number; h: number };
+
+function area(input: Shape): number {
+  switch (input.type) {
+    case 'circle':
+      return Math.PI * input.r * input.r;
+    case 'rectangle':
+      return input.w * input.h;
+  }
+}
+
+// ^^^ was not touched
+
+function circ(input: Shape): number {
+  switch (input.type) {
+    case 'circle':
+      return 2 * Math.PI * input.r;
+    case 'rectangle':
+      return 2 * (input.w + input.h);
+  }
+}
+```
+
+Now let's add functionality to OO model
+
+```typescript
+abstract class Shape {
+  abstract area(): number;
+
+  abstract circ(): number;
+}
+
+class Circle extends Shape {
+  constructor(public r: number) {
+    super();
+  }
+
+  area(): number {
+    return Math.PI * this.r * this.r;
+  }
+
+  circ(): number {
+    return 2 * Math.PI * this.r;
+  }
+}
+
+class Rectangle extends Shape {
+  constructor(public h: number, public w: number) {
+    super();
+  }
+
+  area(): number {
+    return this.w * this.h;
+  }
+
+  circ(): number {
+    return 2 * (this.h + this.w);
+  }
+}
+
+// Base class was touched, and all it's existed children
+```
+
+* Continuing further: Add a new shape, Square, to Shape and make all the necessary updates. What code did you have to
+  touch in Haskell vs. C++ or Java? (Even if you’re not a Haskell programmer, the modifications should be pretty
+  obvious.)
+
+```typescript
+type Shape =
+  | { type: 'circle'; r: number }
+  | { type: 'rectangle'; w: number; h: number }
+  | { type: 'square'; s: number };
+
+function area(input: Shape): number {
+  switch (input.type) {
+    case 'circle':
+      return Math.PI * input.r * input.r;
+    case 'rectangle':
+      return input.w * input.h;
+    case 'square':
+      return input.s * input.s;
+  }
+}
+
+function circ(input: Shape): number {
+  switch (input.type) {
+    case 'circle':
+      return 2 * Math.PI * input.r;
+    case 'rectangle':
+      return 2 * (input.w + input.h);
+    case 'square':
+      return 4 * input.s;
+  }
+}
+
+// Base type was touched, and all operations on it
+```
+
+```typescript
+abstract class Shape {
+  abstract area(): number;
+
+  abstract circ(): number;
+}
+
+class Circle extends Shape {
+  constructor(public r: number) {
+    super();
+  }
+
+  area(): number {
+    return Math.PI * this.r * this.r;
+  }
+
+  circ(): number {
+    return 2 * Math.PI * this.r;
+  }
+}
+
+class Rectangle extends Shape {
+  constructor(public h: number, public w: number) {
+    super();
+  }
+
+  area(): number {
+    return this.w * this.h;
+  }
+
+  circ(): number {
+    return 2 * (this.h + this.w);
+  }
+}
+
+class Square extends Shape {
+  constructor(public s: number) {
+    super();
+  }
+
+  area(): number {
+    return this.s * this.s;
+  }
+
+  circ(): number {
+    return 4 * this.s;
+  }
+}
+
+// Nothing was touched
+```
+
+* Show that 𝑎 + 𝑎 = 2 × 𝑎 holds for types (up to isomorphism). Remember that 2 corresponds to Bool, according to our
+  translation table.
+
+```typescript
+function aPlusAToTwoA<A>(input: APlusA<A>): TwoA<A> {
+  return [input.type === 'right', input.value];
+}
+
+function twoAToAPlusA<A>(input: TwoA<A>): APlusA<A> {
+  return input[0] ? right(input[1]) : left(input[1]);
+}
+```
+
+# Functors
+
+A functor is a mapping between categories. Given two categories, 𝐂 and 𝐃, a functor 𝐹 maps objects in 𝐂 to objects in
+𝐃 — it’s a function on objects. If 𝑎 is an object in 𝐂, we’ll write its image in 𝐃 as 𝐹 𝑎
+
+A functor also maps morphisms — it preserves connections.
+
+So if a morphism 𝑓 in 𝐂 connects object 𝑎 to object 𝑏,
+
+𝑓 ∷ 𝑎 → 𝑏
+
+the image of 𝑓 in 𝐃, 𝐹 𝑓 , will connect the image of 𝑎 to the image of 𝑏:
+
+𝐹 𝑓 ∷ 𝐹 𝑎 → 𝐹 𝑏
+
+![img_17.png](img_17.png)
+
+As you can see, a functor preserves the structure of a category: what’s connected in one category will be connected in
+the other category.
+
+![img_18.png](img_18.png)
+
+Just like functions, functors may do both collapsing and embedding.
+
+A functor from the singleton category to any other category simply selects an object in that category. This is fully
+analogous to the property of morphisms from singleton sets selecting elements in target sets.
+
+The maximally collapsing functor is called the constant functor Δ𝑐 . It maps every object in the source category to one
+selected object 𝑐 in the target category. It also maps every morphism in the source category to the identity morphism
+id𝑐 .
+
+## Functors in Programming
+
+We can talk about functors that map this category into itself — such functors are called endofunctors. First of all, it
+maps types to types. So-called high order types.
+
+### The Maybe Functor
+
+Here’s an important subtlety: Maybe itself is not a type, it’s a type constructor. You have to give it a type argument,
+like Int or Bool, in order to turn it into a type. Maybe without any argument represents a function on types.
+
+A functor is not only a mapping of objects (here, types) but also a mapping of morphisms (here, functions). For any
+function from a to b we would like to produce a function from Maybe a to Maybe b.
+
+```typescript
+type Maybe<T> = Either<void, T>
+
+declare const f: (input: number) => string;
+
+declare const fmap: <A, B>(f: (input: A) => B) => (input: Maybe<A>) => Maybe<B>;
+```
+
+![img_19.png](img_19.png)
+
+We often say that fmap lifts a function. The lifted function acts on Maybe values.
+
+To show that the type constructor Maybe together with the function fmap form a functor, we have to prove that fmap
+preserves identity and composition. These are called “the functor laws,” but they simply ensure the preservation of the
+structure of the category.
+
+### Equational Reasoning
+
+It takes advantage of the fact that Haskell functions are defined as equalities: the left hand side equals the right
+hand side. You can always substitute one for another, possibly renaming variables to avoid name conflicts.
+
+Let's try to prove the preservation of identity:
+
+```text
+fmap id = id
+
+fmap id Nothing = { definition of fmap (id) } Nothing = { definition of id } Nothing = id Nothing
+
+fmap id Just x = { definition of fmap (id) } Just x = { definition of id } Just x = id Just x
+
+fmap g (fmap f Nothing) = fmap g Nothing = Nothing = fmap (g . f) Nothing
+```
+
+It’s worth stressing that equational reasoning doesn’t work for “functions” with side effects. Consider this code:
+
+```typescript
+const square = (n: number) => n * n;
+
+let c = 0;
+
+const counter = () => {
+  return c + 1;
+}
+
+const y = square(counter());
+```
+
+Using equational reasoning, you would be able to inline square to get:
+
+```typescript
+const y = counter() * counter();
+```
+
+### About functors as values
+
+Obviously, an infinite list like this cannot be stored in memory. The compiler implements it as a function that
+generates Integers on demand. Haskell effectively blurs the distinction between data and code. A list could be
+considered a function, and a function could be considered a table that maps arguments to results. The latter can even be
+practical if the domain of the function is finite and not too large. It would not be practical, however, to implement
+strlen as table lookup, because there are infinitely many strings. As programmers, we don’t like infinities,
+but in category theory you learn to eat infinities for breakfast. Whether it’s a set of all strings or a collection of
+all possible states of the Universe, past, present, and future — we can deal with it! So I like to think of the functor
+object (an object of the type generated by an endofunctor) as containing a value or values of the type over which it is
+parameterized, even if these values are not physically present there.
+
+According to this interpretation, a functor object is something that may contain a value or values of the type it’s
+parameterized upon. Or it may contain a recipe for generating those values. We are not at all concerned about being able
+to access the values — that’s totally optional, and outside of the scope of the functor. All we are interested in is to
+be able to manipulate those values using functions. If the values can be accessed, then we should be able to see the
+results of this manipulation. If they can’t, then all we care about is that the manipulations compose correctly and that
+the manipulation with an identity function doesn’t change anything. Just to show you how much we don’t care about being
+able to access the values inside a functor object, here’s a type constructor that ignores completely its argument a:
+
+```typescript
+interface ConstFactory<R> {
+  <T>(value: T): R;
+}
+
+type Const<R, T> = HKT<ConstFactory<R>, T>;
+
+const createConst = <R, T>(constant: R): HKT<ConstFactory<R>, T> => createHKT(constant);
+
+const constFold = <R>(input: Const<R, unknown>): R => input[0](input[1]);
+
+const createConstMap = (<R, A, B>(input: Const<R, A>, _: (value: A) => B) =>
+  createConst<R, B>(constFold(input))) satisfies Map<ConstFactory<unknown>>;
+
+const original = createConst<10, string>(10);
+const mapped = createConstMap(original, (value) => value.length);
+
+console.log(constFold(mapped)); // Value is still 10
+```
+
+It’s pretty obvious that functor composition is associative (the mapping of objects is associative, and the mapping of
+morphisms is associative). And there is also a trivial identity functor in every category: it maps every object to
+itself, and every morphism to itself. So functors have all the same properties as morphisms in some category. But what
+category would that be? It would have to be a category in which objects are categories and morphisms are functors. It’s
+a category of categories. But a category of all categories would have to include itself, and we would get into the same
+kinds of paradoxes that made the set of all sets impossible. There is, however, a category of all small categories
+called 𝐂𝐚𝐭 (which is big, so it can’t be a member of itself). A small category is one in which objects form a set, as
+opposed to something larger than a set. Mind you, in category theory, even an infinite uncountable set is considered
+“small.” I thought I’d mention these things because I find it pretty amazing that we can recognize the same structures
+repeating themselves at many levels of abstraction. We’ll see later that functors form categories as well
+
+## QUESTIONS
+
+* Can we turn the Maybe type constructor into a functor by defining:
+
+```typescript
+type Maybe<T> = Either<void, T>
+
+const fmap = <A, B>(_: unknown) => (__: unknown): never => fmap(_)(__);
+```
+
+To prove that this pair is a functor we must show that fmap preserves identity and composition.
+
+```typescript
+type Maybe<T> = T | undefined;
+
+const fmap =
+  <A>(m: Maybe<A>) =>
+    <B>(t: (input: A) => B): Maybe<B> =>
+      fmap(m)(t);
+
+const id = <T>(value: T) => value;
+
+const idNumber = id<number>;
+
+const identity: Maybe<number> = fmap(10)(idNumber);
+
+const composition: Maybe<string> = fmap(fmap(10)((n) => `Your number is ${n}`))((n) => n.toUpperCase());
+```
+
+From types standpoint everything is going to work fine. But an exception will occur if we try and run this program
+
+* Prove functor laws for the reader functor. Hint: it’s really simple. Implement the reader functor in your second
+  favorite language (the first being Haskell, of course).
+
+```typescript
+declare const compose: <A, B>(left: (input: A) => B) => <C>(right: (input: B) => C) => (input: A) => C;
+
+type Reader<R, A> = <T>(input: R) => A;
+
+declare const fmap: <R, A>(reader: Reader<R, A>) => <B>(transform: (input: A) => B) => Reader<R, B>;
+
+declare const identity: <T>(input: T) => T;
+
+declare const numberToString: (input: number) => string;
+
+declare const stringToBoolean: (input: string) => boolean;
+
+// Identity law
+const identity0 = <T>(input: Reader<unknown, T>): Reader<unknown, T> => fmap(input)(identity);
+
+// Composition law
+const composition0: (input: number) => boolean = compose(numberToString)(stringToBoolean);
+
+const composition1: (input: Reader<unknown, number>) => Reader<unknown, boolean> = (input) =>
+  fmap(fmap(input)(numberToString))(stringToBoolean);
+```
+
+* Prove the functor laws for the list functor. Assume that the laws are true for the tail part of the list you’re
+  applying it to (in other words, use induction).
+
+```typescript
+type List<T> = { head: T; tail: List<T> } | null;
+
+declare const identity: <T>(input: T) => T;
+
+declare const numberToString: (input: number) => string;
+
+declare const stringToBoolean: (input: string) => boolean;
+
+const fmapnull = (input: null) => (transform: (input: never) => unknown) => input;
+
+// Proof of base case
+const empty: List<never> = null;
+const identity0: List<never> = fmapnull(empty)(identity);
+const composition0: List<boolean> = fmapnull(fmapnull(empty)(numberToString))(stringToBoolean);
+
+const fmapany =
+  <A>(input: List<A>) =>
+    <B>(transform: (input: A) => B): List<B> => {
+      // Reusing base case proof
+      if (input === null) {
+        return fmapnull(input)(transform);
+      }
+
+      // Single element is also trivial
+      const single = transform(input.head);
+
+      // Record can be constructed so that two conditions are true simultaneously
+      return {
+        head: single,
+        // The rest of the elements are also satisfy general condition by induction
+        tail: fmapany(input.tail)(transform),
+      };
+    };
+```
+
+# Functoriality
+
+Now that you know what a functor is, and have seen a few examples, let’s see how we can build larger functors from
+smaller ones. In particular it’s interesting to see which type constructors (which correspond to mappings between
+objects in a category) can be extended to functors (which include mappings between morphisms).
+
+## Bifunctors
+
+Since functors are morphisms in 𝐂𝐚𝐭 (the category of categories), a lot of intuitions about morphisms — and functions in
+particular — apply to functors as well.
+
+![img_20.png](img_20.png)
+
+That’s pretty straightforward. But functoriality means that a bifunctor has to map morphisms as well. This time, though,
+it must map a pair of morphisms, one from 𝐂 and one from 𝐃, to a morphism in 𝐄.
+
+Again, a pair of morphisms is just a single morphism in the product category 𝐂 × 𝐃 to 𝐄. We define a morphism in a
+Cartesian product of categories as a pair of morphisms which goes from one pair of objects to another pair of objects.
+These pairs of morphisms can be composed in the obvious way:
+
+(𝑓, 𝑔) ∘ (𝑓′, 𝑔′) = (𝑓 ∘ 𝑓′, 𝑔 ∘ 𝑔′)
+
+![img_21.png](img_21.png)
+
+The composition is associative and it has an identity — a pair of identity morphisms (id, id). So a Cartesian product of
+categories is indeed a category.
+
+An easier way to think about bifunctors would be to consider them functors in each argument separately. So instead of
+translating functorial laws — associativity and identity preservation — from functors to bifunctors, it would be enough
+to check them separately for each argument. However, in general, separate functoriality is not enough to prove joint
+functoriality. Categories in which joint functoriality fails are called premonoidal.
+
+```typescript
+type Functor1<F, A> = {
+  functor: F;
+  args: [A];
+  value: never;
+};
+
+type Functor1Map<F> = <A, B>(input: Functor1<F, A>, transform: (input: A) => B) => Functor1<F, B>;
+
+type Maybe<T> = { type: 'none' } | { type: 'some'; value: T };
+
+declare const maybeMap: Functor1Map<'Maybe'>;
+
+declare const maybeOf: <T>(value: T) => Functor1<'Maybe', T>;
+
+type Identity<T> = T;
+
+declare const identityMap: Functor1Map<'Identity'>;
+
+declare const identityOf: <T>(value: T) => Functor1<'Identity', T>;
+
+const biFunctor = [maybeOf('Hello'), identityOf(10)] as const;
+
+declare const id: <T>(input: T) => T;
+declare const numberToString: (input: number) => string;
+declare const stringToNumber: (input: string) => number;
+
+const idBiFunctor = [maybeMap(biFunctor[0], id), identityMap(biFunctor[1], id)] as const;
+
+const mapBiFunctor = [maybeMap(biFunctor[0], stringToNumber), identityMap(biFunctor[1], numberToString)] as const;
+```
+
+![img_22.png](img_22.png)
+
+When declaring an instance of Bifunctor, you have a choice of either implementing bimap and accepting the defaults for
+first and second, or implementing both first and second and accepting the default for bimap (of course, you may
+implement all three of them, but then it’s up to you to make sure they are related to each other in this manner).
+
+![img_23.png](img_23.png)
+
+Now, remember when we talked about monoidal categories? A monoidal category defines a binary operator acting on objects,
+together with a unit object. What I haven’t mentioned is that one of the requirements for
+a monoidal category is that the binary operator be a bifunctor. But how does it relate to bifunctor?
+
+## Functorial Algebraic Data Types
+
+Complex data types are constructed from simpler data types. In particular, algebraic data types (adts) are created using
+sums and products. So what are the building blocks of parameterized algebraic data types? First, there are the items
+that have no dependency on the type parameter of the functor, like Nothing in Maybe, or Nil in List. They are equivalent
+to the Const functor. Remember, the Const functor ignores its type parameter. Then there are the elements that simply
+encapsulate the type parameter itself, like Just in Maybe. They are equivalent to the identity functor.
+
+Everything else in algebraic data structures is constructed from these two primitives using products and sums.
+
+```typescript
+type Either<A, B> = { type: 'left'; value: A } | { type: 'right'; value: B };
+
+declare const eitherMap: <A, B, C, D>(
+  input: Either<A, B>,
+  left: (input: A) => C,
+  right: (input: B) => D
+) => Either<C, D>;
+
+type Const<T> = void;
+
+const constMap = <A, B>(input: Const<A>, transform: (input: A) => B) => input;
+
+type Identity<T> = T;
+
+const identityMap = <A, B>(input: Identity<A>, transform: (input: A) => B) => transform(input);
+
+type Maybe<T> = Either<Const<T>, Identity<T>>;
+
+const maybeMap = <A, B>(input: Maybe<A>, transform: (input: A) => B): Maybe<B> =>
+  eitherMap(
+    input,
+    (left) => constMap(left, transform),
+    (right) => identityMap(right, transform)
+  );
+```
+
+So Maybe is the composition of the bifunctor Either with two functors, Const () and Identity. (Const is really a
+bifunctor, but here we always use it partially applied.)
+
+So it turns out that we didn’t have to prove that Maybe was a functor — this fact followed from the way it was
+constructed as a sum of two functorial primitives. The regularity of algebraic data structures makes it possible to
+derive instances not only of Functor but of several other type classes, including the Eq type class I mentioned before.
+There is also the option of teaching the compiler to derive instances of your own typeclasses, but that’s a bit more
+advanced. The idea though is the same: You provide the behavior for the basic building blocks and sums and products, and
+let the compiler figure out the rest.
+
+## The Writer Functor
