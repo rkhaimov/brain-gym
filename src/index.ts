@@ -12,11 +12,4 @@ interface Compose {
 
 declare const compose: Compose;
 
-declare const numberToString: (n: number) => string;
-declare const stringToNumber: (s: string) => number;
-
-const nToN = compose(stringToNumber, numberToString);
-const sToS = compose(numberToString, stringToNumber);
-
-expect<AreEqual<typeof nToN, typeof identity<number>>>();
-expect<AreEqual<typeof sToS, typeof identity<string>>>();
+declare const factorizer: <C, A, B>(first: (arg: C) => A) => (second: (arg: C) => B) => (arg: C) => [A, B];

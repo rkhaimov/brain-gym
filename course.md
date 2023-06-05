@@ -6,9 +6,9 @@ declare const expect: <T extends true>() => void;
 declare const identity: <T>(input: T) => T;
 
 interface Compose {
-    <A, B, C>(g: (x: B) => C, f: (x: A) => B): (x: A) => C;
+  <A, B, C>(g: (x: B) => C, f: (x: A) => B): (x: A) => C;
 
-    <A, B, C, D>(h: (x: C) => D, g: (x: B) => C, f: (x: A) => B): (x: A) => D;
+  <A, B, C, D>(h: (x: C) => D, g: (x: B) => C, f: (x: A) => B): (x: A) => D;
 }
 
 declare const compose: Compose;
@@ -284,13 +284,13 @@ const fact = (n: number) => product(range(1, n));
 
 ```typescript
 function fact(n: number): number {
-    const result = 1;
+  const result = 1;
 
-    for (const i = 2; i <= n; ++i) {
-        result *= i;
-    }
+  for (const i = 2; i <= n; ++i) {
+    result *= i;
+  }
 
-    return result;
+  return result;
 }
 ```
 
@@ -456,8 +456,8 @@ definition of a monoid.
 
 ```typescript
 type Monoid<M> = {
-    empty: M;
-    combine(left: M, right: M): M;
+  empty: M;
+  combine(left: M, right: M): M;
 }
 ```
 
@@ -466,8 +466,8 @@ mappend is associative). It’s the responsibility of the programmer to make sur
 
 ```typescript
 const concatM: Monoid<string> = {
-    empty: '',
-    combine: (left, right) => left + right,
+  empty: '',
+  combine: (left, right) => left + right,
 };
 ```
 
@@ -529,9 +529,9 @@ global state
 declare let logger: string;
 
 const not = (flag: boolean) => {
-    logger += `not ${flag}`;
+  logger += `not ${flag}`;
 
-    return !flag;
+  return !flag;
 };
 ```
 
@@ -566,13 +566,13 @@ words, all the while producing a log of those actions.
 
 ```typescript
 const composeWriter =
-    <A, B, C>(g: (input: B) => [C, string], f: (input: A) => [B, string]) =>
-        (input: A) => {
-            const [b, fLog] = f(input);
-            const [c, gLog] = g(b);
+  <A, B, C>(g: (input: B) => [C, string], f: (input: A) => [B, string]) =>
+    (input: A) => {
+      const [b, fLog] = f(input);
+      const [c, gLog] = g(b);
 
-            return [c, gLog + fLog] as const;
-        };
+      return [c, gLog + fLog] as const;
+    };
 ```
 
 We have accomplished our goal: The aggregation of the log is no longer the concern of the individual functions. They
@@ -772,3 +772,86 @@ expect<AreEqual<typeof sToS, typeof identity<string>>>();
 ```
 
 ## Products
+
+The next universal construction is that of a product. We know what a Cartesian product of two sets is: it’s a set of
+pairs. But what’s the pattern that connects the product set with its constituent sets? If we can figure that out, we’ll
+be able to generalize it to other categories. All we can say is that there are two functions, the projections, from the
+product to each of the constituents.
+
+*Intersection is used as an operation there*
+
+![img_5.png](img_5.png)
+
+![img_6.png](img_6.png)
+
+There is another candidate for a product
+
+![img_7.png](img_7.png)
+
+We want to be able to compare two instances of our pattern. We want to compare one candidate object 𝑐 and its two
+projections 𝑝 and 𝑞 with another candidate object 𝑐′ and its two projections 𝑝′ and 𝑞′. We would like to say that 𝑐
+is “better” than 𝑐′ if there is a morphism 𝑚 from 𝑐′ to 𝑐 — but that’s too weak. We also want its projections to be
+“better,” or “more universal,” than the projections of 𝑐′ . What it means is that the projections 𝑝′ and 𝑞′ can be
+reconstructed from 𝑝 and 𝑞 using 𝑚:
+
+*Intersection is used as an operation there*
+![img_8.png](img_8.png)
+
+*Intersection is used as an operation there*
+![img_9.png](img_9.png)
+
+Another way of looking at these equations is that 𝑚 factorizes 𝑝′ and 𝑞′ . Just pretend that these equations are in
+natural numbers, and the dot is multiplication: 𝑚 is a common factor shared by 𝑝′ and 𝑞′.
+
+Putting it all together, given any type c with two projections p and q, there is a unique m from c to the Cartesian
+product (a, b) that factorizes them. In fact, it just combines p and q into a pair.
+
+That makes the Cartesian product (a, b) our best match, which means that this universal construction works in the
+category of sets. It picks the product of any two sets. Now let’s forget about sets and define a product of two objects
+in any category using the same universal construction. Such a product doesn’t always exist, but when it does, it is
+unique up to a unique isomorphism
+
+A product of two objects 𝑎 and 𝑏 is the object 𝑐 equipped with two projections such that for any other object 𝑐′
+equipped with two projections there is a unique morphism 𝑚 from 𝑐′ to 𝑐 that factorizes those projections.
+
+A (higher order) function that produces the factorizing function m from two candidates is sometimes called the
+factorizer. In our case, it would be the function:
+
+```typescript
+declare const factorizer: <C, A, B>(first: (arg: C) => A) => (second: (arg: C) => B) => (arg: C) => [A, B];
+```
+
+## Coproduct
+
+Like every construction in category theory, the product has a dual, which is called the coproduct. When we reverse the
+arrows in the product pattern, we end up with an object 𝑐 equipped with two injections, i and j: morphisms from 𝑎 and 𝑏
+to 𝑐.
+
+![img_10.png](img_10.png)
+
+![img_11.png](img_11.png)
+
+The ranking is also inverted: object 𝑐 is “better” than object 𝑐′ that is equipped with the injections 𝑖′ and 𝑗′ if
+there is a morphism 𝑚 from 𝑐 to 𝑐′ that factorizes the injections:
+
+![img_12.png](img_12.png)
+
+The “best” such object, one with a unique morphism connecting it to
+any other pattern, is called a coproduct and, if it exists, is unique up to
+unique isomorphism.
+
+A coproduct of two objects 𝑎 and 𝑏 is the object 𝑐 equipped with two injections such that for any other object 𝑐′
+equipped with two injections there is a unique morphism 𝑚 from 𝑐 to 𝑐′ that factorizes those injections.
+
+In the category of sets, the coproduct is the disjoint union of two sets.
+
+```typescript
+// Why it has to be disjoint?
+```
+
+Just as we’ve defined the factorizer for a product, we can define one for the coproduct. Given a candidate type c and
+two candidate injections i and j, the factorizer for Either produces the factoring function:
+
+```typescript
+declare const factorizer: <C, A, B>(first: (arg: C) => A) => (second: (arg: C) => B) => (arg: C) => Either<A, B>;
+```
