@@ -1,3 +1,12 @@
-//<editor-fold desc="helpers">
-const isMemberOf = <T>(value: unknown): value is T => true;
-//</editor-fold>
+type Cash = {
+  weight: number;
+  value: number;
+  tag: string;
+};
+
+type Talk = {
+  words: string;
+  tag: number;
+};
+
+function act(input: Cash | Talk) {}

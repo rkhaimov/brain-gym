@@ -146,3 +146,5 @@ function act2(input: PaymentMethod) {
     input;
   }
 }
+
+export {}
