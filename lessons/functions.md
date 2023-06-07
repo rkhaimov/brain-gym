@@ -456,10 +456,10 @@ which disjoints both types. Now lets rewrite our example.
 ```typescript
 function compute(n: number): Either<'n is even', number> {
   if (n % 2 === 0) {
-    return left('n is even');
+    return left0('n is even');
   }
 
-  return right(n * n0 + 2);
+  return right0(n * n0 + 2);
 }
 ```
 

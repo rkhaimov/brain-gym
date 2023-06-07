@@ -1,187 +1,148 @@
-//<editor-fold desc="helpers">
-const isMemberOf = <T>(value: unknown): value is T => true;
-//</editor-fold>
-
-type OneOrTwoOrThree = 1 | 2 | 3;
-type TwoOrFourOrSix = 2 | 4 | 6;
-
-declare let t0: OneOrTwoOrThree | TwoOrFourOrSix;
-
-const everything = [1, '', function () {}, []];
-
-everything.filter(
-  (it) => isMemberOf<OneOrTwoOrThree>(it) || isMemberOf<TwoOrFourOrSix>(it)
-);
-
-function act0(input: OneOrTwoOrThree | TwoOrFourOrSix) {
-  if (input === 4) {
-  }
-}
-
-declare let t1: unknown;
-
-function act1(input: unknown): {} {
-  if (input === null || input === undefined) {
-    return 's';
-  }
-
-  return input;
-}
-
-console.log(act1(everything[4]));
-
-function act2(input: unknown): {} | undefined | null {
-  return input;
-}
-
-function act3(input: {} | undefined | null): unknown {
-  return input;
-}
-
-declare let t2: Exclude<{} | null | undefined, {}>;
-
-declare let t3: (1 | 2 | 3) & (2 | 4 | 6);
-
-declare let t4: number & {};
-declare let t5: number & number;
-declare let t6: number & never;
-declare let t7: number & unknown;
-declare let t8: number & {};
-
-type Apple = {
+type ConsumableApple = {
   sweetness: number;
 };
 
-// Exhaustive type check
-const candidate = {
-  sweetness: 1,
+type ColorizedApple = {
+  color: string;
 };
 
-// Type is valid, even though it contains properties that do not exist
-const a0: Apple = candidate;
+let left0: ConsumableApple;
+let right0: ColorizedApple;
 
-type Red = {
-  color: 'red'
-};
+const test = { sweetness: 1, color: '123' };
 
-// Extraction via intersection
-type RedApple = Red;
+left0 = test;
+right0 = test;
 
-type Blue = {
-  color: 'blue'
-};
+function act(input: ConsumableApple & ColorizedApple) {
+  input;
+}
 
-type BlueApple = Blue;
+class ConsumableApple0 {
+  constructor(public sweetness: number) {}
+}
 
-type Infected = {
-  worm: {
-    name: string;
-    age: number;
+class ColorizedApple0 extends ConsumableApple0 {
+  constructor(public color: string, sweetness: number) {
+    super(sweetness);
   }
 }
 
-const tt0: (Apple & Infected) | Apple = {
-  sweetness: 0,
-};
-
-type WormyApple = Infected & Apple;
-
-declare let a: {}; // unknown from the world of structs
-
-const c0 = {a: 1, d: 0};
-
-a = c0;
-
-type AA = {} & Apple;
-
-// Type union provides property intersections
-type A = { a: number };
-type B = { b: number };
-
-// What if A and B
-function handleAOrB(value: A | B): string {
-  if ('a' in value && 'b' in value) {
-    return 'It is a monster!';
-  }
-
-  if ('a' in value) {
-    return 'It is A!';
-  }
-
-  if ('b' in value) {
-    return 'It is B';
-  }
-
-  value;
+function act0(input: ColorizedApple0) {
+  input;
 }
 
-handleAOrB({a: 1, b: 1});
-
-function handleRedOrBlue(r: Red | Blue): string {
-  if (r.color === 'red') {
-    return 'red';
-  }
-
-  if (r.color === 'blue') {
-    return 'blue';
-  }
-}
-
-declare const s: Red & Blue;
-
-type LocalOptionsSelect = {
-  type: 'local'
-  options: string[]
-};
-
-type RemoteOptionsSelect = {
-  type: 'remote'
-  getOptions(): Promise<string[]>
-};
-
-type SelectProps = LocalOptionsSelect | RemoteOptionsSelect;
-
-const p: SelectProps = {
-  type: 'remote',
-  getOptions: async () => ['wdawd'],
-};
-
-if (p.type === 'remote') {
-  p.getOptions()
-}
-
-// handleRedOrBlue({ color });
-
-type Colored = Red | Blue;
-type ProbablyWormy = {} | Infected;
-
-type GardenApple = Apple & Colored & ProbablyWormy;
-
-declare const apples: GardenApple[];
-
-type RichPeopleApples = Extract<GardenApple, Red>;
-
-type QueenApples = Blue & Apple;
-
-type OtherApples = ExcludeExact<ExcludeExact<GardenApple, QueenApples>, RichPeopleApples>;
-
-type ExcludeExact<TLeft, TRight> = TLeft extends TRight ? TRight extends TLeft ? never : TLeft : TLeft;
-
-abstract class Animal {
-  abstract toName(): string;
-}
-
-class Bottle {
-  toName(): string {
-    return '1'
+type Left0 = {
+  first: {
+    sweetness: number;
   };
+};
+
+type Right0 = {
+  first: {
+    color: string;
+  };
+};
+
+declare let n0: Left0 & Right0;
+
+n0.first;
+
+type Card = {
+  magic: number;
+  id: number;
+  value: number;
+};
+
+type Cash = {
+  magic: string;
+  amount: number;
+  value: number;
+};
+
+type Hmm = number & { operation: number };
+
+function act2(m: Hmm) {
+  Math.pow(m, 2);
+
+  m.operation;
+  m;
+
+  return m + m;
 }
 
-const aaa: Animal = new Bottle();
+function act1(input: Card | Cash) {
+  input.value;
+}
 
-type PersonID = string & { __brand: 'PersonID' };
-type DogID = string & { __brand: 'DogID' };
+declare let n1: Cash & Card;
 
-declare const ddd: PersonID & DogID;
+n1 = {
+  value: 1,
+  amount: 12,
+  id: 412,
+  magic: 1,
+};
 
-export {}
+act1(n1);
+
+type Card0 = {
+  tag: 'Card0';
+  id: number;
+  value: number;
+};
+
+type Cash0 = {
+  tag: 'Cash0';
+  amount: number;
+  value: number;
+};
+
+type Talking0 = {
+  tag: 'Talking0';
+  amount: number;
+  value: number;
+};
+
+type PaymentMethod = Card0 | Cash0 | Talking0;
+
+declare const n4: Card0 | Cash0 | Talking0;
+
+act4(n4);
+
+function act4(input: Card0 | Cash0) {}
+
+function act5(input: Card0 | Cash0 | Talking0) {}
+
+function act3(input: PaymentMethod): string {
+  switch (input.tag) {
+    case 'Card0':
+      return `Card with ${input.id} number`;
+    case 'Cash0':
+      return `Cash with ${input.amount} bucks`;
+  }
+}
+
+declare function assertIsNever(input: never): never;
+
+class PaymentMethod {
+  constructor(public value: number) {}
+}
+
+class CardMethod extends PaymentMethod {
+  constructor(public id: number, value: number) {
+    super(value);
+  }
+}
+
+class CashMethod extends PaymentMethod {
+  constructor(public id: number, value: number) {
+    super(value);
+  }
+}
+
+function act2(input: PaymentMethod) {
+  if (input instanceof CardMethod) {
+    input;
+  }
+}
