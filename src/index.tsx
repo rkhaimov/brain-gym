@@ -1,30 +1,45 @@
-type GetAllUsers = () => Promise<User[]>;
+declare function program(events: Events, queries: Queries): [Images, Commands];
 
-function UsersList(getAllUsers: GetAllUsers) {
-  const query = useQuery(getAllUsers);
-
-  if (query.loading) {
-    return <span>Loading...</span>;
-  }
-
-  return (
-    <div>
-      {query.response.map((it) => (
-        <span>{it.name}</span>
-      ))}
-    </div>
+function testProgram() {
+  const [image, commands] = program(
+    events
+      .inputText('Логин', 'Админ')
+      .inputText('Пароль', 'admin')
+      .check('Запомнить')
+      .click('Войти'),
+    queries
+      .getAllUsers([{ name: 'Vasiliy' }, { name: 'Fedor' }])
+      .isAllowedToEnter(true)
   );
+
+  expect(image).toMatchImageSnapshot();
+
+  // Снимок экрана и его сравнение с прошлой версией (при наличии)
+
+  expect(commands).toMatchCommandsSnapshot();
+
+  // login: [{ login: 'Админ', password: 'admin', remember: true }]
 }
 
-const getAllUsersMock: GetAllUsers = async () => [{ name: 'Vasiliy' }, { name: 'Fedor' }];
+declare function expect(input: unknown): {
+  toMatchImageSnapshot(): unknown;
+  toMatchCommandsSnapshot(): unknown;
+};
 
-declare function getAllUsersImplementation(): Promise<{
-  content: User[];
-  success: true;
-}>;
+type Queries = {
+  getAllUsers(a: unknown): Queries;
+  isAllowedToEnter(a: unknown): Queries;
+};
 
-declare function useQuery<T>(
-  query: () => Promise<T>
-): { loading: true } | { loading: false; response: T };
+declare const queries: Queries;
 
-type User = { name: string };
+type Events = {
+  inputText(a: string, b: string): Events;
+  check(a: string): Events;
+  click(a: string): Events;
+};
+
+declare const events: Events;
+
+type Images = {};
+type Commands = {};
