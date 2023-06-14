@@ -1,150 +1,102 @@
-type ConsumableApple = {
-  sweetness: number;
+const n0 = true;
+
+const user = {
+  username: 'Vasiliy',
+  age: 13,
+} as const;
+
+type User = {
+  name: string;
+  surname: string;
 };
 
-type ColorizedApple = {
-  color: string;
+type Admin = {
+  level: number;
+  surname: number;
 };
 
-let left0: ConsumableApple;
-let right0: ColorizedApple;
+declare const t: User & Admin;
 
-const test = { sweetness: 1, color: '123' };
-
-left0 = test;
-right0 = test;
-
-function act(input: ConsumableApple & ColorizedApple) {
-  input;
+function join(left: User, right: Admin): User & Admin {
+  return { ...left, ...right };
 }
 
-class ConsumableApple0 {
-  constructor(public sweetness: number) {}
+function createCash() {
+  return { type: 'cash' as const, weight: 100 };
 }
 
-class ColorizedApple0 extends ConsumableApple0 {
-  constructor(public color: string, sweetness: number) {
-    super(sweetness);
+function createCard() {
+  return { type: 'card' as const, number: 101 };
+}
+
+function createCashOrCard(flag: boolean) {
+  if (flag) {
+    return createCash();
   }
+
+  return createCard();
 }
 
-function act0(input: ColorizedApple0) {
-  input;
+type CreateCard = typeof createCash;
+type Cash = ReturnType<CreateCard>;
+
+const result = createCashOrCard(true);
+
+if (result.type === 'cash') {
+  result.weight;
 }
 
-type Left0 = {
-  first: {
-    sweetness: number;
-  };
+enum Colors {
+  Red = 'red',
+  Green = 'green',
+  Blue = 'blue',
+}
+
+declare const n: typeof Colors;
+
+console.log(Colors);
+
+function act0(input: Colors): 'red' | 'green' | 'blue' {
+  return input;
+}
+
+console.log(Object.keys(Colors).map((it) => Colors[it as keyof typeof Colors]));
+
+act0(Colors.Blue);
+
+type User0 = {
+  name: string;
+  age: number;
 };
 
-type Right0 = {
-  first: {
-    color: string;
-  };
-};
+declare const namez: User0[keyof User0];
 
-declare let n0: Left0 & Right0;
+type A = keyof typeof Colors;
 
-n0.first;
+declare const property: keyof (
+  | { name: string; age: string }
+  | { value: string; age: number }
+);
 
-type Card = {
-  magic: number;
-  id: number;
-  value: number;
-};
+class UserQ {}
 
-type Cash = {
-  magic: string;
-  amount: number;
-  value: number;
-};
+function joina(left: number, right: string) {}
 
-type Hmm = number & { operation: number };
+type AB = Parameters<typeof joina>;
 
-function act2(m: Hmm) {
-  Math.pow(m, 2);
+type Pair = [number, string];
 
-  m.operation;
-  m;
+declare const tt: Pair;
 
-  return m + m;
+declare const q: keyof Pair;
+
+const left = [1, 2] as const;
+const right = [3, 4, 5] as const;
+
+declare function act12(): ['wallet', number, string] | ['cash', boolean];
+
+const rr = act12();
+
+if (rr['0'] === 'wallet') {
+  rr;
 }
-
-function act1(input: Card | Cash) {
-  input.value;
-}
-
-declare let n1: Cash & Card;
-
-n1 = {
-  value: 1,
-  amount: 12,
-  id: 412,
-  magic: 1,
-};
-
-act1(n1);
-
-type Card0 = {
-  tag: 'Card0';
-  id: number;
-  value: number;
-};
-
-type Cash0 = {
-  tag: 'Cash0';
-  amount: number;
-  value: number;
-};
-
-type Talking0 = {
-  tag: 'Talking0';
-  amount: number;
-  value: number;
-};
-
-type PaymentMethod = Card0 | Cash0 | Talking0;
-
-declare const n4: Card0 | Cash0 | Talking0;
-
-act4(n4);
-
-function act4(input: Card0 | Cash0) {}
-
-function act5(input: Card0 | Cash0 | Talking0) {}
-
-function act3(input: PaymentMethod): string {
-  switch (input.tag) {
-    case 'Card0':
-      return `Card with ${input.id} number`;
-    case 'Cash0':
-      return `Cash with ${input.amount} bucks`;
-  }
-}
-
-declare function assertIsNever(input: never): never;
-
-class PaymentMethod {
-  constructor(public value: number) {}
-}
-
-class CardMethod extends PaymentMethod {
-  constructor(public id: number, value: number) {
-    super(value);
-  }
-}
-
-class CashMethod extends PaymentMethod {
-  constructor(public id: number, value: number) {
-    super(value);
-  }
-}
-
-function act2(input: PaymentMethod) {
-  if (input instanceof CardMethod) {
-    input;
-  }
-}
-
-export {}
