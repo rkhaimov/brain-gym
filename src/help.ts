@@ -100,3 +100,5 @@ const rr = act12();
 if (rr['0'] === 'wallet') {
   rr;
 }
+
+export {}
