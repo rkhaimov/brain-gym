@@ -1,49 +1,80 @@
-const n0 = true;
+declare const user: { name: string; role: string };
 
-const user = {
-  username: 'Vasiliy',
-  age: 13,
-} as const;
-
-type User = {
-  name: string;
-  surname: string;
+type WithRole = {
+  role: string;
 };
 
-type Admin = {
-  level: number;
-  surname: number;
-};
+const t0: WithRole = user;
 
-declare const t: User & Admin;
+t0.role;
 
-function join(left: User, right: Admin): User & Admin {
-  return { ...left, ...right };
+user.name;
+
+act(user);
+
+function act(input: { name: string; role?: string }) {
+  const str = input as { role: string; some?: boolean };
+
+  return str.charAt(10);
 }
 
-function createCash() {
-  return { type: 'cash' as const, weight: 100 };
-}
-
-function createCard() {
-  return { type: 'card' as const, number: 101 };
-}
-
-function createCashOrCard(flag: boolean) {
-  if (flag) {
-    return createCash();
+function act4(input: Array<Card | Cash>) {
+  if (input.every(isCard)) {
+    input;
   }
 
-  return createCard();
+  if (input.some(isCard)) {
+    input;
+  }
+
+  input.filter(isCard).map(it => it.type);
 }
 
-type CreateCard = typeof createCash;
-type Cash = ReturnType<CreateCard>;
+type Card = {
+  type: 'card';
+  amount: number;
+  id: number;
+};
 
-const result = createCashOrCard(true);
+type Cash = {
+  type: 'cash';
+  amount: number;
+  weight: number;
+};
 
-if (result.type === 'cash') {
-  result.weight;
+function act1(input: Card | Cash) {
+  if ('id' in input) {
+    input;
+  }
+
+  // type guard
+  if (input.type === 'card') {
+    input;
+  }
+}
+
+function isCard(input: Card | Cash): input is Card {
+  return true;
+}
+
+function act2(input: Card | Cash) {
+  if (!isCard(input)) {
+    input;
+  }
+}
+
+declare function isUser(input: unknown): input is { name: string };
+
+declare function isWithRole(input: unknown): input is { role: string };
+
+function act3(input: unknown) {
+  if (isUser(input) && isWithRole(input)) {
+    input;
+  }
+
+  if (isUser(input) || isWithRole(input)) {
+    input;
+  }
 }
 
 enum Colors {
@@ -100,5 +131,3 @@ const rr = act12();
 if (rr['0'] === 'wallet') {
   rr;
 }
-
-export {}
