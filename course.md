@@ -853,5 +853,169 @@ Just as we’ve defined the factorizer for a product, we can define one for the 
 two candidate injections i and j, the factorizer for Either produces the factoring function:
 
 ```typescript
-declare const factorizer: <C, A, B>(first: (arg: C) => A) => (second: (arg: C) => B) => (arg: C) => Either<A, B>;
+type Either<TLeft, TRight> = Left<TLeft> | Right<TRight>;
+
+type Left<TValue> = { type: 'left'; value: TValue };
+type Right<TValue> = { type: 'right'; value: TValue };
+
+expect<AreEqual<Left<unknown> & Right<unknown>, never>>();
+
+declare function left<TValue>(value: TValue): Either<TValue, never>;
+
+declare function right<TValue>(value: TValue): Either<never, TValue>;
+
+declare const factorizer: <C, A, B>(first: (arg: A) => C) => (second: (arg: B) => C) => (arg: Either<A, B>) => C;
 ```
+
+## Asymmetry
+
+Functions are, in general, asymmetric. Let me explain. A function must be defined for every element of its domain set (
+in programming, we call it a total function), but it doesn’t have to cover the whole codomain.
+
+When the size of the domain is much smaller than the size of the codomain, we often think of such functions as embedding
+the domain in the codomain.
+
+For instance, we can think of a function from a singleton set as embedding its single element in the codomain. I call
+them embedding functions, but mathematicians prefer to give a name to the opposite: functions that tightly fill their
+codomains are called surjective or onto.
+
+The other source of asymmetry is that functions are allowed to map many elements of the domain set into one element of
+the codomain. They can collapse them. The extreme case are functions that map whole sets into a singleton.
+
+A composition of two collapsing functions is even more collapsing than the individual functions. Mathematicians have a
+name for noncollapsing functions: they call them injective or one-to-one.
+
+Of course there are some functions that are neither embedding nor collapsing. They are called bijections and they are
+truly symmetric, because they are invertible. In the category of sets, an isomorphism is the same as a bijection.
+
+## QUESTIONS
+
+* Show that the terminal object is unique up to unique isomorphism
+
+```typescript
+function terminal<T>(input: T): unknown {
+  return input;
+}
+
+function toUnknown(input: void): unknown {
+  return input;
+}
+
+function toVoid(input: unknown): void {
+}
+
+// Unknown and Void are isomorphic in this sense. But one is expanding and other is collapsing
+```
+
+* What is a product of two objects in a poset? Hint: Use the universal construction.
+
+By definition, poset is pair (A, <=) that satisfies following conditions:
+
+1. Reflexivity (Identity) x <= x
+2. Transitivity (Composition) x <= y and y <= z -> x <= z
+3. Anti-symmetric (Bijection) x <= y and y <= x -> x = y
+
+![img_13.png](img_13.png)
+
+In such category, product of two objects will be greatest lower bound of both objects (often represented as min(a, b))
+
+* What is a coproduct of two objects in a poset?
+
+![img_14.png](img_14.png)
+
+It is the lowest upper bound of two objects (defined as max(a, b))
+
+* Show that Either is a “better” coproduct than int equipped with two injections:
+
+```typescript
+function i(n: number): number {
+  return n;
+}
+
+function j(b: boolean): number {
+  return b ? 0 : 1;
+}
+
+function m(e: Either<number, boolean>): number {
+  return e.type === 'left' ? i(e.value) : j(e.value);
+}
+```
+
+* Continuing the previous problem: How would you argue that int with the two injections i and j cannot be “better” than
+  Either?
+
+By universal construction (and ranking in particular). We can define morphism from Either to number. It means we can
+only implement basic mappings p and q and then, reuse them across system with any other coproduct-like data structure
+just by composing with m, thus avoiding duplication and maintaining symmetry.
+
+# Simple Algebraic Data Types
+
+We’ve seen two basic ways of combining types: using a product and a coproduct. It turns out that a lot of data
+structures in everyday programming can be built using just these two mechanisms. This fact has important practical
+consequences. Many properties of data structures are composable. For instance, if you know how to compare values of
+basic types for equality, and you know how to generalize these comparisons to product and coproduct types, you can
+automate the derivation of equality operators for composite types.
+
+## Product Types
+
+The canonical implementation of a product of two types in a programming language is a pair. Indeed, we can define
+morphisms: frst and scnd such that both objects can be extracted from a product. Obviously, ranking here works as well:
+any triple, four, five and more elements array can be mapped to a pair making latter the best candidate.
+
+Pairs are not strictly commutative: a pair (Int, Bool) cannot be substituted for a pair (Bool, Int), even though they
+carry the same information. They are, however, commutative up to isomorphism. You can think of the two pairs as simply
+using a different format for storing the same data.
+
+You can combine an arbitrary number of types into a product by nesting pairs inside pairs, but there is an easier way:
+nested pairs are equivalent to tuples. It’s the consequence of the fact that different ways of nesting pairs are
+isomorphic. If you want to combine three types in a product, a, b, and c, in this order, you can do it in two ways:
+
+```typescript
+function main<A, B, C>(a: A, b: B, c: C) {
+  [a, b, c] === [a, [b, c]] === [[a, b], c]
+}
+```
+
+These types are different — you can’t pass one to a function that expects the other — but their elements are in
+one-to-one correspondence. There is a function that maps one to another:
+
+```typescript
+function alpha<A, B, C>([[a, b], c]: [[A, B], C]) {
+  return [a, [b, c]];
+}
+
+function alphaInv<A, B, C>([a, [b, c]]: [A, [B, C]]) {
+  return [[a, b], c];
+}
+```
+
+You can interpret the creation of a product type as a binary operation on types. From that perspective, the above
+isomorphism looks very much like the associativity law we’ve seen in monoids:
+
+(𝑎 ∗ 𝑏) ∗ 𝑐 = 𝑎 ∗ (𝑏 ∗ 𝑐)
+
+If we can live with isomorphisms, and don’t insist on strict equality, we can go even further and show that the unit
+type, (), is the unit of the product the same way 1 is the unit of multiplication. Indeed, the pairing of a value of
+some type a with a unit doesn’t add any information:
+
+```typescript
+function main<A>(a: A, unit: void) {
+  [a, unit] === a
+}
+```
+
+## Records
+
+It can be shown easily that tuples and records are isomorphic. Notice that the names of record fields also serve as
+functions to access these fields.
+
+```typescript
+type UserR = {
+  name: string;
+  age: number;
+};
+
+type UserT = [string, number]
+```
+
+## Sum Types

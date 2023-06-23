@@ -1,15 +1,22 @@
-type AreEqual<A, B> = A extends B ? (B extends A ? true : false) : false;
+type Either<TLeft, TRight> = Left<TLeft> | Right<TRight>;
 
-declare const expect: <T extends true>() => void;
+type Left<TValue> = { type: 'left'; value: TValue };
+type Right<TValue> = { type: 'right'; value: TValue };
 
-declare const identity: <T>(input: T) => T;
+declare function left<TValue>(value: TValue): Either<TValue, never>;
 
-interface Compose {
-  <A, B, C>(g: (x: B) => C, f: (x: A) => B): (x: A) => C;
+declare function right<TValue>(value: TValue): Either<never, TValue>;
 
-  <A, B, C, D>(h: (x: C) => D, g: (x: B) => C, f: (x: A) => B): (x: A) => D;
+function i(n: number): number {
+  return n;
 }
 
-declare const compose: Compose;
+function j(b: boolean): number {
+  return b ? 0 : 1;
+}
 
-declare const factorizer: <C, A, B>(first: (arg: C) => A) => (second: (arg: C) => B) => (arg: C) => [A, B];
+function m(e: Either<number, boolean>): number {
+  return e.type === 'left' ? i(e.value) : j(e.value);
+}
+
+export {};
