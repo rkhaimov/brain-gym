@@ -7,16 +7,14 @@ declare function left<TValue>(value: TValue): Either<TValue, never>;
 
 declare function right<TValue>(value: TValue): Either<never, TValue>;
 
-function i(n: number): number {
-  return n;
+type APlusA<A> = Either<A, A>;
+
+type TwoA<A> = [boolean, A];
+
+function aPlusAToTwoA<A>(input: APlusA<A>): TwoA<A> {
+  return [input.type === 'right', input.value];
 }
 
-function j(b: boolean): number {
-  return b ? 0 : 1;
+function twoAToAPlusA<A>(input: TwoA<A>): APlusA<A> {
+  return input[0] ? right(input[1]) : left(input[1]);
 }
-
-function m(e: Either<number, boolean>): number {
-  return e.type === 'left' ? i(e.value) : j(e.value);
-}
-
-export {};

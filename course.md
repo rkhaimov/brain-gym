@@ -1019,3 +1019,332 @@ type UserT = [string, number]
 ```
 
 ## Sum Types
+
+Eithers are commutative (up to isomorphism), can be nested, and the nesting order is irrelevant (up to isomorphism). So
+we can, for instance, define a sum equivalent of a triple:
+
+```typescript
+type EitherThree<A, B, C> = Either<A, Either<B, C>>;
+```
+
+The role of the binary operation is played by the disjoint sum, and the role of the unit element is played by the
+initial object. In terms of types, we have Either as the monoidal operator and Void, the uninhabited type, as its
+neutral element. You can think of Either as plus, and Void as zero. Indeed, adding Void to a sum type doesn’t change its
+content. For instance:
+
+```typescript
+type AlwaysRight<TLeft, TRight> = Either<never, TRight>; // a + 0 = a
+
+type Maybe<T> = Either<void, T> // a + 1
+```
+
+More complex sum types are often faked in C++ using pointers. A pointer can be either null, or point to a value of
+specific type. For instance, a Haskell list type, which can be defined as a (recursive) sum type:
+
+```typescript
+type List<T> = { head: T, tail: List<T> } | null;
+```
+
+The main difference, though, between Haskell and C++ types is that Haskell data structures are immutable. If you create
+an object using one particular constructor, the object will forever remember which constructor was used and what
+arguments were passed to it. So a Maybe object that was created as Just "energy" will never turn into Nothing.
+Similarly, an empty list will forever be empty, and a list of three elements will always have the same three elements.
+
+It’s this immutability that makes construction reversible. Given an object, you can always disassemble it down to parts
+that were used in its construction. This deconstruction is done with pattern matching and it reuses constructors as
+patterns. Constructor arguments, if any, are replaced with variables (or other patterns).
+
+## Algebra of Types
+
+Let’s summarize what we’ve discovered so far. We’ve seen two commutative monoidal structures underlying the type system:
+We have the sum types with Void as the neutral element, and the product types with the unit type, (), as the neutral
+element. We’d like to think of them as analogous to addition and multiplication. In this analogy, Void would correspond
+to zero, and unit, (), to one.
+
+Let’s see how far we can stretch this analogy. For instance, does multiplication by zero give zero? In other words, is a
+product type with one component being Void isomorphic to Void? For example, is it possible to create a pair of, say Int
+and Void? To create a pair you need two values. Although you can easily come up with an integer, there is no value of
+type Void.Therefore, for any type a, the type (a, Void) is uninhabited — has no values — and is therefore equivalent to
+Void. In other words, 𝑎 × 0 = 0.
+
+Another thing that links addition and multiplication is the distributive property:
+
+𝑎 × (𝑏 + 𝑐) = 𝑎 × 𝑏 + 𝑎 × 𝑐
+
+```typescript
+type Dist<A, B, C> = [A, Either<B, C>]
+
+function toRight<A, B, C>(input: [A, Either<B, C>]): Either<[A, B], [A, C]> {
+  return input[1].fold((l) => left([input[0], l]), (r) => right([input[0], r]));
+}
+```
+
+I’m not going to prove that these two functions are the inverse of each other, but if you think about it, they must be!
+They are just trivially re-packing the contents of the two data structures. It’s the same data, only different format.
+
+Mathematicians have a name for two such intertwined monoids: it’s called a semiring. It’s not a full ring, because we
+can’t define subtraction of types. That’s why a semiring is sometimes called a rig, which is a pun on “ring without an
+n” (negative). But barring that, we can get a lot of mileage from translating statements about, say, natural numbers,
+which form a rig, to statements about types. Here’s a translation table with some entries of interest:
+
+![img_15.png](img_15.png)
+
+The list type is quite interesting, because it’s defined as a solution to an equation. The type we are defining appears
+on both sides of the equation:
+
+```typescript
+type List<A> = Either<void, [A, List<A>]>;
+
+// Substitute
+// x = 1 + a * x (0)
+// x = 1 + a * (1 + a * x) (1)
+// x = 1 + a * (1 + a * (1 + a * x)) (2)
+// 1 + a + a * a * (1 + a * x)
+// 1 + a + a * a + a * a * a...
+
+// List<A> = x
+// x = 1 + a * x
+// x - a * x = 1
+// x * (1 - a) = 1
+// x = 1 / (1 - a)
+```
+
+We end up with an infinite sum of products (tuples), which can be interpreted as: A list is either empty, 1; or a
+singleton, a; or a pair, a*a; or a triple, a*a*a; etc… Well, that’s exactly what a list is — a string of as!
+
+Finally, I should mention one very important interpretation of the algebra of types. Notice that a product of two types
+a and b must contain both a value of type a and a value of type b, which means both types must be inhabited. A sum of
+two types, on the other hand, contains either a value of type a or a value of type b, so it’s enough if one of them is
+inhabited. Logical and and or also form a semiring, and it too can be mapped into type theory:
+
+![img_16.png](img_16.png)
+
+## QUESTIONS
+
+* Show the isomorphism between Maybe a and Either () a.
+
+```typescript
+function fromEitherToMaybe<A>(e: Either<void, A>): Maybe<A> {
+  return e.fold(Maybe.none, Maybe.some);
+}
+
+function fromMaybeToEither<A>(m: Maybe<A>): Either<void, A> {
+  return m.fold(() => Either.left(undefined), Either.right);
+}
+```
+
+* Here’s a sum type using fp:
+
+```typescript
+type Shape =
+  | { type: 'circle'; r: number }
+  | { type: 'rectangle'; w: number; h: number };
+
+function area(input: Shape): number {
+  switch (input.type) {
+    case 'circle':
+      return Math.PI * input.r * input.r;
+    case 'rectangle':
+      return input.w * input.h;
+  }
+}
+```
+
+Implement Shape using standard OO approach using template method
+
+```typescript
+abstract class Shape {
+  abstract area(): number;
+}
+
+class Circle extends Shape {
+  constructor(public r: number) {
+    super();
+  }
+
+  area(): number {
+    return Math.PI * this.r * this.r;
+  }
+}
+
+class Rectangle extends Shape {
+  constructor(public h: number, public w: number) {
+    super();
+  }
+
+  area(): number {
+    return this.w * this.h;
+  }
+}
+```
+
+* Continuing with the previous example: We can easily add a new function circ that calculates the circumference of a
+  Shape. We can do it without touching the definition of Shape:
+
+```typescript
+type Shape =
+  | { type: 'circle'; r: number }
+  | { type: 'rectangle'; w: number; h: number };
+
+function area(input: Shape): number {
+  switch (input.type) {
+    case 'circle':
+      return Math.PI * input.r * input.r;
+    case 'rectangle':
+      return input.w * input.h;
+  }
+}
+
+// ^^^ was not touched
+
+function circ(input: Shape): number {
+  switch (input.type) {
+    case 'circle':
+      return 2 * Math.PI * input.r;
+    case 'rectangle':
+      return 2 * (input.w + input.h);
+  }
+}
+```
+
+Now let's add functionality to OO model
+
+```typescript
+abstract class Shape {
+  abstract area(): number;
+
+  abstract circ(): number;
+}
+
+class Circle extends Shape {
+  constructor(public r: number) {
+    super();
+  }
+
+  area(): number {
+    return Math.PI * this.r * this.r;
+  }
+
+  circ(): number {
+    return 2 * Math.PI * this.r;
+  }
+}
+
+class Rectangle extends Shape {
+  constructor(public h: number, public w: number) {
+    super();
+  }
+
+  area(): number {
+    return this.w * this.h;
+  }
+
+  circ(): number {
+    return 2 * (this.h + this.w);
+  }
+}
+
+// Base class was touched, and all it's existed children
+```
+
+* Continuing further: Add a new shape, Square, to Shape and make all the necessary updates. What code did you have to
+  touch in Haskell vs. C++ or Java? (Even if you’re not a Haskell programmer, the modifications should be pretty
+  obvious.)
+
+```typescript
+type Shape =
+  | { type: 'circle'; r: number }
+  | { type: 'rectangle'; w: number; h: number }
+  | { type: 'square'; s: number };
+
+function area(input: Shape): number {
+  switch (input.type) {
+    case 'circle':
+      return Math.PI * input.r * input.r;
+    case 'rectangle':
+      return input.w * input.h;
+    case 'square':
+      return input.s * input.s;
+  }
+}
+
+function circ(input: Shape): number {
+  switch (input.type) {
+    case 'circle':
+      return 2 * Math.PI * input.r;
+    case 'rectangle':
+      return 2 * (input.w + input.h);
+    case 'square':
+      return 4 * input.s;
+  }
+}
+
+// Base type was touched, and all operations on it
+```
+
+```typescript
+abstract class Shape {
+  abstract area(): number;
+
+  abstract circ(): number;
+}
+
+class Circle extends Shape {
+  constructor(public r: number) {
+    super();
+  }
+
+  area(): number {
+    return Math.PI * this.r * this.r;
+  }
+
+  circ(): number {
+    return 2 * Math.PI * this.r;
+  }
+}
+
+class Rectangle extends Shape {
+  constructor(public h: number, public w: number) {
+    super();
+  }
+
+  area(): number {
+    return this.w * this.h;
+  }
+
+  circ(): number {
+    return 2 * (this.h + this.w);
+  }
+}
+
+class Square extends Shape {
+  constructor(public s: number) {
+    super();
+  }
+
+  area(): number {
+    return this.s * this.s;
+  }
+
+  circ(): number {
+    return 4 * this.s;
+  }
+}
+
+// Nothing was touched
+```
+
+* Show that 𝑎 + 𝑎 = 2 × 𝑎 holds for types (up to isomorphism). Remember that 2 corresponds to Bool, according to our
+  translation table.
+
+```typescript
+function aPlusAToTwoA<A>(input: APlusA<A>): TwoA<A> {
+  return [input.type === 'right', input.value];
+}
+
+function twoAToAPlusA<A>(input: TwoA<A>): APlusA<A> {
+  return input[0] ? right(input[1]) : left(input[1]);
+}
+```
+
+# Functors
