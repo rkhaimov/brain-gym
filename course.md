@@ -1348,3 +1348,61 @@ function twoAToAPlusA<A>(input: TwoA<A>): APlusA<A> {
 ```
 
 # Functors
+
+A functor is a mapping between categories. Given two categories, 𝐂 and 𝐃, a functor 𝐹 maps objects in 𝐂 to objects in
+𝐃 — it’s a function on objects. If 𝑎 is an object in 𝐂, we’ll write its image in 𝐃 as 𝐹 𝑎
+
+A functor also maps morphisms — it preserves connections.
+
+So if a morphism 𝑓 in 𝐂 connects object 𝑎 to object 𝑏,
+
+𝑓 ∷ 𝑎 → 𝑏
+
+the image of 𝑓 in 𝐃, 𝐹 𝑓 , will connect the image of 𝑎 to the image of 𝑏:
+
+𝐹 𝑓 ∷ 𝐹 𝑎 → 𝐹 𝑏
+
+![img_17.png](img_17.png)
+
+As you can see, a functor preserves the structure of a category: what’s connected in one category will be connected in
+the other category.
+
+![img_18.png](img_18.png)
+
+Just like functions, functors may do both collapsing and embedding.
+
+A functor from the singleton category to any other category simply selects an object in that category. This is fully
+analogous to the property of morphisms from singleton sets selecting elements in target sets.
+
+The maximally collapsing functor is called the constant functor Δ𝑐 . It maps every object in the source category to one
+selected object 𝑐 in the target category. It also maps every morphism in the source category to the identity morphism
+id𝑐 .
+
+## Functors in Programming
+
+We can talk about functors that map this category into itself — such functors are called endofunctors. First of all, it
+maps types to types. So-called high order types.
+
+### The Maybe Functor
+
+Here’s an important subtlety: Maybe itself is not a type, it’s a type constructor. You have to give it a type argument,
+like Int or Bool, in order to turn it into a type. Maybe without any argument represents a function on types.
+
+A functor is not only a mapping of objects (here, types) but also a mapping of morphisms (here, functions). For any
+function from a to b we would like to produce a function from Maybe a to Maybe b.
+
+```typescript
+type Maybe<T> = Either<void, T>
+
+declare const f: (input: number) => string;
+
+declare const fmap: <A, B>(f: (input: A) => B) => (input: Maybe<A>) => Maybe<B>;
+```
+
+![img_19.png](img_19.png)
+
+We often say that fmap lifts a function. The lifted function acts on Maybe values.
+
+To show that the type constructor Maybe together with the function fmap form a functor, we have to prove that fmap
+preserves identity and composition. These are called “the functor laws,” but they simply ensure the preservation of the
+structure of the category.
