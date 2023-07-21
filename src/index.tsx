@@ -1,11 +1,30 @@
-interface IRepository {
-  getAllAdministrators(max: number): Promise<NonEmptyArray<Admin>>;
+type GetAllUsers = () => Promise<User[]>
 
-  deleteAdministratorById(id: Admin['id']): Promise<void>;
+function UserList(getAllUsers: GetAllUsers) {
+  const users = useQuery(getAllUsers);
+
+  if (users.loading) {
+    return <span>Loading</span>;
+  }
+
+  return <List of={users.data} />;
 }
 
-type Admin = {
-  id: number;
+function getAllUsers(): Promise<User[]> {
+  return get('api/v1/users');
+}
+
+console.log(UserList);
+
+declare const List: React.FC<{ of: User[] }>;
+
+type User = {
+  name: string;
 };
 
-type NonEmptyArray<T> = {};
+declare function useQuery<T>(request: () => Promise<T>): {
+  loading: boolean;
+  data: T;
+};
+
+declare function get<T>(url: string): Promise<T>;
