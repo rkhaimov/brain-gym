@@ -1,114 +1,202 @@
-type A1 =
-  | { name: string; role: string }
-  | { name?: string; surname: string }
-  | { age: number };
-
-type B1 = { name: string };
-
-type R4 = Extract<A1, B1>;
-
-type MyExtract<A, B> = A & B;
-
-type R5 = MyExtract<A1, B1>;
-
-declare let a: A1;
-declare let b: B1;
-declare let bb: { name: string; role: string };
-declare let c: Extract<A1, B1>;
-declare let d: MyExtract<A1, B1>;
-
-a = c;
-b = c;
-bb = c;
-
-a = d;
-b = d;
-bb = d;
-
-type WithPaging<out T> = {
-  content: T[];
-  pageSize: number;
-  total: number;
+type User = {
+  name: string;
+  role: string;
 };
 
-type IsWithPaging<T> = T extends WithPaging<unknown> ? true : false;
-
-declare const t0: WithPaging<{ name: string }>;
-declare const t1: number;
-
-type R6 = IsWithPaging<typeof t0>;
-type R7 = IsWithPaging<typeof t1>;
-
-type ExtractWithPagingContent<T> = T extends WithPaging<unknown>
-  ? T['content'][number]
-  : never;
-
-type R8 = ExtractWithPagingContent<typeof t0>;
-type R9 = ExtractWithPagingContent<typeof t1>;
-
-type EditableBox<in out T> = {
-  edit(value: T): void;
-};
-
-type IsEditableBox<T> = T extends EditableBox<unknown> ? true : false;
-
-declare const t2: EditableBox<number>;
-declare const t3: number;
-
-type R10 = IsEditableBox<typeof t2>;
-type R11 = IsEditableBox<typeof t3>;
-
-type IsUnaryFunction<T> = T extends (arg: never) => unknown ? true : false;
-
-type R12 = IsUnaryFunction<(input: 'hello') => true>;
-type R13 = IsUnaryFunction<() => true>;
-type R14 = IsUnaryFunction<(a: number, b: number) => true>;
-
-type AsNumber<T> = T extends number ? T : never;
-
-type ToPrecisionType<T> = AsNumber<T>['toPrecision'];
-
-const t4: any = 'awd' as unknown;
-
-const t5: string = t4;
-const t6: number = t4;
-const t7: string & number = t4;
-
-type Union = number | string | any;
-type Intersection = number & any;
-
-function act0(value: any) {
-  value.property.value;
+function act(user: keyof User) {
+  user;
 }
 
-type UnboxPaging<T extends WithPaging<unknown>> = T extends WithPaging<infer R>
-  ? R
+type AbstractRecord = {
+  [key: string]: number;
+};
+
+function act0(input: AbstractRecord) {
+  const value = input['age'];
+
+  value.toPrecision();
+}
+
+// act0({}) unsafe
+
+const record0: AbstractRecord = {
+  name: 10,
+  ['hello']: 12,
+  [10]: 30,
+};
+
+console.log(record0);
+
+type CombinedRecord = {
+  [key: string]: string;
+  [key: number]: 'hello' | 'world';
+};
+
+const record1: CombinedRecord = {
+  ['prop']: 'Hello world',
+  [10]: 'hello',
+};
+
+const r = record1['prop'];
+const k = record1[42];
+
+Object.keys(record1).map((key) => {
+  const t = record1[key];
+
+  console.log(t);
+});
+
+type UniversalKey = keyof never;
+
+type ConcreteRecord = {
+  [TKey in 'hello' | 'world']: TKey;
+};
+
+function act1(input: ConcreteRecord) {
+  const t = input.hello;
+}
+
+type RandomPropertiesToUndefined<TInput extends Record<string, unknown>> = {
+  [TKey in keyof TInput]?: TInput[TKey];
+};
+
+function randomPropertiesToUndefined<TInput extends Record<string, unknown>>(
+  input: TInput
+): Partial<TInput> {
+  const result = Object.entries(input).map(([key, value]) => [
+    key,
+    Math.random() > 0.5 ? undefined : value,
+  ]);
+
+  return Object.fromEntries(result);
+}
+
+const input0 = { name: 'Vladimir', age: 20 };
+type Result0 = RandomPropertiesToUndefined<typeof input0>;
+const result0 = randomPropertiesToUndefined(input0);
+
+type UserFromApi = {
+  name?: string;
+  age?: number;
+};
+
+type UserMapped = Required<UserFromApi>;
+
+declare function toMappedUser(input: UserFromApi): UserMapped;
+
+declare const n: UserFromApi;
+
+type PickByKeys<
+  TInput extends Record<string, unknown>,
+  TKeys extends keyof TInput
+> = {
+  [TKey in TKeys]: TInput[TKey];
+};
+
+function pickByKeys<
+  TInput extends Record<string, unknown>,
+  TKeys extends keyof TInput
+>(input: TInput, keys: TKeys[]) {
+  return Object.fromEntries(
+    Object.entries(input).filter(([key]) => keys.includes(key as TKeys))
+  ) as Pick<TInput, TKeys>;
+}
+
+const result1 = pickByKeys({ name: 'Hello', age: 30, role: 'admin' }, [
+  'name',
+  'age',
+  'age',
+]);
+
+type OmitByKeys<
+  TInput extends Record<string, unknown>,
+  TKeys extends keyof TInput
+> = PickByKeys<TInput, Exclude<keyof TInput, TKeys>>;
+
+function omitByKeys<
+  TInput extends Record<string, unknown>,
+  TKeys extends keyof TInput
+>(input: TInput, keys: TKeys[]) {
+  return pickByKeys(
+    input,
+    Object.keys(input).filter((key) => !keys.includes(key as TKeys))
+  ) as OmitByKeys<TInput, TKeys>;
+}
+
+console.log(omitByKeys({ name: 'Hello', age: 30, role: 'admin' }, ['name']));
+
+function head<T>(input: readonly T[]) {
+  return input[0];
+}
+
+const t = head([1, 2, 3] as const);
+
+type IsEmptyList<TInput extends unknown[]> = TInput extends [] ? true : false;
+
+type Result1 = IsEmptyList<[]>;
+type Result2 = IsEmptyList<[1]>;
+type Result3 = IsEmptyList<[1, 2]>;
+
+type IsOneElementList<TInput extends unknown[]> = TInput extends [unknown]
+  ? true
+  : false;
+
+type Result4 = IsOneElementList<[]>;
+type Result5 = IsOneElementList<[1]>;
+type Result6 = IsOneElementList<[1, 2]>;
+
+type IsAtLeastOneElementList<TInput extends unknown[]> = TInput extends [
+  unknown,
+  ...unknown[]
+]
+  ? true
+  : false;
+
+type Result7 = IsAtLeastOneElementList<[]>;
+type Result8 = IsAtLeastOneElementList<[1]>;
+type Result9 = IsAtLeastOneElementList<[1, 2]>;
+
+type Head<TInput extends unknown[]> = TInput extends [infer RHead, ...unknown[]]
+  ? RHead
   : never;
 
-type R15 = UnboxPaging<WithPaging<'Hello'>>;
-type R16 = UnboxPaging<1>;
+type Result10 = Head<[1]>;
+type Result11 = Head<[1, 2]>;
+type Result12 = Head<[]>;
 
-type UnboxUnaryArg<T> = T extends (arg: infer RArg) => infer RReturn
-  ? [RArg, RReturn]
+type Tail<TInput extends unknown[]> = TInput extends [unknown, ...infer RTail]
+  ? RTail
   : never;
 
-type UnboxWithPagingName<T> = T extends WithPaging<
-  infer R extends { name: string }
->
-  ? R
-  : never;
+type Result13 = Tail<[1]>;
+type Result14 = Tail<[1, 2]>;
+type Result15 = Tail<[]>;
 
-declare const noArgFunction: (arg: string) => number;
-declare const arg: UnboxUnaryArg<typeof noArgFunction>;
+type HeadFlat<TInput extends unknown[]> = Head<TInput> extends unknown[]
+  ? HeadFlat<Head<TInput>>
+  : Head<TInput>;
 
-type Strings = [string, string];
-type Numbers = number[];
-type Unbounded = [...Strings, ...Numbers, boolean];
+type Result16 = HeadFlat<[[1, [2, [3]]], 2]>;
 
-const t8: Unbounded = ['1', '2', 2, 3, 4, true];
+type Flat<TInput extends unknown[]> = TInput extends [
+  infer RHead,
+  ...infer RRest
+]
+  ? RHead extends unknown[]
+    ? [...Flat<RHead>, ...Flat<RRest>]
+    : [RHead, ...Flat<RRest>]
+  : [];
 
-declare const tail: <T extends unknown[]>(input: readonly [unknown, ...T]) => T;
+type Result17 = Flat<[]>;
+type Result18 = Flat<[1, 2]>;
+type Result19 = Flat<[1, 2, [2, [3, [4]]]]>;
 
-const t9 = tail([1, 2, 3] as const);
+type UnknownStruct = {
+  [key: string]: unknown;
+};
 
-export {};
+type DefaultsAnyStructToNumber<TInput extends UnknownStruct> = {
+  [TKey in keyof TInput]: undefined extends TInput[TKey]
+    ? NonNullable<TInput[TKey]> | number
+    : TInput[TKey];
+};
