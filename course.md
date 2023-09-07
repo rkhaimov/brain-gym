@@ -1494,3 +1494,224 @@ called 𝐂𝐚𝐭 (which is big, so it can’t be a member of itself). A small
 opposed to something larger than a set. Mind you, in category theory, even an infinite uncountable set is considered
 “small.” I thought I’d mention these things because I find it pretty amazing that we can recognize the same structures
 repeating themselves at many levels of abstraction. We’ll see later that functors form categories as well
+
+## QUESTIONS
+
+* Can we turn the Maybe type constructor into a functor by defining:
+
+```typescript
+type Maybe<T> = Either<void, T>
+
+const fmap = <A, B>(_: unknown) => (__: unknown): never => fmap(_)(__);
+```
+
+To prove that this pair is a functor we must show that fmap preserves identity and composition.
+
+```typescript
+type Maybe<T> = T | undefined;
+
+const fmap =
+  <A>(m: Maybe<A>) =>
+    <B>(t: (input: A) => B): Maybe<B> =>
+      fmap(m)(t);
+
+const id = <T>(value: T) => value;
+
+const idNumber = id<number>;
+
+const identity: Maybe<number> = fmap(10)(idNumber);
+
+const composition: Maybe<string> = fmap(fmap(10)((n) => `Your number is ${n}`))((n) => n.toUpperCase());
+```
+
+From types standpoint everything is going to work fine. But an exception will occur if we try and run this program
+
+* Prove functor laws for the reader functor. Hint: it’s really simple. Implement the reader functor in your second
+  favorite language (the first being Haskell, of course).
+
+```typescript
+declare const compose: <A, B>(left: (input: A) => B) => <C>(right: (input: B) => C) => (input: A) => C;
+
+type Reader<R, A> = <T>(input: R) => A;
+
+declare const fmap: <R, A>(reader: Reader<R, A>) => <B>(transform: (input: A) => B) => Reader<R, B>;
+
+declare const identity: <T>(input: T) => T;
+
+declare const numberToString: (input: number) => string;
+
+declare const stringToBoolean: (input: string) => boolean;
+
+// Identity law
+const identity0 = <T>(input: Reader<unknown, T>): Reader<unknown, T> => fmap(input)(identity);
+
+// Composition law
+const composition0: (input: number) => boolean = compose(numberToString)(stringToBoolean);
+
+const composition1: (input: Reader<unknown, number>) => Reader<unknown, boolean> = (input) =>
+  fmap(fmap(input)(numberToString))(stringToBoolean);
+```
+
+* Prove the functor laws for the list functor. Assume that the laws are true for the tail part of the list you’re
+  applying it to (in other words, use induction).
+
+```typescript
+type List<T> = { head: T; tail: List<T> } | null;
+
+declare const identity: <T>(input: T) => T;
+
+declare const numberToString: (input: number) => string;
+
+declare const stringToBoolean: (input: string) => boolean;
+
+const fmapnull = (input: null) => (transform: (input: never) => unknown) => input;
+
+// Proof of base case
+const empty: List<never> = null;
+const identity0: List<never> = fmapnull(empty)(identity);
+const composition0: List<boolean> = fmapnull(fmapnull(empty)(numberToString))(stringToBoolean);
+
+const fmapany =
+  <A>(input: List<A>) =>
+    <B>(transform: (input: A) => B): List<B> => {
+      // Reusing base case proof
+      if (input === null) {
+        return fmapnull(input)(transform);
+      }
+
+      // Single element is also trivial
+      const single = transform(input.head);
+
+      // Record can be constructed so that two conditions are true simultaneously
+      return {
+        head: single,
+        // The rest of the elements are also satisfy general condition by induction
+        tail: fmapany(input.tail)(transform),
+      };
+    };
+```
+
+# Functoriality
+
+Now that you know what a functor is, and have seen a few examples, let’s see how we can build larger functors from
+smaller ones. In particular it’s interesting to see which type constructors (which correspond to mappings between
+objects in a category) can be extended to functors (which include mappings between morphisms).
+
+## Bifunctors
+
+Since functors are morphisms in 𝐂𝐚𝐭 (the category of categories), a lot of intuitions about morphisms — and functions in
+particular — apply to functors as well.
+
+![img_20.png](img_20.png)
+
+That’s pretty straightforward. But functoriality means that a bifunctor has to map morphisms as well. This time, though,
+it must map a pair of morphisms, one from 𝐂 and one from 𝐃, to a morphism in 𝐄.
+
+Again, a pair of morphisms is just a single morphism in the product category 𝐂 × 𝐃 to 𝐄. We define a morphism in a
+Cartesian product of categories as a pair of morphisms which goes from one pair of objects to another pair of objects.
+These pairs of morphisms can be composed in the obvious way:
+
+(𝑓, 𝑔) ∘ (𝑓′, 𝑔′) = (𝑓 ∘ 𝑓′, 𝑔 ∘ 𝑔′)
+
+![img_21.png](img_21.png)
+
+The composition is associative and it has an identity — a pair of identity morphisms (id, id). So a Cartesian product of
+categories is indeed a category.
+
+An easier way to think about bifunctors would be to consider them functors in each argument separately. So instead of
+translating functorial laws — associativity and identity preservation — from functors to bifunctors, it would be enough
+to check them separately for each argument. However, in general, separate functoriality is not enough to prove joint
+functoriality. Categories in which joint functoriality fails are called premonoidal.
+
+```typescript
+type Functor1<F, A> = {
+  functor: F;
+  args: [A];
+  value: never;
+};
+
+type Functor1Map<F> = <A, B>(input: Functor1<F, A>, transform: (input: A) => B) => Functor1<F, B>;
+
+type Maybe<T> = { type: 'none' } | { type: 'some'; value: T };
+
+declare const maybeMap: Functor1Map<'Maybe'>;
+
+declare const maybeOf: <T>(value: T) => Functor1<'Maybe', T>;
+
+type Identity<T> = T;
+
+declare const identityMap: Functor1Map<'Identity'>;
+
+declare const identityOf: <T>(value: T) => Functor1<'Identity', T>;
+
+const biFunctor = [maybeOf('Hello'), identityOf(10)] as const;
+
+declare const id: <T>(input: T) => T;
+declare const numberToString: (input: number) => string;
+declare const stringToNumber: (input: string) => number;
+
+const idBiFunctor = [maybeMap(biFunctor[0], id), identityMap(biFunctor[1], id)] as const;
+
+const mapBiFunctor = [maybeMap(biFunctor[0], stringToNumber), identityMap(biFunctor[1], numberToString)] as const;
+```
+
+![img_22.png](img_22.png)
+
+When declaring an instance of Bifunctor, you have a choice of either implementing bimap and accepting the defaults for
+first and second, or implementing both first and second and accepting the default for bimap (of course, you may
+implement all three of them, but then it’s up to you to make sure they are related to each other in this manner).
+
+![img_23.png](img_23.png)
+
+Now, remember when we talked about monoidal categories? A monoidal category defines a binary operator acting on objects,
+together with a unit object. What I haven’t mentioned is that one of the requirements for
+a monoidal category is that the binary operator be a bifunctor. But how does it relate to bifunctor?
+
+## Functorial Algebraic Data Types
+
+Complex data types are constructed from simpler data types. In particular, algebraic data types (adts) are created using
+sums and products. So what are the building blocks of parameterized algebraic data types? First, there are the items
+that have no dependency on the type parameter of the functor, like Nothing in Maybe, or Nil in List. They are equivalent
+to the Const functor. Remember, the Const functor ignores its type parameter. Then there are the elements that simply
+encapsulate the type parameter itself, like Just in Maybe. They are equivalent to the identity functor.
+
+Everything else in algebraic data structures is constructed from these two primitives using products and sums.
+
+```typescript
+type Either<A, B> = { type: 'left'; value: A } | { type: 'right'; value: B };
+
+declare const eitherMap: <A, B, C, D>(
+  input: Either<A, B>,
+  left: (input: A) => C,
+  right: (input: B) => D
+) => Either<C, D>;
+
+type Const<T> = void;
+
+const constMap = <A, B>(input: Const<A>, transform: (input: A) => B) => input;
+
+type Identity<T> = T;
+
+const identityMap = <A, B>(input: Identity<A>, transform: (input: A) => B) => transform(input);
+
+type Maybe<T> = Either<Const<T>, Identity<T>>;
+
+const maybeMap = <A, B>(input: Maybe<A>, transform: (input: A) => B): Maybe<B> =>
+  eitherMap(
+    input,
+    (left) => constMap(left, transform),
+    (right) => identityMap(right, transform)
+  );
+```
+
+So Maybe is the composition of the bifunctor Either with two functors, Const () and Identity. (Const is really a
+bifunctor, but here we always use it partially applied.)
+
+So it turns out that we didn’t have to prove that Maybe was a functor — this fact followed from the way it was
+constructed as a sum of two functorial primitives. The regularity of algebraic data structures makes it possible to
+derive instances not only of Functor but of several other type classes, including the Eq type class I mentioned before.
+There is also the option of teaching the compiler to derive instances of your own typeclasses, but that’s a bit more
+advanced. The idea though is the same: You provide the behavior for the basic building blocks and sums and products, and
+let the compiler figure out the rest.
+
+## The Writer Functor

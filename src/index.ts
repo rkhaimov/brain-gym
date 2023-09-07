@@ -1,49 +1,26 @@
-type HKT<F, A> = [F, A];
+type Either<A, B> = { type: 'left'; value: A } | { type: 'right'; value: B };
 
-const createHKT = <F extends (value: A) => unknown, A>(value: ReturnType<F>): HKT<F, A> => [
-  ((_) => value) as F,
-  undefined as A,
-];
+declare const eitherMap: <A, B, C, D>(
+  input: Either<A, B>,
+  left: (input: A) => C,
+  right: (input: B) => D
+) => Either<C, D>;
 
-interface Map<F> {
-  <A, B>(input: HKT<F, A>, transform: (value: A) => B): HKT<F, B>;
-}
+type Const<T> = void;
 
-interface MaybeFactory {
-  <T>(value: T): { type: 'none' } | { type: 'some'; value: T };
-}
+const constMap = <A, B>(input: Const<A>, transform: (input: A) => B) => input;
 
-type Maybe<A> = HKT<MaybeFactory, A>;
+type Identity<T> = T;
 
-const some = <T>(value: T): Maybe<T> => createHKT({ type: 'some', value });
+const identityMap = <A, B>(input: Identity<A>, transform: (input: A) => B) => transform(input);
 
-const none = (): Maybe<never> => createHKT({ type: 'none' });
+type Maybe<T> = Either<Const<T>, Identity<T>>;
 
-const maybeFold = <T, R>(input: Maybe<T>, onNone: () => R, onSome: (value: T) => R) => {
-  const constructed = input[0](input[1]);
-
-  if (constructed.type === 'none') {
-    return onNone();
-  }
-
-  return onSome(constructed.value);
-};
-
-const maybeMap: Map<MaybeFactory> = (input, transform) => maybeFold(input, none, (it) => some(transform(it)));
-
-interface ConstFactory<R> {
-  <T>(value: T): R;
-}
-
-type Const<R, T> = HKT<ConstFactory<R>, T>;
-
-const createConst = <R, T>(constant: R): HKT<ConstFactory<R>, T> => createHKT(constant);
-
-const constFold = <R>(input: Const<R, unknown>): R => input[0](input[1]);
-
-const createConstMap = (<R, A, B>(input: Const<R, A>, _: (value: A) => B) =>
-  createConst<R, B>(constFold(input))) satisfies Map<ConstFactory<unknown>>;
-
-console.log(constFold(createConstMap(createConst<10, string>(10), (value) => value.length)));
+const maybeMap = <A, B>(input: Maybe<A>, transform: (input: A) => B): Maybe<B> =>
+  eitherMap(
+    input,
+    (left) => constMap(left, transform),
+    (right) => identityMap(right, transform)
+  );
 
 export {};
