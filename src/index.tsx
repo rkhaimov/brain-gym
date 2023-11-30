@@ -2,19 +2,16 @@ function double(n: number) {
   return n * 3;
 }
 
-function test() {
-  const expected = new Map([
-    [0, 0],
-    [2, 4],
-    [-5, -10],
-  ]);
-
-  const actual = map(expected, ([key]) => double(key));
+/**
+ * Представляет собой процесс тестирования любой чистой функции
+ * @param expected Ожидаемое поведение функции ввиде таблицы ввода/вывода
+ * @param program Тестируемое поведение
+ */
+function test<K, V>(expected: Map<K, V>, program: (input: K) => V) {
+  const actual = map(expected, ([key]) => program(key));
 
   assert(equals(expected, actual));
 }
-
-test();
 
 function equals(
   left: Map<unknown, unknown>,
@@ -42,8 +39,14 @@ function getAllUsers(): Promise<User[]> {
   return get('api/v1/users');
 }
 
+// Команда выполняющая сайд-эффект
 function deleteUserById(id: number): Promise<void> {
   return get(`api/v1/users/${id}/delete`);
+}
+
+// Команда не выполняющая сайд-эффект (уже по сути командой не является)
+function deleteUserByIdMock(id: number): Promise<void> {
+  return ['deleteUserById', [id]];
 }
 
 const getAllUsersRealAfter = (): Promise<{ content: User[] }> =>
@@ -52,21 +55,43 @@ const getAllUsersRealAfter = (): Promise<{ content: User[] }> =>
 const getAllUsersAdapted = () =>
   getAllUsersRealAfter().then((it) => it.content);
 
-declare function program(ds: DataSource): void;
-
-// Заглушки
-declare function createMockDS(): DataSource;
-
 // Реальный внешний API
 declare function createExternalDS(): DataSource;
 
-function main() {
-  // Обычное значение списка пользователей
-  const users: User[] = [{ name: 'Fedor' }, { name: 'Vasiliy' }];
+// Заглушки
+const createMockDS = (): DataSource => ({
+  getUsers: async () => [],
+});
 
-  // То же самое значение списка пользователей, но уже в ленивом виде
-  const getUsers = (): User[] => [{ name: 'Fedor' }, { name: 'Vasiliy' }];
+function main() {
+  // Таблица ввода/вывода. Пока рассматриваются только входные данные
+  // интерфейс источников данных DataSource
+  const expected = new Map<DataSource, unknown>([
+    [
+      // Реализация конкретных queries переопределяется следующим образом
+      {
+        ...createMockDS(),
+        getUsers: async () => [{ name: 'Fedor' }, { name: 'Vasiliy' }],
+      },
+      //<editor-fold desc="Скрыто">
+      0,
+      //</editor-fold>
+    ],
+  ]);
+
+  test(expected, program);
 }
+
+function program(source: DataSource): CommandResult {
+  //<editor-fold desc="Много кода">
+  const a = 0;
+  //</editor-fold>
+
+  // Где-то в глубине какого-то обработчика событий
+  source.deleteUserById(10);
+}
+
+type CommandResult = unknown;
 
 declare function expect(input: unknown): any;
 
@@ -74,9 +99,12 @@ function wait() {
   return new Promise((resolve) => setTimeout(resolve, 1_000));
 }
 
-type DataSource = {};
+type DataSource = {
+  getUsers(): Promise<User[]>;
+  deleteUserById(id: User['id']): Promise<void>;
+};
 
-type User = { name: string };
+type User = { name: string; id: number };
 
 type GetAllUsers = () => Promise<User[]>;
 
