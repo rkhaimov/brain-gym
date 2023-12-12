@@ -30,7 +30,6 @@ function Calculator() {
 
 console.log(Calculator);
 
-declare const Equals: React.FC<{ onClick(): void }>;
 declare const NumPad: React.FC;
 declare const Output: React.FC;
 
@@ -47,13 +46,26 @@ function sum(left: Expression, right: Expression) {
 }
 
 function test() {
-  assert(sum(Expression.literal(2), Expression.literal(2)) === 4);
+  // sum является неявной зависимостью Equals
+  const rendered = <Equals />;
 
-  assert(sum(Expression.literal(2), Expression.literal(0)) === 2);
+  //<editor-fold desc="Тесты">
+  console.log(rendered);
+  //</editor-fold>
+}
 
-  assert(sum(Expression.literal(2), Expression.literal(-2)) === 0);
+const Equals: React.FC = () => {
+  //<editor-fold desc="Инициализация">
+  const a = 0;
+  const b = 0;
+  //</editor-fold>
 
-  console.log('PASSES');
+  // Где-то в глубине реализации
+  const result = sum(a, b);
+
+  //<editor-fold desc="Вывод">
+  return null;
+  //</editor-fold>
 }
 
 console.log(test());
