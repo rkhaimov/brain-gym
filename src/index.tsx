@@ -1,3 +1,32 @@
+type Screen = unknown;
+
+// Интерфейс (глаза) пользователя
+interface IUserInterface {
+  writeToMonitor(input: Screen): void;
+}
+
+declare function createUser(): { input: IUserInterface };
+
+// Основная программа
+function program(output: IUserInterface) {
+  const screen = //<editor-fold desc="Реализация программы">
+  console.log(1);
+  //</editor-fold>
+
+  output.writeToMonitor(screen);
+}
+
+function main() {
+  // Реальный пользователь (клиент)
+  const user = createUser();
+
+  // Программа (сервер) выводит информацию пользователю,
+  // содержание выводимого и есть поведение
+  program(user.input);
+}
+
+console.log(main);
+
 const Expression = {
   literal: (n: number) => ({ eval: () => n }),
 };
@@ -66,7 +95,7 @@ const Equals: React.FC = () => {
   //<editor-fold desc="Вывод">
   return null;
   //</editor-fold>
-}
+};
 
 console.log(test());
 
