@@ -9,8 +9,7 @@ declare function createUser(): { input: IUserInterface };
 
 // Основная программа
 function program(output: IUserInterface) {
-  const screen = //<editor-fold desc="Реализация программы">
-  console.log(1);
+  const screen = console.log(1); //<editor-fold desc="Реализация программы">
   //</editor-fold>
 
   output.writeToMonitor(screen);
@@ -75,13 +74,22 @@ function sum(left: Expression, right: Expression) {
 }
 
 function test() {
-  // sum является неявной зависимостью Equals
-  const rendered = <Equals />;
-
-  //<editor-fold desc="Тесты">
-  console.log(rendered);
-  //</editor-fold>
+  assert(doubleWhenEven(5) === 5);
 }
+
+function doubleWhenEven(n: number): number {
+  if (n % 2 === 0) {
+    return n * 2;
+  }
+
+  // Строчка выполняется и будет засчитана как покрытая,
+  // хотя фактически тесты её игнорируют
+  doSomething();
+
+  return n;
+}
+
+function doSomething() {};
 
 const Equals: React.FC = () => {
   //<editor-fold desc="Инициализация">
