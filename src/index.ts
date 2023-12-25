@@ -1,26 +1,59 @@
-type Either<A, B> = { type: 'left'; value: A } | { type: 'right'; value: B };
+type Either<A, B> = Left<A> | Right<B>;
+type Left<A> = { type: 'left'; value: A };
+type Right<B> = { type: 'right'; value: B };
 
-declare const eitherMap: <A, B, C, D>(
-  input: Either<A, B>,
-  left: (input: A) => C,
-  right: (input: B) => D
-) => Either<C, D>;
+declare function isEitherLeft<T>(input: Either<T, unknown>): input is Left<T>;
 
-type Const<T> = void;
+type Matcher<TOrigin, TResult> = {
+  on<TRefined extends TOrigin>(
+    refiner: (input: TOrigin) => input is TRefined,
+    act: (input: TRefined) => TResult,
+  ): Matcher<Exclude<TOrigin, TRefined>, TResult>;
+  orElse(act: (input: TOrigin) => TResult): TResult;
+};
 
-const constMap = <A, B>(input: Const<A>, transform: (input: A) => B) => input;
+declare function match<TOrigin, TResult>(input: TOrigin): Matcher<TOrigin, TResult>;
 
-type Identity<T> = T;
+// Either empty or not
+type List<T> = Either<void, [T, List<T>]>;
 
-const identityMap = <A, B>(input: Identity<A>, transform: (input: A) => B) => transform(input);
+declare function createEmptyList<T>(): List<T>;
 
-type Maybe<T> = Either<Const<T>, Identity<T>>;
+declare function followedBy<T>(element: T, origin: List<T>): List<T>;
 
-const maybeMap = <A, B>(input: Maybe<A>, transform: (input: A) => B): Maybe<B> =>
-  eitherMap(
-    input,
-    (left) => constMap(left, transform),
-    (right) => identityMap(right, transform)
-  );
+// Either zero or successor (greater than one) of another positive
+type PositiveNumber = Either<void, () => PositiveNumber>;
+
+declare function zero(): Left<void>;
+
+declare function successorOf(input: PositiveNumber): PositiveNumber;
+
+function fromNumber(input: number): PositiveNumber {
+  if (input === 0) {
+    return zero();
+  }
+
+  return successorOf(fromNumber(input - 1));
+}
+
+const isZero = isEitherLeft<void>;
+
+declare function not(input: boolean): boolean;
+
+const isEven = (input: PositiveNumber): boolean =>
+  match<PositiveNumber, boolean>(input)
+    .on(isZero, () => true)
+    .orElse(({ value }) => not(isEven(value())));
+
+function createPositiveFromLength(input: string): PositiveNumber {
+  return fromNumber(input.length);
+}
+
+const getEachWordLength = (words: List<string>): List<PositiveNumber> =>
+  match<List<string>, List<PositiveNumber>>(words)
+    .on(isEitherLeft, (_) => createEmptyList())
+    .orElse(({ value: [word, words] }) => followedBy(createPositiveFromLength(word), getEachWordLength(words)));
+
+declare function hole<T>(): T;
 
 export {};
