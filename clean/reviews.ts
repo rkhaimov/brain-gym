@@ -1,13 +1,42 @@
-function openReviewForm(inputs: Component[]) {
-  openPopup(
-    Form(
-      ...inputs,
-      Button({
-        text: 'Отправить',
-        onClick: sendReview,
-      })
-    )
-  );
+function openReviewForm(module: string) {
+  switch (module) {
+    case 'MY_DOCUMENTS_MODULE': {
+      openPopup(
+        Form(
+          TextInput({ placeholder: 'Насколько понятным был документ' }),
+          TextInput({
+            placeholder: 'Опишите ваши впечатления от заполнения формы',
+          }),
+          TextInput({
+            placeholder:
+              'Перечислите поля документа, которые можно было-бы упростить',
+          }),
+          Button({ text: 'Отправить', onClick: sendReview })
+        )
+      );
+
+      return;
+    }
+    case 'SUPPORT_MODULE': {
+      openPopup(
+        Form(
+          TextInput({ placeholder: 'Насколько довольны качеством поддержки' }),
+          TextInput({
+            placeholder: 'Что понравилось',
+          }),
+          TextInput({
+            placeholder: 'Что не понравилось',
+          }),
+          Button({ text: 'Отправить', onClick: sendReview })
+        )
+      );
+
+      return;
+    }
+    default: {
+      throw new Error('Unknown module was specified');
+    }
+  }
 }
 
 console.log(openReviewForm);

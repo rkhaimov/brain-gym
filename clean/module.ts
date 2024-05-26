@@ -13,7 +13,7 @@ function a(input: Iterable<string>) {}
 function MyDocumentsPage() {
   const onReviewStart = () =>
     openReviewForm([
-      TextInput({ placeholder: 'На сколько понятным был документ' }),
+      TextInput({ placeholder: 'Насколько понятным был документ' }),
       TextInput({
         placeholder: 'Опишите ваши впечатления от заполнения формы',
       }),

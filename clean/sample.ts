@@ -71,19 +71,30 @@ async function interceptRejectionsOf<T>(
   }
 }
 
+declare function parseAndAddProduct(
+  line: string,
+  onProductValidated: (product: Product | undefined) => void,
+  delimiter = ','
+): void;
+
+declare function getProductsByDate(arg: unknown): Promise<string>;
+
 async function getProductsFromAPI(source: APISource) {
   const products: Product[] = [];
   const content = await getProductsByDate(source.date);
 
   for (const line of content.split('\n')) {
-    const [name, price] = line.split('|');
-    const product = ensureProductIsValid({ name, price });
+    parseAndAddProduct(
+      line,
+      (product) => {
+        if (product === undefined) {
+          return;
+        }
 
-    if (product === undefined) {
-      continue;
-    }
-
-    products.push(product);
+        products.push(product);
+      },
+      '|'
+    );
   }
 
   return products;
@@ -340,11 +351,11 @@ enum AuthorizationError {
   UserIsBlocked,
 }
 
-type User = {}
+type User = {};
 
 function a(a: Validate, b: Authorize) {
-  AuthorizationError.UserDoesNotExist
-  AuthorizationError.UserIsBlocked
+  AuthorizationError.UserDoesNotExist;
+  AuthorizationError.UserIsBlocked;
 }
 
 type NonEmptyString = string;
