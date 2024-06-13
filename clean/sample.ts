@@ -57,14 +57,14 @@ type Admin = { name: string };
 console.log(showAtLeastOneAdmin);
 
 async function interceptRejectionsOf<T>(
-  runAsync: () => Promise<T>
+  runAsync: () => Promise<T>,
 ): Promise<T> {
   try {
     return runAsync();
   } catch (e) {
     console.log(
       'Exception has been caught. Contact administrator for more info',
-      e
+      e,
     );
 
     throw e;
@@ -74,7 +74,7 @@ async function interceptRejectionsOf<T>(
 declare function parseAndAddProduct(
   line: string,
   onProductValidated: (product: Product | undefined) => void,
-  delimiter = ','
+  delimiter = ',',
 ): void;
 
 declare function getProductsByDate(arg: unknown): Promise<string>;
@@ -84,17 +84,21 @@ async function getProductsFromAPI(source: APISource) {
   const content = await getProductsByDate(source.date);
 
   for (const line of content.split('\n')) {
-    parseAndAddProduct(
-      line,
-      (product) => {
-        if (product === undefined) {
-          return;
-        }
+    const [name, price] = line.split(',');
 
-        products.push(product);
-      },
-      '|'
-    );
+    if (name === undefined) {
+      logger.error('Name is invalid');
+
+      return;
+    }
+
+    if (price === undefined) {
+      logger.error('Price is invalid');
+
+      return;
+    }
+
+    products.push({ name, price: parseInt(price) });
   }
 
   return products;
@@ -107,13 +111,20 @@ async function getProductsFromFile(source: FileSource) {
 
   for await (const line of rl) {
     const [name, price] = line.split(',');
-    const product = ensureProductIsValid({ name, price });
 
-    if (product === undefined) {
-      products.push({ name: 'Невалидный продукт', price: 0 });
-    } else {
-      products.push(product);
+    if (name === undefined) {
+      logger.error('Name is invalid');
+
+      return;
     }
+
+    if (price === undefined) {
+      logger.error('Price is invalid');
+
+      return;
+    }
+
+    products.push({ name, price: parseInt(price) });
   }
 
   return products;
@@ -189,7 +200,6 @@ function showCountOfInvalidProducts(products: Product[]) {
 }
 
 type Product = {
-  kind: number;
   name: string;
   price: number;
 };
@@ -239,7 +249,7 @@ function test() {
       <li>User 0</li>
       <li>User 1</li>
     </ul>
-  `
+  `,
   );
 }
 
@@ -268,7 +278,7 @@ class Suggestions {
   @memo
   suggestProductPriceByKind(
     kind: Product['kind'],
-    similar: Product[]
+    similar: Product[],
   ): Product['price'] | undefined {
     const product = similar.findIndex((it) => it.kind === kind);
 
@@ -283,7 +293,7 @@ class Suggestions {
 console.log(new Suggestions().suggestProductPriceByKind);
 
 function selectFirstLargeEnough(
-  similar: Product[]
+  similar: Product[],
 ): Product['price'] | undefined {
   return similar.find((it) => it.price >= 10)?.price;
 }
@@ -324,7 +334,7 @@ function LoginPage() {
     Button({
       text: 'Войти',
       onClick: login,
-    })
+    }),
   );
 }
 
@@ -334,7 +344,7 @@ type LoginForm = {
 };
 
 type Validate = (
-  form: LoginForm
+  form: LoginForm,
 ) => Either<AuthorizationPayload, ErrorsHaving<LoginForm>>;
 
 type AuthorizationPayload = {
@@ -343,7 +353,7 @@ type AuthorizationPayload = {
 };
 
 type Authorize = (
-  payload: AuthorizationPayload
+  payload: AuthorizationPayload,
 ) => Promise<Either<User, AuthorizationError>>;
 
 enum AuthorizationError {
