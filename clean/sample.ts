@@ -109,23 +109,6 @@ async function getProductsFromFile(source: FileSource) {
   const stream = fs.createReadStream(source.file);
   const rl = readline.createInterface({ input: stream });
 
-  for await (const line of rl) {
-    const [name, price] = line.split(',');
-
-    if (name === undefined) {
-      logger.error('Name is invalid');
-
-      return;
-    }
-
-    if (price === undefined) {
-      logger.error('Price is invalid');
-
-      return;
-    }
-
-    products.push({ name, price: parseInt(price) });
-  }
 
   return products;
 }
@@ -199,10 +182,6 @@ function showCountOfInvalidProducts(products: Product[]) {
   console.log(invalidProducts.length);
 }
 
-type Product = {
-  name: string;
-  price: number;
-};
 
 type ParsedProduct = Record<string, string | undefined>;
 
@@ -257,11 +236,39 @@ declare function toMatchSnapshot(input: unknown): void;
 
 console.log(test);
 
-async function main(source: Source) {
-  const effects = pureProgram(source);
+async function main(file: string) {
+  const stream = fs.createReadStream(file);
+  const rl = readline.createInterface({ input: stream });
 
-  handleLog(effects);
+  const products: Product[] = [];
+
+  for await (const line of rl) {
+    const [name, price] = line.split(',');
+
+    if (name === undefined) {
+      console.error('Name is invalid');
+
+      return;
+    }
+
+    if (price === undefined) {
+      console.error('Price is invalid');
+
+      return;
+    }
+
+    products.push({ name, price: parseInt(price) });
+  }
+
+  const sum = products.reduce((result, it) => it.price + result, 0);
+
+  console.log('Total sum of all products is', sum);
 }
+
+type Product = {
+  name: string;
+  price: number;
+};
 
 console.log(main);
 
