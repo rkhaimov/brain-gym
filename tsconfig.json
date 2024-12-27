@@ -1,27 +1,23 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
-    "allowJs": true,
-    "skipLibCheck": true,
+    "target": "ESNext",
+    "module": "ESNext",
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "module": "esnext",
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "isolatedModules": false,
-    "downlevelIteration": true,
-    "noEmit": true,
-    "jsx": "react-jsx"
+    "strict": true,
+    "skipLibCheck": true,
+    "moduleResolution": "Node",
+    // Важно для корректного включения типов сторонней библиотеки в процесс компиляции
+    "baseUrl": ".",
+    "paths": {
+      // Указывает компилятору использовать данную папку в качестве *изначального* корня для импортируемых модулей.
+      // Типы могут копироваться сюда автоматически или в ручном режиме
+      "*": ["./libs/*"]
+    }
   },
-  "include": [
-    "src"
-  ]
+  "ts-node": {
+    "compilerOptions": {
+      "module": "CommonJS"
+    }
+  }
 }

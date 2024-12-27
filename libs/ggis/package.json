@@ -1,0 +1,14 @@
+{
+  "name": "ggis",
+  "version": "0.0.0",
+  "private": true,
+  "main": "dist/ggis.js",
+  "types": "dist/ggis.d.ts",
+  "scripts": {
+    "build": "webpack build && tsc -p tsconfig.types.json"
+  },
+  "dependencies": {
+    "@types/lodash": "^4.17.13",
+    "lodash": "^4.17.21"
+  }
+}
