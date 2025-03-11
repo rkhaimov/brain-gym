@@ -1,10 +1,10 @@
 module Main (main) where
 import Language.Haskell.TH (prim)
 
-factorial n =
-  if n == 1
-    then 1
-    else n * factorial (n - 1)
+fibonacci n
+    | n == 0 = 0
+    | n == 1 = 1
+    | otherwise = fibonacci (n - 1) + fibonacci (n - 2)
 
 -- run runghc main.hs
-main = print $ show $ factorial 5
+main = print $ show $ fibonacci 10
