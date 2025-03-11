@@ -1,6 +1,6 @@
 module Main where
 
-makeGreeting salutation person = salutation <> " " <> person
+makeGreeting = (<>) . (<> " ")
 
 -- run runghc main.hs
 main = print $ makeGreeting "Hello" "Jeff"
