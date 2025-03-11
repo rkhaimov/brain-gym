@@ -1,4 +1,6 @@
 module Main where
 
+makeGreeting salutation person = salutation <> " " <> person
+
 -- run runghc main.hs
-main = print "Hello haskell"
+main = print $ makeGreeting "Hello" "Jeff"
