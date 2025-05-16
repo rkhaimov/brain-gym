@@ -1,14 +1,18 @@
 module Main (main) where
 
-import Language.Haskell.TH (prim)
-
-countdown :: Integer -> [Integer]
-countdown n
-  | n == 0 = [0]
-  | otherwise = n : countdown (n - 1)
-  
-range = reverse . countdown
+-- Returns all prime factors of an integer.
+-- By definition:
+--  * for 1 returns empty factors
+--  * for prime returns an array of single element with that prime
+factors :: Int -> [Int]
+factors n =
+  factors' n 2
+  where
+    factors' n divider
+      | n == 1 = []
+      | n `rem` divider == 0 = divider : factors' (n `div` divider) divider
+      | otherwise = factors' n (divider + 1)
 
 -- 73 page
 -- run runghc main.hs
-main = print $ show $ range 2
+main = print $ show $ factors 12
