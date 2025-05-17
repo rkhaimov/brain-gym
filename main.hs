@@ -1,18 +1,19 @@
 module Main (main) where
 
--- Returns all prime factors of an integer.
--- By definition:
---  * for 1 returns empty factors
---  * for prime returns an array of single element with that prime
-factors :: Int -> [Int]
-factors n =
-  factors' n 2
+reduce mapper initial values =
+  if null values
+    then initial
+    else
+      let mapped = mapper initial (head values)
+       in reduce mapper mapped (tail values)
+
+isBalanced :: String -> Bool
+isBalanced brackets =
+  0 == count brackets
   where
-    factors' n divider
-      | n == 1 = []
-      | n `rem` divider == 0 = divider : factors' (n `div` divider) divider
-      | otherwise = factors' n (divider + 1)
+    -- brackets аргумент игнорируется
+    count = reduce (\count char -> if char == '(' then count + 1 else count - 1) 0
 
 -- 73 page
 -- run runghc main.hs
-main = print $ show $ factors 12
+main = print $ show $ isBalanced ")))((("
