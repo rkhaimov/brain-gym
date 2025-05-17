@@ -242,3 +242,8 @@ count brackets == 0
 ```
 
 Тут уже не сразу ясно с чем происходит сравнение.
+
+Выдержка:
+
+**The general term in Haskell for these functions that accumulate a value while recursing through a structure are called
+folds. **
