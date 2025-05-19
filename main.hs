@@ -7,6 +7,6 @@ isBalanced brackets =
     -- brackets аргумент игнорируется
     count = foldl (\count char -> if char == '(' then count + 1 else count - 1) 0
 
--- 73 page
+-- 76 page
 -- run runghc main.hs
 main = print $ show $ isBalanced ")))((("
