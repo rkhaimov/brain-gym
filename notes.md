@@ -247,3 +247,35 @@ count brackets == 0
 
 **The general term in Haskell for these functions that accumulate a value while recursing through a structure are called
 folds. **
+
+# Функции над структурами
+
+Ввиду особенностей языка стандартные функции преобразований имеют определённые нюансы в реализации.
+
+Функция `map` имеет следующий вид:
+
+```haskell
+map' :: (a -> b) -> [a] -> [b]
+map' mapper =
+  foldr (onMap mapper) []
+  where
+    onMap f element acc = f element : acc
+```
+
+`foldr` является *right associative*, что совместимо с поведением функции трансформации. Так как аккумуляция выполняется
+справа на лево (начиная с конца списка), то и создание нового массива на его основе не видится чем то сложным.
+
+То же верно и для `filter`:
+
+```haskell
+filter' :: (a -> Bool) -> [a] -> [a]
+filter' predicate =
+  foldr (onMap predicate) []
+  where
+    onMap f element acc =
+      if f element
+        then element : acc
+        else acc
+```
+
+Таким образом, `fold` является более фундаментальной функцией структуры, на базе которой можно создавать новые операции.

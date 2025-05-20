@@ -1,12 +1,17 @@
 module Main (main) where
 
-isBalanced :: String -> Bool
-isBalanced brackets =
-  0 == count brackets
+filter' :: (a -> Bool) -> [a] -> [a]
+filter' predicate =
+  foldr (onMap predicate) []
   where
-    -- brackets аргумент игнорируется
-    count = foldl (\count char -> if char == '(' then count + 1 else count - 1) 0
+    onMap f element acc =
+      if f element
+        then element : acc
+        else acc
 
--- 76 page
+double :: [Int] -> [Int]
+double = map' (* 2)
+
+-- 80 page
 -- run runghc main.hs
-main = print $ show $ isBalanced ")))((("
+main = print $ show $ double [1, 2, 3]
