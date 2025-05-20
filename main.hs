@@ -1,17 +1,8 @@
 module Main (main) where
 
-filter' :: (a -> Bool) -> [a] -> [a]
-filter' predicate =
-  foldr (onMap predicate) []
-  where
-    onMap f element acc =
-      if f element
-        then element : acc
-        else acc
+pairs :: [Int] -> [Int] -> [(Int, Int)]
+pairs as bs = [(a, b) | a <- as, a `elem` bs, b <- bs, odd b]
 
-double :: [Int] -> [Int]
-double = map' (* 2)
-
--- 80 page
+-- 87 page
 -- run runghc main.hs
-main = print $ show $ double [1, 2, 3]
+main = print $ show $ pairs [1, 2, 3]
