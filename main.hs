@@ -1,6 +1,7 @@
 module Main (main) where
 
-pairs = uncurry (+)
+-- id' :: [a] -> a
+id' a = head a
 
 -- 87 page
 -- run runghc main.hs

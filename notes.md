@@ -330,3 +330,69 @@ sum = uncurry (+)
 дальнейшее многообразие:
 
 ![img.png](assets/img.png)
+
+# Pattern-matching
+
+`haskell` - удивительный язык, способный автоматически выводить типы исходя из реализации функции:
+
+```haskell
+-- id' :: p -> p
+id' a = a
+```
+
+Переменная `a` может быть чем угодно.
+
+А теперь:
+
+```haskell
+-- id' :: [a] -> a
+id' a = head a
+```
+
+Функция `head` накладывает ограничения на возможные значения переменной.
+
+Возьмём список, вот его характерные черты:
+
+* Можно получить текущий элемент.
+* Можно получить следующие элементы списка, если таковые есть.
+
+Эти две простые операции можно описать простым интерфейсом:
+
+```ts
+type IList<T> = Maybe<{
+  head: T;
+  tail: IList<T>;
+}>
+```
+
+```ts
+/**
+ * В haskell тип для list всплывёт исходя из операций над ним.
+ * В данном случае операция (функция) одна countLength
+ */
+function main(list) {
+  countLength(list);
+}
+
+function countLength(list: IList<T>) {
+  return isNull(list) ? 0 : 1 + countLength(list.tail);
+}
+```
+
+При выполнении нескольких операций одновременно, они объёдиняются:
+
+```ts
+// Тип считается как объединение операций (IList<unknown> & IList<number> === IList<number>)
+function main(list) {
+  countLength(list);
+  calcSum(list);
+}
+
+function countLength(list: IList<T>) {
+  return isNull(list) ? 0 : 1 + countLength(list.tail);
+}
+
+function calcSum(list: IList<number>) {
+  return isNull(list) ? 0 : list.head + calcSum(list.tail);
+}
+```
