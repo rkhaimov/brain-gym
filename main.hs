@@ -1,7 +1,12 @@
 module Main (main) where
 
-partialFunction 0 = "I only work for 0"
+fib :: Int -> Int
+fib 0 = 0
+fib 1 = 1
+fib n = fib (n - 1) + fib (n - 2)
 
--- 90 page
+fibs = map fib [0 ..]
+
+-- 99 page
 -- run runghc -Wincomplete-patterns main.hs
-main = print $ show $ partialFunction 1
+main = print $ show $ fibs !! 5

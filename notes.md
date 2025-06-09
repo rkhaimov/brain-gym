@@ -408,3 +408,58 @@ matchNumber 0 = "zero"
 matchNumber n = show n
 -- Комбинация show и 0 накладывает контракт на первый аргумент matchNumber
 ```
+
+# Lazy вычисления
+
+В haskell большую роль играют ленивые вычисления.
+
+Любое выражение представляется в виде специального объекта "trunk" и распаковывается (вычисляется) только при самом
+чтении:
+
+```haskell
+'cycle ns = ns <> ('cycle ns)
+```
+
+В данном случае конкатенация (<>) соединяет список `ns` с правой частью, таким же бесконечным списком.
+
+Вся функция 'cycle является ленивой и будет вычислена ровно до той степени, до которой это необходимо самой программе:
+
+```haskell
+-- Вычислит первые 10 элементов и вернёт 11-ый
+'cycle !! 10
+```
+
+Другой, гораздо менее интуитивной под-функцией данного явления считается fold бесконечных списков:
+
+```haskell
+findFirst predicate lst =
+  if null lst
+    then []
+    else findHelper (head lst) $ findFirst predicate (tail lst)
+  where
+    findHelper listElement maybeFound
+      | predicate listElement = [listElement]
+      | otherwise = maybeFound
+```
+
+На первый взгляд такой вызов `findFirst (>10) [1..]` не должен вернуть ничего, программа должна просто зависнуть, однако
+в дело вступает lazy механизм:
+
+* Выражение `findFirst predicate (tail lst)` будет обёрнуто в trunk
+* Trunk будет передан в качестве второго аргумента в функцию `findHelper (head lst)`
+* `maybeFound` внутри `findHelper` (он же trunk) будет распакован только в том случае, если не выполнится
+  условие `predicate listElement` что соответствует заявленному `findFirst` поведению.
+
+Для haskell функция выше идентична этому:
+
+```haskell
+findFirst predicate lst =
+    if null lst
+    then []
+    else
+        if predicate (head lst)
+        then [head lst]
+        else findFirst predicate (tail lst)
+```
+
+Для разработчиков такое поведение непривычно, ведь мы привыкли к строго определённому порядку выполнения выражений.
