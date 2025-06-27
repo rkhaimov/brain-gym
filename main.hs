@@ -1,12 +1,11 @@
 module Main (main) where
 
-fib :: Int -> Int
-fib 0 = 0
-fib 1 = 1
-fib n = fib (n - 1) + fib (n - 2)
+fibs :: [Int]
+fibs = _fibs 0 1
+  where
+    _fibs :: Int -> Int -> [Int]
+    _fibs fst snd = fst : _fibs snd (fst + snd)
 
-fibs = map fib [0 ..]
-
--- Creating Lazy Streams 104 page
--- run runghc -Wincomplete-patterns main.hs
-main = print $ show $ fibs !! 5
+-- Creating Lazy Streams 105 page
+-- runghc -Wincomplete-patterns main.hs
+main = print $ show $ fibs !! 50
