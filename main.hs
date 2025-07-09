@@ -1,11 +1,14 @@
 module Main (main) where
 
-reverse' :: [Int] -> [Int]
-reverse' = foldr concat' []
-  where
-    concat' :: Int -> [Int] -> [Int]
-    concat' n ns = ns <> [n]
+zipWith' :: (a -> b -> c) -> [a] -> [b] -> [c]
+zipWith' join as bs =
+  if null as
+    then []
+    else
+      let a = head as
+       in let b = head bs
+           in join a b : zipWith' join (tail as) (tail bs)
 
 -- Creating Lazy Streams 105 page
 -- runghc -Wincomplete-patterns main.hs
-main = print $ show $ reverse' [1, 2, 3, 4]
+main = print $ show $ zipWith' (+) [1, 2, 3] [1, 2, 3]
