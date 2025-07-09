@@ -1,11 +1,11 @@
 module Main (main) where
 
-fibs :: [Int]
-fibs = _fibs 0 1
+reverse' :: [Int] -> [Int]
+reverse' = foldr concat' []
   where
-    _fibs :: Int -> Int -> [Int]
-    _fibs fst snd = fst : _fibs snd (fst + snd)
+    concat' :: Int -> [Int] -> [Int]
+    concat' n ns = ns <> [n]
 
 -- Creating Lazy Streams 105 page
 -- runghc -Wincomplete-patterns main.hs
-main = print $ show $ fibs !! 50
+main = print $ show $ reverse' [1, 2, 3, 4]
