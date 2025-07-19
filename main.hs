@@ -1,8 +1,8 @@
 module Main (main) where
 
-concatMap' aToB = foldl mapConcat []
+concatMap' aToB = foldr mapConcat []
   where
-    mapConcat bs as = bs <> map aToB as
+    mapConcat as bs = map aToB as <> bs
 
 -- Creating Lazy Streams 110 page
 -- runghc -Wincomplete-patterns main.hs
