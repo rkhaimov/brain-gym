@@ -1,11 +1,9 @@
 module Main (main) where
 
-zipWith' join = foldr onA onB
+concatMap' aToB = foldl mapConcat []
   where
-    onB bs = []
-    onA a onBF [] = []
-    onA a onBF (b : bs) = join a b : onBF bs
+    mapConcat bs as = bs <> map aToB as
 
 -- Creating Lazy Streams 110 page
 -- runghc -Wincomplete-patterns main.hs
-main = print $ show $ zipWith' (,) [1, 2, 3] [4, 5, 6]
+main = print $ show $ concatMap' (* 2) [[1, 2], [3, 4]]
