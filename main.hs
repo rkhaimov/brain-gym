@@ -1,9 +1,9 @@
 module Main (main) where
 
-concatMap' aToB = foldr mapConcat []
-  where
-    mapConcat as bs = map aToB as <> bs
+n :: Int
+n = _
 
--- Creating Lazy Streams 122 page
+-- Creating Lazy Streams 131 page
 -- runghc -Wincomplete-patterns main.hs
+-- https://github.com/BartoszMilewski/DaoFP/blob/master/DaoFP.pdf
 main = print $ show $ concatMap' (* 2) [[1, 2], [3, 4]]
