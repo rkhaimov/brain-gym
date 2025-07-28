@@ -1,10 +1,16 @@
 module Main (main) where
 
-mapApply :: [a -> b] -> [a] -> [b]
-mapApply fs = concatMap (mapEvery fs)
-  where
-    mapEvery :: [a -> b] -> a -> [b]
-    mapEvery fs a = map ($ a) fs
+
+data LeftType
+data RightType
+
+onLeft :: LeftType -> Int
+onLeft left = onRight left;
+
+onRight :: RightType -> Int
+onRight right = undefined;
+
+--Couldn't match expected type ‘RightType’ with actual type ‘LeftType’
 
 -- Creating Lazy Streams 134 page
 -- runghc -Wincomplete-patterns main.hs
