@@ -660,3 +660,102 @@ emptyCart customer =
 ```
 
 Специальный синтаксис создания новых экземпляров на базе старых идентичен object spread из js.
+
+## Sum
+
+Sum типы интересным образом совмещают пересечение типов и генерируемые геттеры:
+
+```haskell
+data Person
+  = Customer
+      { name :: String,
+        balance :: Int
+      }
+  | Employee
+      { name :: String,
+        managerName :: String,
+        salary :: Int
+      }
+```
+
+Несмотря на наличие общего свойства name, ошибки не возникает так как возможно создать такой геттер, который
+удовлетворяет `name :: Person -> String`.
+
+Почему haskell не делает автоматически того же самого и для свойств, пересечённых для разных структур? Из-за того что в
+таком случае их объединение нужно было бы объявлять в типе геттера?
+
+И здесь опять проблема с глобальными геттерами:
+
+```haskell
+data Person
+  = Customer
+      { name :: String,
+        balance :: Int
+      }
+  | Employee
+      { name :: String,
+        managerName :: String,
+        salary :: Int
+      }
+      
+balance :: Person -> Int
+r =
+  balance
+    Employee
+      { name = "John",
+        managerName = "Marting",
+        salary = 10
+      }
+```
+
+Код выше выбросит runtime исключение. Почему haskell спокойно реализует геттеры как partial функции?
+
+Данные проблемы решаются с помощью использования дополнительных обёрток, которые исключают наличие прямых геттеров:
+
+```haskell
+
+data CustomerInfo = CustomerInfo
+  { customerName :: String,
+    customerBalance :: Int
+  }
+
+data EmployeeInfo = EmployeeInfo
+  { employeeName :: String,
+    employeeManagerName :: String,
+    employeeSalary :: Int
+  }
+
+data Person
+  = Customer CustomerInfo
+  | Employee EmployeeInfo
+
+george =
+  Customer $
+    CustomerInfo
+      { customerName = "Georgie Bird",
+        customerBalance = 100
+      }
+
+porter =
+  Employee $
+    EmployeeInfo
+      { employeeName = "Porter P. Pupper",
+        employeeManagerName = "Remi",
+        employeeSalary = 10
+      }
+```
+
+Общие функции реализуются через отдельные методы:
+
+```haskell
+getPersonName :: Person -> String
+getPersonName person =
+  case person of
+    Employee employee -> employeeName employee
+    Customer customer -> customerName customer
+```
+
+В ООП языке структура выглядела бы гораздо проще (один базовый класс с общими полями и два наследника). В ts
+используется модель с множествами (более низкий уровень) где пересечение вычисляется автоматически (не нужен явный
+базовый класс).
+
