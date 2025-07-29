@@ -589,3 +589,55 @@ const unary = (a) => {/*...*/
 
 Функция, это преобразование значения в домене от `()` до n-мерного tuple `(a0, a1, ..., an)` до другого значения, в
 потенциально более широком диапазоне (до universal множества `unknown`).
+
+## Record
+
+В haskell реализована возможность описания именованных картежей (record другими словами)
+
+```haskell
+data CustomerInfo = CustomerInfo
+  { firstName :: String,
+    lastName :: String,
+    widgetCount :: Int,
+    balance :: Int
+  }
+```
+
+Структурно, количество элементов в модели растёт мультипликативно, с каждым новым свойством (product types).
+
+При объявлении именованных полей, для них автоматически генерируются геттеры:
+
+```haskell
+customerGeorge =
+  CustomerInfo
+    { firstName = "George",
+      lastName = "Bird",
+      balance = 100,
+      widgetCount = 10
+    }
+    
+--lastName :: CustomerInfo -> String
+name = lastName customerGeorge
+```
+
+Преимущество геттеров как отдельных функций заключается в том, что общая модель использует уже существующий базовый
+объект в языке - чистую функцию:
+
+```haskell
+--Геттеры легко композировать и строить зависимые поведения
+totalWidgetCount :: [CustomerInfo] -> Int
+totalWidgetCount = sum . map widgetCount
+```
+
+Процедуры обновляющие структуры реализуются с помощью специальных фабрик
+
+```haskell
+emptyCart :: CustomerInfo -> CustomerInfo
+emptyCart customer =
+  customer
+    { widgetCount = 0,
+      balance = 0
+    }
+```
+
+Специальный синтаксис создания новых экземпляров на базе старых идентичен object spread из js.
