@@ -629,6 +629,25 @@ totalWidgetCount :: [CustomerInfo] -> Int
 totalWidgetCount = sum . map widgetCount
 ```
 
+Недостаток заключается в невозможности объявления двух одинаковых свойств в рамках разных структур:
+
+```haskell
+data CustomerInfo = CustomerInfo
+  { firstName :: String,
+    lastName :: String,
+    widgetCount :: Int,
+    balance :: Int
+  }
+
+data EmployeeInfo = EmployeeInfo
+--ERROR: Multiple declarations of ‘firstName’
+  { firstName :: String,
+    lastName :: String,
+    timezone :: String,
+    contactInfo :: String
+  }
+```
+
 Процедуры обновляющие структуры реализуются с помощью специальных фабрик
 
 ```haskell
