@@ -1,25 +1,29 @@
 module Main (main) where
 
-data Peano = Zero | Successor Peano
+data List a = Empty | Cons a (List a)
 
-toPeano :: Int -> Peano
-toPeano 0 = Zero
-toPeano n = Successor $ toPeano (n - 1)
+fromList :: [a] -> List a
+fromList = foldr Cons Empty
 
-fromPeano :: Peano -> Int
-fromPeano Zero = 0
-fromPeano (Successor of') = 1 + fromPeano of'
+toList :: List a -> [a]
+toList = foldr' (:) []
 
-isPeanoEquals :: Peano -> Peano -> Bool
-isPeanoEquals Zero Zero = True
-isPeanoEquals (Successor ls) (Successor rs) = isPeanoEquals ls rs
-isPeanoEquals _ _ = False
+foldr' :: (a -> b -> b) -> b -> List a -> b
+foldr' _ b Empty = b
+foldr' f b (Cons x xs) = f x (foldr' f b xs)
 
-addPeano :: Peano -> Peano -> Peano
-addPeano Zero right = right
-addPeano (Successor ls) right = addPeano ls (Successor right)
+foldl' :: (b -> a -> b) -> b -> List a -> b
+foldl' _ b Empty = b
+foldl' f b (Cons x xs) = foldl' f (f b x) xs
 
--- 157 page
+head' :: List a -> Maybe a
+head' Empty = Nothing
+head' (Cons x _) = Just x
+
+reverse' :: List a -> List a
+reverse' = foldl' (flip Cons) Empty
+
+-- 160 page
 -- runghc -Wincomplete-patterns main.hs
 -- https://github.com/BartoszMilewski/DaoFP/blob/master/DaoFP.pdf
-main = print $ show $ fromPeano $ addPeano (toPeano 5) (toPeano 10)
+main = print $ show $ toList $ reverse' $ fromList [1, 2, 3]
