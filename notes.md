@@ -759,3 +759,18 @@ getPersonName person =
 используется модель с множествами (более низкий уровень) где пересечение вычисляется автоматически (не нужен явный
 базовый класс).
 
+## Тип как функция
+
+Тип в haskell это функция над типами (type constructor), либо значение (type value)
+
+```haskell
+-- type constructor Either :: Type -> Type -> Type
+Either
+
+-- Поэтому возможен point free
+-- AppValue Type -> Type
+type AppValue = Either String
+
+-- Однако runtime функции здесь не работают
+type AppError = flip Either -- Ошибка
+```
