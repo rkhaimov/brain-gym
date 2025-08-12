@@ -1,8 +1,11 @@
-module Utils (Name (..), myUtil) where
+module Utils (Name, createName) where
 
-myUtil :: String
-myUtil = "42"
-
+-- Представляет не пустую строку
 data Name = Name
   { value :: String
   }
+
+createName :: String -> Maybe Name
+createName "" = Nothing
+createName str = Just $ Name str
+

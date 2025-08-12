@@ -774,3 +774,58 @@ type AppValue = Either String
 -- Однако runtime функции здесь не работают
 type AppError = flip Either -- Ошибка
 ```
+
+# Инкапсуляция
+
+В haskell модульная система является относительно простой.
+
+```haskell
+module Utils (Name (..)) where
+
+data Name = Name
+  { value :: String
+  }
+```
+
+Данная запись объявлет тип Name и экспортирует его (а также конструктор и геттер на значение).
+
+Если расскрыть сахар выше, выходит:
+
+```haskell
+module Utils (Name (Name, value)) where
+
+data Name = Name
+  { value :: String
+  }
+```
+
+Это означает, что можно объявлять приватные члены:
+
+```haskell
+module Utils (Name (Name)) where
+
+-- Геттер для value не экспортируется.
+-- Тем самым свойство становится приватным.
+data Name = Name
+  { value :: String
+  }
+```
+
+Такая гибкость достигается засчёт обобщения (приведения методов объекта к уже существующим структурам - внешним функциям).
+
+Инкапсуляцию можно использовать и для умных конструкторов:
+
+```haskell
+module Utils (Name, createName) where
+
+-- Представляет не пустую строку
+data Name = Name
+  { value :: String
+  }
+
+createName :: String -> Maybe Name
+createName "" = Nothing
+createName str = Just $ Name str
+```
+
+Таким образом, сохраняются инварианты типа Name, которые можно использовать в функциях над ним.
