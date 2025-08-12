@@ -1,5 +1,3 @@
-module Main (main) where
-
 import Text.Read (Lexeme (Char, String), readMaybe)
 
 data BinaryTree
