@@ -1,6 +1,7 @@
 module Main where
 
 import Data.Char (isPrint)
+import Utils (myUtil)
 
 countNonPrintableCharacters :: String -> Int
 countNonPrintableCharacters = length . filter (not . isPrint)
@@ -10,4 +11,4 @@ countNonPrintableCharacters = length . filter (not . isPrint)
 -- cabal exec brain-gym
 -- cabal run brain-gym
 main :: IO ()
-main = print (countNonPrintableCharacters "Hello, Haskell!")
+main = print (countNonPrintableCharacters ("Hello, Haskell!" <> myUtil))
