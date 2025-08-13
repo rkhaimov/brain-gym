@@ -1,14 +1,24 @@
 module Main where
 
-import Data.Char (isPrint)
-import Utils (myUtil)
+data UserBase = UserBase
+  { userBaseName :: String
+  }
 
-countNonPrintableCharacters :: String -> Int
-countNonPrintableCharacters = length . filter (not . isPrint)
+data UnauthorizedUser = UnauthorizedUser
+  { unauthorizedUserGuestID :: Int,
+    unauthorizedUserBase :: UserBase
+  }
+
+data AuthorizedUser = AuthorizedUser
+  { authorizedUserEmail :: String,
+    authorizedUserBase :: UserBase
+  }
+
+data User = Unauthorized UnauthorizedUser | Authorized AuthorizedUser
 
 -- cabal build lib:brain-gym
 -- cabal build exe:brain-gym
 -- cabal exec brain-gym
 -- cabal run brain-gym
 main :: IO ()
-main = print (countNonPrintableCharacters ("Hello, Haskell!" <> myUtil))
+main = undefined

@@ -811,7 +811,8 @@ data Name = Name
   }
 ```
 
-Такая гибкость достигается засчёт обобщения (приведения методов объекта к уже существующим структурам - внешним функциям).
+Такая гибкость достигается засчёт обобщения (приведения методов объекта к уже существующим структурам - внешним
+функциям).
 
 Инкапсуляцию можно использовать и для умных конструкторов:
 
@@ -829,3 +830,82 @@ createName str = Just $ Name str
 ```
 
 Таким образом, сохраняются инварианты типа Name, которые можно использовать в функциях над ним.
+
+## Фантомные типы
+
+```haskell
+-- Тип без конструктора (пустое множество)
+data Authenticated
+data Unauthenticated
+
+-- isAuthenticated это дженерик который по хорошему extends (Authenticated | Unauthenticated) 
+data User isAuthenticated = User {
+    userName :: String,
+    userEmail :: String
+}
+
+-- Работает для всех пользователей
+getUserName :: User isAuthenticated -> String
+getUserName = userName
+
+-- Работает только для авторизированных.
+-- Сопоставляет по Authenticated который можно сделать приватным. 
+getUserEmailAddress :: User Authenticated -> String
+getUserEmailAddress = userEmailAddress
+```
+
+Способ интересный но есть ряд особенностей:
+
+* В качестве дженерика можно передать любой тип User Int (бессмыслица)
+* Усложняются методы над общим User
+* Наличие уникальных для типов свойств (например, свойство которое есть в Unauthenticated но нет в Authenticated).
+    * Вероятно стоит моделировать через Maybe, но в таком случае partial методы неизбежны
+
+Решение ниже даёт более управляемое решение (хоть и несколько многословное)
+
+```haskell
+data UserBase = UserBase
+  { userBaseName :: String
+  }
+
+data UnauthorizedUser = UnauthorizedUser
+  { unauthorizedUserGuestID :: Int,
+    unauthorizedUserBase :: UserBase
+  }
+
+data AuthorizedUser = AuthorizedUser
+  { authorizedUserEmail :: String,
+    authorizedUserBase :: UserBase
+  }
+
+data User = Unauthorized UnauthorizedUser | Authorized AuthorizedUser
+```
+
+В typescript фантомные типы можно попробовать описать с помощью `unique symbol` типов
+
+```typescript
+declare const _Unauthorized: unique symbol;
+declare const _Authorized: unique symbol;
+
+export type Unauthorized = typeof _Unauthorized;
+export type Authorized = typeof _Authorized;
+export type UnknownAuthState = Unauthorized | Authorized;
+
+export type User<TAuthenticated extends UnknownAuthState> = {
+  readonly authenticated: TAuthenticated;
+};
+
+export declare function findUserByName(name: string): User<Unauthorized> | undefined;
+
+export declare function getUserName(user: User<UnknownAuthState>): string;
+
+export declare function authenticate(user: User<UnknownAuthState>, password: string): User<Authorized> | undefined;
+
+export declare function getUserEmail(user: User<Authorized>): string;
+```
+
+Важное отличие заключается в том что unique symbol описывает singleton множество, поэтому его значение нужно оставлять
+приватным.
+
+Соотношение дженериков обязано быть ковариантным (out) для корректной работы с обобщёнными методами опирающимися на
+UnknownAuthState constraint.
