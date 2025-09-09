@@ -1,17 +1,9 @@
 module Main where
 
-data Box a = Box
-  { value :: a
-  }
+class (Eq a) => Box a where
+  value :: a
 
---Type class definition example
---class Eq a where
----- (==) :: a -> a -> Bool
-
-instance Eq (Box Int) where
-  (==) left right = value left == value right
-
-unique :: Eq a => [a] -> [a]
+unique :: (Eq a) => [a] -> [a]
 unique [] = []
 unique (a : as) = a : unique (filter (/= a) as)
 
