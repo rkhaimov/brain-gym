@@ -775,6 +775,384 @@ type AppValue = Either String
 type AppError = flip Either -- Ошибка
 ```
 
+## Constraints
+
+Шаблонные типы встречаются как в ООП, так в функциональной парадигме:
+
+```typescript
+function last<T>(elements: T[]): T {
+  return elements.at(-1);
+}
+```
+
+```typescript
+class Map<TKey, TValue> {
+}
+```
+
+Дженерики позволяют описывать абстрактные контейнеры и методы над ними не привязываясь к конкретному типу хранимого
+значения и при этом сохраняя эффективность статичной типизации.
+
+Parametric polymorphism - это вид полиморфизма при котором методы работают с самими контейнерами, не обращаясь при этом
+к самому значению имеющему шаблонный тип.
+
+Этого не всегда бывает достаточно:
+
+```typescript
+function printJoin<T>(elements: T[]): string {
+  return elements.map((element) => toString(element)).join(', ');
+}
+```
+
+Функция toString должна знать точное значение типа `T` для того чтобы понимать каким образом его стоит преобразовать в
+строку.
+
+ad hoc polymorphism - это вид полиморфизма при котором выполняемая операция определяется исходя из типа дженерик
+аргумента.
+
+Существуют разные способы:
+
+### Реализация интерфейса
+
+В стандартном ООП подходе используется подход с описанием общего интерфейса и его имплементации.
+
+```typescript
+interface Showable {
+  show(): string;
+}
+
+class Piano implements Showable {
+  // ...
+}
+
+function printJoin(elements: Showable[]): string {
+  return elements.map((element) => element.show()).join(', ');
+}
+```
+
+*Наследование лишь частный случай данного процесса, поэтому не упоминается отдельно.*
+
+### Duck струтура
+
+В случае с TypeScript подход аналогичный, за исключением того что чаще используются более простые структуры:
+
+```typescript
+interface Showable {
+  show(): string;
+}
+
+// Обычный объект вместо класса
+const piano: Showable = {
+  // ...
+};
+
+function printJoin(elements: Showable[]): string {
+  return elements.map((element) => element.show()).join(', ');
+}
+```
+
+### Switch метод
+
+Switch метод или multi-method это объединение операций над некоторым множеством типов в одной функции:
+
+```typescript
+type FiniteTypeSet = /* Перечисление конечного множества возможных типов */;
+
+function show<T extends FiniteTypeSet>(on: T) {
+  if (on.isA()) {
+    // Работаем с типом A
+  }
+  if (on.isB()) {
+    // Работаем с типом B
+  }
+  // etc
+}
+```
+
+В ООП мире подобное можно реализовать с помощью паттерна "visitor":
+
+```typescript
+interface IVisitor<T> {
+  visitA(on: A): T;
+
+  visitB(on: B): T;
+}
+
+const showVisitor: IVisitor<string> = {
+  visitA: (a) => 'print a',
+  visitB: (b) => 'print b',
+}
+```
+
+Основная разница заключая в том, как данные схемы реагируют на изменения в стуктурах и функциях. Существуют и более
+комплексные способы построения ad hoc полиморфизма, которые являются более гибкими, однако здесь они рассматриваться не
+будут. (см. Extensibility problem).
+
+### Haskell
+
+В haskell, интерфейсы имеют иное название "type class" и выглядят следующим образом:
+
+```haskell
+class Printable a where
+  print :: a -> String
+```
+
+Type class представляет из себя набор моделей методов (сигнатур), ровно как и интерфейс в ООП.
+
+Однако, метод реализации несколько отличается
+
+```haskell
+instance Printable Int where
+  toPrintable a = show a
+```
+
+Реализация выполняется на каждый отдельно взятый тип дженерик. Это похоже на имплементацию интерфейса для конкретной
+структуры данных как в ООП.
+
+Сам интерфейс применяется как и обычные методы структур в haskell - отдельными чистыми функциями:
+
+```haskell
+-- Выполнится т. к. есть реализация для Int типа
+toPrintable (12 :: Int)
+
+-- Ошибка т. к. реализация для Bool отсутствует
+toPrintable True
+```
+
+Внешне, реализация интерфейса выглядит как в ООП, однако на уровне применения имплементации toPrintable "объединяются" в
+один большой мультиметод.
+
+Интерфейсы можно завязывать друг на друга:
+
+```typescript
+interface Eq<T> {
+  compare(on: T): boolean;
+}
+
+// Данный метод зависит от Eq (использует его внутри)
+function unique<T extends Eq<T>>(elements: T[]): T[];
+
+// unique можно описать и как отдельный интерфейс с наобором методов.
+// его конструирование будет возможно через фабричный метод. Возможно ли это в ООП через один класс?
+```
+
+В haskell такая взаимосвязь описывается иначе:
+
+```haskell
+-- Напрямую читается как функция (Eq a -> Printable a)
+class (Eq a) => Printable a where
+  toPrintable :: a -> String
+```
+
+Для того чтобы реализовать экземпляр Printable теперь необходимо передать дженерик удобвлетворяющий ограничению:
+
+```haskell
+-- Описываем базовый type class который зависит от Eq
+class (Eq n) => Natural n where
+  add :: n -> n -> n
+
+-- Реализуем для Peano Eq метод
+instance Eq Peano where
+  (==) Z Z = True
+  (==) (S a) (S b) = a == b
+  (==) _ _ = False
+  
+-- Теперь реализация Natural для Peano возможна
+instance Natural Peano where
+  add a Z = a
+```
+
+### TypeScript
+
+В TypeScript зависимые интерфейсы реализуются через обычные фабрики:
+
+```typescript
+interface Eq<in T> {
+  equal(a: T, b: T): boolean;
+}
+
+// Интерфейс Unique T зависит от наличия возможность сравнения (Eq) над T
+type Uniq<T> = (eq: Eq<T>) => {
+  unique(elements: T[]): T[];
+};
+
+// Реализация может быть как точечной (от конкретного экземпляра T), так и полиморфной
+function uniq<T>(eq: Eq<T>) {
+  const result = {
+    unique: (elements: T[]): T[] => {
+      if (elements.length === 0) {
+        return [];
+      }
+
+      const [head, ...others] = elements;
+
+      return [head, ...result.unique(others.filter((it) => !eq.equal(head, it)))];
+    }
+  };
+
+  return result;
+}
+```
+
+В примере используется только одна зависимость, однако их может быть сколь угодно много.
+
+Ниже представлен пример использования:
+
+```typescript
+// Функции над структурами (Uniq, Show, Eq) и сами структуры (T) живут отдельно.
+function logic<T>(elements: T[], uniq: Uniq<T>, show: Show<T>, eq: Eq<T>) {
+  if (elements.length === 0) {
+    return 'list is empty';
+  }
+
+  if (elements.length === 1) {
+    // Операции вызываются как обычный stateless чистые функции
+    return `only one element is here ${show.show(elements[0])}`;
+  }
+
+  if (elements.length === 2) {
+    return eq.equal(elements[0], elements[1]) ? 'They are equal' : 'They are not equal';
+  }
+
+  /**
+   * Здесь самое интересное, т. к. Uniq зависит от наличия возможности Eq,
+   * то сама операция представляется ввиде фабрики со своими зависимостями.
+   */
+  return `deduplicated length ${uniq(eq).unique(elements)}`;
+}
+```
+
+### Гибкость
+
+```typescript
+interface Eq<in T> {
+  equal(a: T, b: T): boolean;
+}
+```
+
+Архитектура открыта к расширению при добавлении нового типа данных:
+
+```typescript
+interface Eq<in T> {
+  equal(a: T, b: T): boolean;
+}
+
+// --- Предыдущий код не был изменён
+
+type Position = {
+  x: number;
+  y: number;
+};
+
+const positionEq: Eq<Position> = {
+  equal: (a, b) => a.x === b.x && a.y === b.y
+};
+```
+
+Архитектура также открыта к расширению при добавлении новых операций над существующими типами данных:
+
+```typescript
+interface Eq<in T> {
+  equal(a: T, b: T): boolean;
+}
+
+type Position = {
+  x: number;
+  y: number;
+};
+
+const positionEq: Eq<Position> = {
+  equal: (a, b) => a.x === b.x && a.y === b.y
+};
+
+// --- Предыдущий код не был изменён
+
+interface Show<in T> {
+  show(a: T): string;
+}
+
+const positionShow: Show<Position> = {
+  show(a: Position): string {
+    return `{ x: ${a.x}`
+  }
+};
+```
+
+Можно объединять разные операции над одной структурой:
+
+```typescript
+const positionShowAndEq: Show<Position> & Eq<Position> = {
+  equal: (a, b) => a.x === b.x && a.y === b.y,
+  show: (a) => `{ x: ${a.x}, y: ${a.y} }`
+};
+```
+
+И создавать агрегации поведений над разными структурами в одной:
+
+```typescript
+const positionShow: Show<Position> = {
+  show: a => `{ x: ${a.x}, y: ${a.y} }`
+};
+
+const numberShow: Show<number> = {
+  show: a => `number ${a}`
+};
+
+const numberOrPositionShow: Show<Position | number> = {
+  show: (a) => {
+    if (typeof a === 'number') {
+      return numberShow.show(a);
+    }
+
+    return positionShow.show(a);
+  }
+};
+```
+
+Создавать зависимые поведения и интерфейсы:
+
+```typescript
+interface Uniq<T> {
+  uniq(elements: T[]): T[];
+}
+
+function createDefaultUniq<T>(eq: Eq<T>): Uniq<T> {
+  return {
+    uniq: elements => {
+      /* реализация с eq в контексте */
+      return elements;
+    }
+  };
+}
+```
+
+Иногда, но не всегда, можно создавать деструкторы зависимых интефейсов:
+
+```typescript
+// Из интерфейса Uniq извлекается интерфейс Eq
+function createEqFromUniq<T>(uniq: Uniq<T>): Eq<T> {
+  return {
+    equal: (a, b) => {
+      const elements = [a, b];
+
+      return uniq.uniq(elements).length === 1;
+    }
+  };
+}
+```
+
+И самое главное, над структурами и операциями можно писать абстрактные программы с использованием ad hoc полиморфизма:
+
+```typescript
+function logic<T>(elements: T[], eq: Eq<T>, uniq: Uniq<T>) {
+  const deduplicated = uniq.uniq(elements);
+
+  return eq.equal(deduplicated[0], deduplicated[1]) ? 'Success' : 'Failure';
+}
+
+logic<Position>([{ x: 0, y: 0 }], positionEq, createDefaultUniq(positionEq));
+```
+
 # Инкапсуляция
 
 В haskell модульная система является относительно простой.
