@@ -1,29 +1,14 @@
 module Main where
 
-class (Eq a) => Printable a where
-  toPrintable :: a -> String
+readFloat = read @Float
 
-instance Printable Int where
-  toPrintable = show
+adheresToReadShowContract :: forall a. (Show a, Read a) => a -> Bool
+adheresToReadShowContract val =
+  let a = show . (read @a) . show $ val
+      b = show val
+   in a == b
 
-data A = A
-
-instance (Eq A) => Printable A where
-  toPrintable = show
-
-s = toPrintable (A)
-
-class (Show a, Eq a) => Box a where
-  value :: a
-
-instance Box Int where
-  value = 0
-
-unique :: (Eq a) => [a] -> [a]
-unique [] = []
-unique (a : as) = a : unique (filter (/= a) as)
-
--- 236 page
+-- 258 page
 -- runghc -Wincomplete-patterns main.hs
 -- https://github.com/BartoszMilewski/DaoFP/blob/master/DaoFP.pdf
 main = undefined
