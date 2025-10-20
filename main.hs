@@ -8,7 +8,7 @@ adheresToReadShowContract val =
       b = show val
    in a == b
 
--- 258 page
+-- 264 page
 -- runghc -Wincomplete-patterns main.hs
 -- https://github.com/BartoszMilewski/DaoFP/blob/master/DaoFP.pdf
 main = undefined
