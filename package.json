@@ -3,10 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start": "ts-node ./src/index.ts"
+    "start": "ts-node ./src/index.ts",
+    "debug": "node --inspect-brk ./node_modules/ts-node/dist/bin.js ./src/index.ts"
   },
   "dependencies": {
+    "@langchain/core": "^1.1.17",
+    "@langchain/openai": "^1.2.4",
+    "langchain": "^1.2.13",
+    "prettier": "^3.8.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.2"
+    "typescript": "^5.9.3",
+    "zod": "^4.3.6"
+  },
+  "overrides": {
+    "zod": "^4.3.6"
   }
 }
