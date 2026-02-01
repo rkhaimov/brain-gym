@@ -1,88 +1,74 @@
-import { MemorySaver } from '@langchain/langgraph';
 import { ChatOpenAI } from '@langchain/openai';
-import { createAgent, tool } from 'langchain';
+import { createAgent, HumanMessage, tool } from 'langchain';
+import { BuiltInState } from 'langchain/dist/agents/types';
 import z from 'zod';
+import { createRL } from './createRL';
+import { createTodoStorage } from './createTodoStorage';
 import { CONNECTION_CONFIG } from './private';
 
 void main();
 
 async function main() {
-  // System prompt defines your agent’s role and behavior. Keep it specific and actionable.
-  const systemPrompt = `
-    You are an expert weather forecaster, who speaks in puns.
-    
-    You have access to two tools:
-    - get_weather_for_location: use this to get the weather for a specific location
-    - get_user_location: use this to get the user's location
-    
-    If a user asks you for the weather, make sure you know the location. If you can't tell from the question that they mean wherever they are, use the get_user_location tool to find their location.
-  `;
+  const rl = createRL();
+  const todo = createTodoStorage();
 
-  // Tools are functions your agent can call. Oftentimes tools will want to connect to external systems.
-  const getWeather = tool(
-    ({ city }) =>
-      `The weather in ${city} is clear with gusty winds. Low 24F. Winds NW at 20 to 30 mph.`,
+  const systemPrompt = `You are an expert assistance who helps to manage things to do`;
+
+  const getAllTodos = tool(async () => JSON.stringify(await todo.getAll()), {
+    name: 'get_all_todos',
+    description: 'Get all planned todos. List all of them as numbered list',
+  });
+
+  const createTodo = tool(
+    ({ content }) => JSON.stringify(todo.create(content)),
     {
-      name: 'get_weather_for_location',
-      description: 'Get the weather for a given city',
+      name: 'create_todo',
+      description: 'Create a new todo',
       schema: z.object({
-        city: z.string().describe('The city to get the weather for'),
+        content: z
+          .string()
+          .describe('Contains information about what must be done'),
       }),
     },
   );
 
-  const getUserLocation = tool(
-    (_, config) => {
-      const { user_id } = config.context;
-
-      return user_id === '1' ? 'Florida' : 'SF';
-    },
-    {
-      name: 'get_user_location',
-      description: 'Retrieve user information based on user ID',
-    },
-  );
-
-  // Set up a model
-  const model = new ChatOpenAI(CONNECTION_CONFIG);
-
-  // Define a structured response format if you need the agent responses to match a specific schema.
-  // Represented as a tool with identity handler.
-  const responseFormat = z.object({
-    punny_response: z.string(),
-    weather_conditions: z.string().optional(),
+  const completeTodo = tool(({ id }) => JSON.stringify(todo.complete(id)), {
+    name: 'complete_todo',
+    description: 'Complete a todo',
+    schema: z.object({
+      id: z.number().describe('ID of a todo to be marked as completed'),
+    }),
   });
 
-  // Add memory to your agent to maintain state across interactions. This allows the agent to remember previous conversations and context.
-  // Used to recall conversation based on thread_id (between invoke() calls)
-  const checkpointer = new MemorySaver();
+  const model = new ChatOpenAI(CONNECTION_CONFIG);
 
   const agent = createAgent({
     model,
     systemPrompt,
-    tools: [getUserLocation, getWeather],
-    responseFormat,
-    checkpointer,
+    tools: [getAllTodos, createTodo, completeTodo],
   });
 
-  // `thread_id` is a unique identifier for a given conversation.
-  const config = {
-    configurable: { thread_id: '1' },
-    context: { user_id: '1' },
-  };
+  // Short-term memory is kept small with the help of external tools
+  while (true) {
+    // Output state to a user
+    const state = await agent.invoke({
+      messages: [new HumanMessage('List me things that must be done')],
+    });
 
-  const response = await agent.invoke(
-    { messages: [{ role: 'user', content: 'what is the weather outside?' }] },
-    config,
-  );
+    // User asks for an action
+    const prompt = await rl.ask(state.messages.at(-1)!.content as string);
 
-  console.log(response.structuredResponse);
+    state.messages.push(new HumanMessage(prompt));
 
-  // Note that we can continue the conversation using the same `thread_id`.
-  const thankYouResponse = await agent.invoke(
-    { messages: [{ role: 'user', content: 'thank you!' }] },
-    config,
-  );
+    // Perform an action and repeat
+    await agent.invoke(state);
 
-  console.log(thankYouResponse.structuredResponse);
+    /**
+     * It looks very much like standard UI behaviour:
+     * * We have a "screen" where data is displayed
+     * * We perform an action and screen is just being updated
+     * * LLM allows to implement human-readable text interface instead of standard controls like buttons and etc.
+     */
+    console.clear();
+  }
 }
