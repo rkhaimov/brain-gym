@@ -1,7 +1,11 @@
-import { BaseMessageLike } from '@langchain/core/messages';
+import {
+  AIMessage,
+  AIMessageChunk,
+  BaseMessageLike,
+  SystemMessage,
+} from '@langchain/core/messages';
 import { ChatOpenAI } from '@langchain/openai';
 import { HumanMessage } from 'langchain';
-import assert from 'node:assert';
 import { createRL } from './createRL';
 import { CONNECTION_CONFIG } from './private';
 
@@ -16,11 +20,16 @@ async function main() {
 }
 
 async function chat(model: ChatOpenAI, messages: BaseMessageLike[]) {
-  const answer = await model.invoke(messages);
+  const stream = await model.stream(messages);
 
-  assert(typeof answer.content === 'string');
+  let full = new AIMessageChunk([]);
+  for await (const chunk of stream) {
+    full = full.concat(chunk);
+  }
 
-  const prompt = await rl.ask(answer.content);
+  const prompt = await rl.ask(full.text);
 
-  return chat(model, [...messages, answer, new HumanMessage(prompt)]);
+  console.log('\n');
+
+  return chat(model, [...messages, full, new HumanMessage(prompt)]);
 }
