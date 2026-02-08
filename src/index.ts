@@ -1,26 +1,28 @@
+import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { ChatOpenAI } from '@langchain/openai';
-import { z } from 'zod';
 import { CONNECTION_CONFIG } from './private';
 
 void main();
 
-// https://docs.langchain.com/oss/javascript/langchain/models#structured-output
+// https://docs.langchain.com/oss/javascript/langchain/models#advanced-topics
 async function main() {
-  const model = new ChatOpenAI(CONNECTION_CONFIG).withStructuredOutput(
-    z.object({
-      title: z.string().describe('The title of the movie'),
-      year: z.number().describe('The year the movie was released'),
-      director: z.string().describe('The director of the movie'),
-      rating: z.int().min(0).max(10).describe("The movie's rating"),
-    }),
-  );
+  const model = new ChatOpenAI({ ...CONNECTION_CONFIG, maxTokens: 100 });
 
-  const start = performance.now();
-  console.log(
-    await model.invoke('Provide details about the movie Inception', {
-      timeout: 30_000,
-    }),
-  );
+  const response = await model.stream([
+    new SystemMessage(`
+          You are an assistant who draws request objects as ascii images.
+          
+          * You must output picture only.
+          * You can't use emoji's.
+          * You must not use markdown specific elements.
+          * You are working in restricted CLI env.
+        `),
+    new HumanMessage('Draw a frog'),
+  ]);
 
-  console.log(performance.now() - start);
+  for await (const chunk of response) {
+    process.stdout.write(chunk.text);
+  }
+
+  console.log('\n');
 }
