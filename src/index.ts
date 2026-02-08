@@ -1,41 +1,29 @@
+import { WikipediaQueryRun } from '@langchain/community/tools/wikipedia_query_run';
 import { ChatOpenAI } from '@langchain/openai';
-import { createAgent, HumanMessage, SystemMessage, tool } from 'langchain';
-import { z } from 'zod';
+import { createAgent, HumanMessage, SystemMessage } from 'langchain';
 import { CONNECTION_CONFIG } from './private';
 
 void main();
 
-// https://docs.langchain.com/oss/javascript/langchain/models#advanced-topics
+// https://docs.langchain.com/oss/javascript/langchain/short-term-memory
 async function main() {
-  const searchDatabase = tool(
-    (args) => {
-      console.log(args);
-
-      return `Found 42 results in total.`;
-    },
-    {
-      name: 'search_database',
-      description:
-        'Search the customer database for records matching the query.',
-      schema: z.object({
-        query: z.string().describe('Search terms to look for'),
-        limit: z.number().describe('Maximum number of results to return'),
-      }),
-    },
-  );
+  const wiki = new WikipediaQueryRun({
+    topKResults: 3,
+    maxDocContentLength: 4_000,
+  });
 
   const agent = createAgent({
     model: new ChatOpenAI(CONNECTION_CONFIG),
-    tools: [searchDatabase],
+    tools: [wiki],
   });
 
   const response = await agent.stream(
     {
       messages: [
         new SystemMessage(
-          'You are an assistant who helps to count customers matching certain criteria.',
+          'You are an assistant who tells people about places.',
         ),
-        new HumanMessage('How many customers have bought hats in last month?'),
+        new HumanMessage('Could you tell me about New-York?'),
       ],
     },
     { streamMode: 'values' },
