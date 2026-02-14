@@ -1,18 +1,43 @@
-import { MemorySaver } from '@langchain/langgraph';
+import { RemoveMessage } from '@langchain/core/messages';
+import { REMOVE_ALL_MESSAGES } from '@langchain/langgraph';
 import { ChatOpenAI } from '@langchain/openai';
-import { AIMessage, createAgent, HumanMessage, SystemMessage } from 'langchain';
+import {
+  AIMessage,
+  createAgent,
+  createMiddleware,
+  HumanMessage,
+  SystemMessage,
+} from 'langchain';
 import { CONNECTION_CONFIG } from './private';
 
 void main();
 
 // https://docs.langchain.com/oss/javascript/langchain/short-term-memory
 async function main() {
-  const checkpointer = new MemorySaver();
-
+  // The problem with trimming or removing messages is that you may lose information from culling of the message queue.
   const agent = createAgent({
     model: new ChatOpenAI(CONNECTION_CONFIG),
     tools: [],
-    checkpointer,
+    middleware: [
+      createMiddleware({
+        name: 'TrimMessages',
+        beforeModel: (state) => {
+          const messages = state.messages;
+
+          if (messages.length < 5) {
+            return; // No changes needed
+          }
+
+          return {
+            messages: [
+              new RemoveMessage({ id: REMOVE_ALL_MESSAGES }),
+              messages[0],
+              ...messages.slice(-3),
+            ],
+          };
+        },
+      }),
+    ],
   });
 
   const response = await agent.stream(
@@ -24,6 +49,8 @@ async function main() {
         new HumanMessage('2+3'),
         new AIMessage('5'),
         new HumanMessage('5*3'),
+        new AIMessage('15'),
+        new HumanMessage('10*5'),
       ],
     },
     { streamMode: 'values', configurable: { thread_id: '1' } },
