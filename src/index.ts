@@ -1,42 +1,38 @@
 import { ChatOpenAI } from '@langchain/openai';
-import {
-  AIMessage,
-  createAgent,
-  HumanMessage,
-  summarizationMiddleware,
-  SystemMessage,
-} from 'langchain';
+import { createAgent, tool } from 'langchain';
+import { z } from 'zod';
 import { CONNECTION_CONFIG } from './private';
 
 void main();
 
-// https://docs.langchain.com/oss/javascript/langchain/short-term-memory
+// https://docs.langchain.com/oss/javascript/langchain/streaming/overview
 async function main() {
-  // The problem with trimming or removing messages is that you may lose information from culling of the message queue.
-  const agent = createAgent({
-    model: new ChatOpenAI(CONNECTION_CONFIG),
-    tools: [],
-    middleware: [
-      summarizationMiddleware({
-        model: new ChatOpenAI(CONNECTION_CONFIG),
-        trigger: { messages: 2 },
-        keep: { messages: 2 },
+  const getWeather = tool(
+    async ({ city }) => {
+      return `The weather in ${city} is always sunny!`;
+    },
+    {
+      name: 'get_weather',
+      description: 'Get weather for a given city.',
+      schema: z.object({
+        city: z.string(),
       }),
-    ],
+    },
+  );
+
+  const model = new ChatOpenAI(CONNECTION_CONFIG);
+
+  const agent = createAgent({
+    model: model,
+    tools: [getWeather],
   });
 
-  const response = await agent.invoke({
-    messages: [
-      new SystemMessage(
-        'You are a calculator that outputs results of elementary operations.',
-      ),
-      new HumanMessage('2+3'),
-      new AIMessage('5'),
-      new HumanMessage('5*3'),
-      new AIMessage('15'),
-      new HumanMessage('10*5'),
-    ],
-  });
+  const stream = await agent.stream(
+    { messages: [{ role: 'user', content: 'what is the weather in sf' }] },
+    { streamMode: 'updates' },
+  );
 
-  console.log(response.messages.at(-1)?.text);
+  for await (const chunk of stream) {
+    console.log(chunk);
+  }
 }
