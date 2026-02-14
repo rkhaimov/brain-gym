@@ -1,32 +1,32 @@
-import { WikipediaQueryRun } from '@langchain/community/tools/wikipedia_query_run';
+import { MemorySaver } from '@langchain/langgraph';
 import { ChatOpenAI } from '@langchain/openai';
-import { createAgent, HumanMessage, SystemMessage } from 'langchain';
+import { AIMessage, createAgent, HumanMessage, SystemMessage } from 'langchain';
 import { CONNECTION_CONFIG } from './private';
 
 void main();
 
 // https://docs.langchain.com/oss/javascript/langchain/short-term-memory
 async function main() {
-  const wiki = new WikipediaQueryRun({
-    topKResults: 3,
-    maxDocContentLength: 4_000,
-  });
+  const checkpointer = new MemorySaver();
 
   const agent = createAgent({
     model: new ChatOpenAI(CONNECTION_CONFIG),
-    tools: [wiki],
+    tools: [],
+    checkpointer,
   });
 
   const response = await agent.stream(
     {
       messages: [
         new SystemMessage(
-          'You are an assistant who tells people about places.',
+          'You are a calculator that outputs results of elementary operations.',
         ),
-        new HumanMessage('Could you tell me about New-York?'),
+        new HumanMessage('2+3'),
+        new AIMessage('5'),
+        new HumanMessage('5*3'),
       ],
     },
-    { streamMode: 'values' },
+    { streamMode: 'values', configurable: { thread_id: '1' } },
   );
 
   for await (const chunk of response) {
