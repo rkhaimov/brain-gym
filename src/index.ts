@@ -1,6 +1,5 @@
-import { LangGraphRunnableConfig } from '@langchain/langgraph';
 import { ChatOpenAI } from '@langchain/openai';
-import { createAgent, tool } from 'langchain';
+import { createAgent, providerStrategy } from 'langchain';
 import { z } from 'zod';
 import { CONNECTION_CONFIG } from './private';
 
@@ -8,35 +7,28 @@ void main();
 
 // https://docs.langchain.com/oss/javascript/langchain/streaming/overview
 async function main() {
-  const getWeather = tool(
-    async ({ city }, config: LangGraphRunnableConfig) => {
-      config.writer?.(`Looking up data for city: ${city}`);
-      config.writer?.(`Acquired data for city: ${city}`);
-
-      return `The weather in ${city} is always sunny!`;
-    },
-    {
-      name: 'get_weather',
-      description: 'Get weather for a given city.',
-      schema: z.object({
-        city: z.string(),
-      }),
-    },
-  );
+  const ContactInfo = z.object({
+    name: z.string().describe('The name of the person'),
+    email: z.string().describe('The email address of the person'),
+    phone: z.string().describe('The phone number of the person'),
+  });
 
   const model = new ChatOpenAI(CONNECTION_CONFIG);
 
   const agent = createAgent({
     model: model,
-    tools: [getWeather],
+    responseFormat: providerStrategy(ContactInfo),
   });
 
-  const stream = await agent.stream(
-    { messages: [{ role: 'user', content: 'what is the weather in sf' }] },
-    { streamMode: ['custom', 'messages'] },
-  );
+  const result = await agent.invoke({
+    messages: [
+      {
+        role: 'user',
+        content:
+          'Extract contact info from: John Doe, john@example.com, (555) 123-4567',
+      },
+    ],
+  });
 
-  for await (const chunk of stream) {
-    console.log(chunk);
-  }
+  console.log(result);
 }
