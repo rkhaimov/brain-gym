@@ -29,10 +29,11 @@ async function main() {
 
   const stream = await agent.stream(
     { messages: [{ role: 'user', content: 'what is the weather in sf' }] },
-    { streamMode: 'updates' },
+    { streamMode: 'messages' },
   );
 
-  for await (const chunk of stream) {
-    console.log(chunk);
+  for await (const [token, metadata] of stream) {
+    console.log('metadata:', metadata.langgraph_node);
+    console.log('content:', token.contentBlocks);
   }
 }
