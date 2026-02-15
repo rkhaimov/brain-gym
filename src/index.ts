@@ -1,3 +1,4 @@
+import { LangGraphRunnableConfig } from '@langchain/langgraph';
 import { ChatOpenAI } from '@langchain/openai';
 import { createAgent, tool } from 'langchain';
 import { z } from 'zod';
@@ -8,7 +9,10 @@ void main();
 // https://docs.langchain.com/oss/javascript/langchain/streaming/overview
 async function main() {
   const getWeather = tool(
-    async ({ city }) => {
+    async ({ city }, config: LangGraphRunnableConfig) => {
+      config.writer?.(`Looking up data for city: ${city}`);
+      config.writer?.(`Acquired data for city: ${city}`);
+
       return `The weather in ${city} is always sunny!`;
     },
     {
@@ -29,11 +33,10 @@ async function main() {
 
   const stream = await agent.stream(
     { messages: [{ role: 'user', content: 'what is the weather in sf' }] },
-    { streamMode: 'messages' },
+    { streamMode: ['custom', 'messages'] },
   );
 
-  for await (const [token, metadata] of stream) {
-    console.log('metadata:', metadata.langgraph_node);
-    console.log('content:', token.contentBlocks);
+  for await (const chunk of stream) {
+    console.log(chunk);
   }
 }
