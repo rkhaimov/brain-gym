@@ -54,7 +54,14 @@ async function main() {
 
   const result = await agent.invoke(
     new Command({
-      resume: { decisions: [{ type: 'approve' }] },
+      resume: {
+        decisions: [
+          {
+            type: 'reject',
+            message: 'I am sorry, I want to know weather in New York instead',
+          },
+        ],
+      },
     }),
     { configurable: { thread_id: '1' } },
   );
