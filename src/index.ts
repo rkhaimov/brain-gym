@@ -1,7 +1,7 @@
 import { Calculator } from '@langchain/community/tools/calculator';
 import { ChatOpenAI } from '@langchain/openai';
 
-import { createAgent, llmToolSelectorMiddleware, tool } from 'langchain';
+import { createAgent, tool, toolEmulatorMiddleware } from 'langchain';
 import { z } from 'zod';
 import { CONNECTION_CONFIG } from './private';
 
@@ -26,7 +26,7 @@ async function main() {
   const agent = createAgent({
     model: model,
     tools: [calculator, getWeather],
-    middleware: [llmToolSelectorMiddleware({ model: model })],
+    middleware: [toolEmulatorMiddleware()],
   });
 
   const result = await agent.invoke({
