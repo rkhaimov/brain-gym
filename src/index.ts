@@ -1,5 +1,5 @@
 import { ChatOpenAI } from '@langchain/openai';
-import { createFilesystemMiddleware, LocalShellBackend } from 'deepagents';
+import { createFilesystemMiddleware, FilesystemBackend } from 'deepagents';
 
 import { createAgent, tool } from 'langchain';
 import { z } from 'zod';
@@ -22,12 +22,13 @@ async function main() {
     },
   );
 
+  debugger;
   const agent = createAgent({
     model: model,
     tools: [getWeather],
     middleware: [
       createFilesystemMiddleware({
-        backend: new LocalShellBackend({ rootDir: process.cwd() }),
+        backend: new FilesystemBackend({ rootDir: process.cwd() }),
       }),
     ],
   });
@@ -36,12 +37,8 @@ async function main() {
     messages: [
       {
         role: 'user',
-        content: `Create node js script that outputs number of cpu cores on local computer.
-           File must be named getCoresNumber.js.
-           Execute it and print results.
-           
-           Use paths relative to cwd (./) only
-          `,
+        content:
+          'Fix error in ./main.js file. Do not use ls. Directly work with a file.',
       },
     ],
   });
