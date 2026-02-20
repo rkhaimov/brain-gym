@@ -1,5 +1,5 @@
 import { ChatOpenAI } from '@langchain/openai';
-import { createFilesystemMiddleware, FilesystemBackend } from 'deepagents';
+import { createSubAgentMiddleware } from 'deepagents';
 
 import { createAgent, tool } from 'langchain';
 import { z } from 'zod';
@@ -7,7 +7,7 @@ import { CONNECTION_CONFIG } from './private';
 
 void main();
 
-// https://docs.langchain.com/oss/javascript/langchain/middleware/built-in#filesystem-middleware
+// https://docs.langchain.com/oss/javascript/langchain/guardrails
 async function main() {
   const model = new ChatOpenAI(CONNECTION_CONFIG);
 
@@ -22,13 +22,22 @@ async function main() {
     },
   );
 
-  debugger;
   const agent = createAgent({
     model: model,
-    tools: [getWeather],
     middleware: [
-      createFilesystemMiddleware({
-        backend: new FilesystemBackend({ rootDir: process.cwd() }),
+      createSubAgentMiddleware({
+        defaultModel: model,
+        subagents: [
+          {
+            name: 'weather',
+            description: 'This subagent can get weather in cities.',
+            systemPrompt:
+              'Use the get_weather tool to get the weather in a city.',
+            tools: [getWeather],
+            model: 'gpt-4.1',
+            middleware: [],
+          },
+        ],
       }),
     ],
   });
@@ -37,8 +46,7 @@ async function main() {
     messages: [
       {
         role: 'user',
-        content:
-          'Fix error in ./main.js file. Do not use ls. Directly work with a file.',
+        content: 'What is the weather in SF?',
       },
     ],
   });
