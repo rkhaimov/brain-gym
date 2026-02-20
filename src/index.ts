@@ -1,7 +1,7 @@
-import { Calculator } from '@langchain/community/tools/calculator';
 import { ChatOpenAI } from '@langchain/openai';
+import { createFilesystemMiddleware } from 'deepagents';
 
-import { createAgent, tool, toolEmulatorMiddleware } from 'langchain';
+import { createAgent, tool } from 'langchain';
 import { z } from 'zod';
 import { CONNECTION_CONFIG } from './private';
 
@@ -21,12 +21,11 @@ async function main() {
     },
   );
 
-  const calculator = new Calculator();
-
+  debugger;
   const agent = createAgent({
     model: model,
-    tools: [calculator, getWeather],
-    middleware: [toolEmulatorMiddleware()],
+    tools: [getWeather],
+    middleware: [createFilesystemMiddleware()],
   });
 
   const result = await agent.invoke({
