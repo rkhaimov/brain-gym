@@ -1,12 +1,8 @@
-import * as fs from 'node:fs';
-
 export async function createSearcher(
   documents: string[],
   { k }: { k: number },
 ) {
-  const store: number[][] = JSON.parse(
-    fs.readFileSync('./embeddings.json').toString('utf-8'),
-  );
+  const store = await embed(documents);
 
   return {
     search: async (query: string) => {
