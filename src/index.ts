@@ -1,5 +1,6 @@
+import * as cheerio from 'cheerio';
 import { ChatOpenAI } from '@langchain/openai';
-import { createAgent, HumanMessage, tool } from 'langchain';
+import { createAgent, HumanMessage, tool, createMiddleware } from 'langchain';
 import { z } from 'zod';
 import { CONNECTION_CONFIG } from './private';
 
@@ -20,7 +21,9 @@ async function main() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      return response.text();
+      return cheerio
+        .load(await response.text())('*')
+        .prop('innerText');
     },
     {
       name: 'fetch_documentation',
@@ -60,6 +63,21 @@ async function main() {
     model: new ChatOpenAI(CONNECTION_CONFIG),
     tools: [fetchDocumentation],
     systemPrompt,
+    middleware: [
+      createMiddleware({
+        name: 'debug',
+        beforeModel: (state, runtime) => {
+          debugger;
+
+          return state;
+        },
+        afterModel: (state, runtime) => {
+          debugger;
+
+          return state;
+        },
+      }),
+    ],
   });
 
   const response = await agent.invoke({
