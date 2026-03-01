@@ -1,68 +1,34 @@
-import { ChatOpenAI } from '@langchain/openai';
-import {
-  CompositeBackend,
-  createDeepAgent,
-  FileData,
-  StateBackend,
-  StoreBackend,
-} from 'deepagents';
-import { createMiddleware } from 'langchain';
-import { CONNECTION_CONFIG } from './private';
+import { z } from 'zod';
+import { chat } from './chat';
+import { openai } from './core/llm';
+import { Either } from './misc/Either';
+import { assert } from './misc/utils';
+import { tool } from './core/tool';
 
-// https://docs.langchain.com/oss/javascript/deepagents/overview
 async function main() {
-  function createFileData(content: string): FileData {
-    const now = new Date().toISOString();
-    return {
-      content: content.split('\n'),
-      created_at: now,
-      modified_at: now,
-    };
-  }
-
-  const skillsFiles: Record<string, FileData> = {};
-
-  const skillUrl =
-    'https://raw.githubusercontent.com/langchain-ai/deepagentsjs/refs/heads/main/examples/skills/langgraph-docs/SKILL.md';
-  const response = await fetch(skillUrl);
-  const skillContent = await response.text();
-
-  skillsFiles['/skills/langgraph-docs/SKILL.md'] = createFileData(skillContent);
-
-  const agent = createDeepAgent({
-    model: new ChatOpenAI(CONNECTION_CONFIG),
-    systemPrompt: 'You are helpful assistant',
-    tools: [],
-    middleware: [
-      createMiddleware({
-        name: 'debug',
-        wrapToolCall: (request, handler) => {
-          debugger;
-
-          return handler(request);
-        },
-        wrapModelCall: (request, handler) => {
-          debugger;
-
-          return handler(request);
-        },
-      }),
-    ],
-    skills: ['/skills/'],
-  });
-
-  console.log(
-    await agent.invoke({
-      messages: [
-        {
-          role: 'user',
-          content:
-            'what is langraph? Use the langgraph-docs skill if available.',
-        },
-      ],
-      files: skillsFiles,
-    }),
+  const result = await chat(
+    {
+      role: 'system',
+      content:
+        'You are forecast assistant who uses getWeather tool.' +
+        'Use emojis to encourage user.',
+    },
+    {
+      llm: openai,
+      tools: [getWeather],
+    },
   );
+
+  assert(Either.isLeft(result));
+
+  console.log(result.value);
 }
+
+const getWeather = tool({
+  name: 'getWeather',
+  description: 'Get the weather for a given city',
+  schema: z.object({ city: z.string() }),
+  fn: async ({ city }) => `It is always sunny in ${city}`,
+});
 
 void main();
