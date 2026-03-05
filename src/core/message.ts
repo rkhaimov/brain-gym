@@ -1,5 +1,5 @@
 import { ArgumentsSchema, ToolName } from './tool';
-import { Brand, ChildBrand } from '../misc/utils';
+import { Brand, ExtendsBrand } from '../misc/utils';
 
 export type Message =
   | SystemMessage
@@ -44,6 +44,6 @@ export type AssistantMessage = {
   tool_calls?: ToolCall[];
 };
 
-export type ArgumentsValue = ChildBrand<JSONString, 'ArgumentsValue'>;
+export type ArgumentsValue = ExtendsBrand<JSONString, 'ArgumentsValue'>;
 
 type JSONString = Brand<string, 'JSONString'>;

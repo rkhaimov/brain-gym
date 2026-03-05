@@ -1,9 +1,10 @@
 import { z } from 'zod';
 import { chat } from './chat';
 import { openai } from './core/llm';
+import { tool } from './core/tool';
+import { createLLMEmulatedTool } from './createLLMEmulatedTool';
 import { Either } from './misc/Either';
 import { assert } from './misc/utils';
-import { tool } from './core/tool';
 
 async function main() {
   const result = await chat(
@@ -15,13 +16,17 @@ async function main() {
     },
     {
       llm: openai,
-      tools: [getWeather],
+      tools: [createLLMEmulatedTool(getWeather, openai)],
     },
   );
 
   assert(Either.isLeft(result));
 
-  console.log(result.value);
+  if (result.value.kind === 'ReadLineFailure') {
+    process.exit();
+  }
+
+  console.log(JSON.stringify(result, null, 2));
 }
 
 const getWeather = tool({

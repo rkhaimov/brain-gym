@@ -1,12 +1,18 @@
 import { z } from 'zod';
 import { Either } from '../misc/Either';
-import { ArgumentsValue, ToolMessage, ToolMeta } from './message';
+import { Failure } from '../misc/failure';
+import { Task } from '../misc/Task';
 import { Brand } from '../misc/utils';
+import { ArgumentsValue, ToolMessage, ToolMeta } from './message';
 
 export type Tool = {
   meta: ToolMeta;
-  run(args: ArgumentsValue): Promise<Either<unknown, ToolMessage>>;
+  run(args: ArgumentsValue): Task<ToolFailure, ToolMessage>;
 };
+
+export type ToolFailure =
+  | Failure<'ToolInvalidArguments', string>
+  | Failure<'ToolCallFailure', unknown>;
 
 export function tool<T extends z.ZodType>(config: {
   name: string;
@@ -24,12 +30,24 @@ export function tool<T extends z.ZodType>(config: {
         parameters: toJSONSchema(config.schema),
       },
     },
-    run: Either.fromAsyncThrowable(async (args) => {
-      const parsed = config.schema.parse(JSON.parse(args));
-      const result = await config.fn(parsed);
+    run: async (args) => {
+      const parsed = config.schema.safeParse(JSON.parse(args));
 
-      return { role: 'tool', name, content: result };
-    }),
+      if (parsed.error) {
+        return Either.left({
+          kind: 'ToolInvalidArguments',
+          body: JSON.stringify(parsed.error.issues),
+        });
+      }
+
+      try {
+        const result = await config.fn(parsed.data);
+
+        return Either.right({ role: 'tool', name, content: result });
+      } catch (error: unknown) {
+        return Either.left({ kind: 'ToolCallFailure', body: error });
+      }
+    },
   };
 }
 

@@ -1,12 +1,16 @@
 import { Either } from '../misc/Either';
-import { AssistantMessage, Message, ToolMeta } from './message';
+import { Failure } from '../misc/failure';
+import { Task } from '../misc/Task';
 import { assert } from '../misc/utils';
 import { CONNECTION_CONFIG } from '../private';
+import { AssistantMessage, Message, ToolMeta } from './message';
 
-export type LLM = typeof openai;
+export type LLM = (body: LLMBody) => Task<LLMFailure, LLMResponse>;
 
-export const openai = Either.fromAsyncThrowable(
-  async (body: LLMBody): Promise<LLMResponse> => {
+export type LLMFailure = Failure<'LLMRequestFailure', unknown>;
+
+export const openai: LLM = async (body) => {
+  try {
     const result = await fetch(
       `${CONNECTION_CONFIG.configuration.baseURL}/chat/completions`,
       {
@@ -25,9 +29,11 @@ export const openai = Either.fromAsyncThrowable(
 
     assert(result.ok, result.statusText);
 
-    return result.json();
-  },
-);
+    return Either.right(await result.json());
+  } catch (error: unknown) {
+    return Either.left({ kind: 'LLMRequestFailure', body: error });
+  }
+};
 
 type LLMBody = {
   tools: ToolMeta[];

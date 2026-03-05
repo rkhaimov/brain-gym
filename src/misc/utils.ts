@@ -39,7 +39,7 @@ export type Brand<TType, TProperty extends string> = TType & {
   [Key in `__${TProperty}`]: TProperty;
 };
 
-export type ChildBrand<
+export type ExtendsBrand<
   TBrand extends Brand<unknown, never>,
   TProperty extends string,
 > = Brand<TBrand, TProperty>;

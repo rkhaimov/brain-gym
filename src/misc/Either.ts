@@ -15,11 +15,6 @@ export const Either = {
   ): either is Either<never, TRight> {
     return either.type === 'right';
   },
-  fromAsyncThrowable<TArgs extends unknown[], TR>(
-    fn: (...args: TArgs) => Promise<TR>,
-  ): (...args: TArgs) => Promise<Either<unknown, TR>> {
-    return (...args) => fn(...args).then(Either.right, Either.left);
-  },
 };
 
 export type Either<TLeft, TRight> =
