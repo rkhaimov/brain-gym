@@ -1,11 +1,10 @@
-import { ArgumentsSchema, ToolName } from './tool';
 import { Brand, ExtendsBrand } from '../misc/utils';
 
 export type Message =
   | SystemMessage
   | UserMessage
-  | AssistantMessage
-  | ToolMessage;
+  | ToolMessage
+  | AssistantMessage;
 
 export type ToolMeta = {
   function: {
@@ -31,19 +30,26 @@ export type ToolMessage = {
   name: ToolName;
 };
 
+export type AssistantMessage = {
+  role: 'assistant';
+  content: AssistantContent;
+  tool_calls: ToolCall[];
+};
+
 export type ToolCall = {
+  id: ToolCallID;
+  type: 'function';
   function: {
     name: ToolName;
-    arguments: ArgumentsValue;
+    arguments: ToolArguments;
   };
 };
 
-export type AssistantMessage = {
-  role: 'assistant';
-  content: string;
-  tool_calls?: ToolCall[];
-};
-
-export type ArgumentsValue = ExtendsBrand<JSONString, 'ArgumentsValue'>;
+export type ToolArguments = ExtendsBrand<JSONString, 'ToolArguments'>;
 
 type JSONString = Brand<string, 'JSONString'>;
+
+export type AssistantContent = Brand<string, 'AssistantContent'>;
+export type ArgumentsSchema = Brand<unknown, 'ArgumentsSchema'>;
+export type ToolName = Brand<string, 'ToolName'>;
+export type ToolCallID = Brand<string, 'UniqueID'>;

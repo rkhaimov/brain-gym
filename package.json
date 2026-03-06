@@ -12,6 +12,7 @@
     "@langchain/openai": "^1.2.11",
     "@langchain/tavily": "^1.2.0",
     "deepagents": "^1.8.0",
+    "parse-sse": "^0.1.0",
     "prettier": "^3.8.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"

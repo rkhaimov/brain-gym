@@ -1,16 +1,21 @@
 import { z } from 'zod';
 import { Either } from '../misc/Either';
 import { Failure } from '../misc/failure';
-import { Task } from '../misc/Task';
-import { Brand } from '../misc/utils';
-import { ArgumentsValue, ToolMessage, ToolMeta } from './message';
+import {
+  ArgumentsSchema,
+  ToolArguments,
+  ToolMessage,
+  ToolMeta,
+  ToolName,
+} from './message';
 
 export type Tool = {
   meta: ToolMeta;
-  run(args: ArgumentsValue): Task<ToolFailure, ToolMessage>;
+  run(args: ToolArguments): Promise<Either<ToolFailure, ToolMessage>>;
 };
 
 export type ToolFailure =
+  | Failure<'ToolInvalidArgumentsJSON', ToolArguments>
   | Failure<'ToolInvalidArguments', string>
   | Failure<'ToolCallFailure', unknown>;
 
@@ -31,7 +36,13 @@ export function tool<T extends z.ZodType>(config: {
       },
     },
     run: async (args) => {
-      const parsed = config.schema.safeParse(JSON.parse(args));
+      const raw = toRawObject(args);
+
+      if (Either.isLeft(raw)) {
+        return raw;
+      }
+
+      const parsed = config.schema.safeParse(raw.value);
 
       if (parsed.error) {
         return Either.left({
@@ -51,10 +62,14 @@ export function tool<T extends z.ZodType>(config: {
   };
 }
 
-export type ToolName = Brand<string, 'ToolName'>;
-
-export type ArgumentsSchema = Brand<unknown, 'ArgumentsSchema'>;
-
 function toJSONSchema(zod: z.ZodType): ArgumentsSchema {
   return zod.toJSONSchema() as unknown as ArgumentsSchema;
+}
+
+function toRawObject(args: ToolArguments): Either<ToolFailure, unknown> {
+  try {
+    return Either.right(JSON.parse(args));
+  } catch (_) {
+    return Either.left({ kind: 'ToolInvalidArgumentsJSON', body: args });
+  }
 }

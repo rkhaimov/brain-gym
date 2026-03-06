@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import { chat } from './chat';
-import { openai } from './core/llm';
+import { AssistantContentChunk, dumbai } from './core/llm';
 import { tool } from './core/tool';
+import { createHITLTool } from './createHITLTool';
 import { createLLMEmulatedTool } from './createLLMEmulatedTool';
-import { Either } from './misc/Either';
-import { assert } from './misc/utils';
+import { UserProvider } from './UserContext';
 
 async function main() {
-  const result = await chat(
+  const work = chat(
     {
       role: 'system',
       content:
@@ -15,18 +15,12 @@ async function main() {
         'Use emojis to encourage user.',
     },
     {
-      llm: openai,
-      tools: [createLLMEmulatedTool(getWeather, openai)],
+      llm: dumbai,
+      tools: [createHITLTool(createLLMEmulatedTool(getWeather, dumbai))],
     },
   );
 
-  assert(Either.isLeft(result));
-
-  if (result.value.kind === 'ReadLineFailure') {
-    process.exit();
-  }
-
-  console.log(JSON.stringify(result, null, 2));
+  return UserProvider(() => render(work));
 }
 
 const getWeather = tool({
@@ -37,3 +31,16 @@ const getWeather = tool({
 });
 
 void main();
+
+async function render(
+  stream: AsyncGenerator<AssistantContentChunk, unknown, void>,
+) {
+  let iter = await stream.next();
+  while (!iter.done) {
+    process.stdout.write(iter.value);
+
+    iter = await stream.next();
+  }
+
+  console.log('EXIT REASON', iter.value);
+}

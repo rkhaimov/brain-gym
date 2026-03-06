@@ -16,10 +16,12 @@ export function createLLMEmulatedTool(tool: Tool, llm: LLM): Tool {
       Generate a realistic response that this tool would return given these arguments.
       Return ONLY the tool's output, no explanation or preamble. Introduce variation into your responses.`;
 
-      const result = await invoke([{ role: 'user', content: prompt }], {
-        llm,
-        tools: [],
-      });
+      const result = await drain(
+        invoke([{ role: 'user', content: prompt }], {
+          llm,
+          tools: [],
+        }),
+      );
 
       if (Either.isLeft(result)) {
         return Either.left({ kind: 'ToolCallFailure', body: result.value });
@@ -32,4 +34,13 @@ export function createLLMEmulatedTool(tool: Tool, llm: LLM): Tool {
       });
     },
   };
+}
+
+async function drain<T>(stream: AsyncGenerator<unknown, T, void>): Promise<T> {
+  let iter = await stream.next();
+  while (!iter.done) {
+    iter = await stream.next();
+  }
+
+  return iter.value;
 }

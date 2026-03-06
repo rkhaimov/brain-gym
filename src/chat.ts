@@ -1,10 +1,11 @@
 import { ask, AskFailure } from './ask';
-import { AgentConfig, agent, AgentFailure } from './core/agent';
+import { agent, AgentFailure } from './core/agent';
+import { InvokeConfig } from './core/invoke';
+import { AssistantContentChunk } from './core/llm';
 import { Message, SystemMessage } from './core/message';
 import { Either } from './misc/Either';
-import { Task } from './misc/Task';
 
-export function chat(system: SystemMessage, config: AgentConfig) {
+export function chat(system: SystemMessage, config: InvokeConfig) {
   return _chat(
     [
       system,
@@ -20,21 +21,23 @@ export function chat(system: SystemMessage, config: AgentConfig) {
 
 type Chat = (
   history: Message[],
-  config: AgentConfig,
-) => Task<AskFailure | AgentFailure, never>;
+  config: InvokeConfig,
+) => AsyncGenerator<AssistantContentChunk, ChatFailure, void>;
 
-const _chat: Chat = async (history, config) => {
-  const result = await agent(history, config);
+type ChatFailure = AgentFailure | AskFailure;
 
-  if (Either.isLeft(result)) {
-    return result;
+const _chat: Chat = async function* (history, config) {
+  const messages = yield* agent(history, config);
+
+  if (Either.isLeft(messages)) {
+    return messages.value;
   }
 
-  const answer = await ask(result.value.response.content);
+  const question = await ask();
 
-  if (Either.isLeft(answer)) {
-    return answer;
+  if (Either.isLeft(question)) {
+    return question.value;
   }
 
-  return _chat([...result.value.history, answer.value], config);
+  return yield* _chat([...messages.value, question.value], config);
 };

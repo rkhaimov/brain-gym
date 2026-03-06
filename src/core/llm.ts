@@ -1,15 +1,19 @@
+import { parseServerSentEvents } from 'parse-sse';
 import { Either } from '../misc/Either';
 import { Failure } from '../misc/failure';
-import { Task } from '../misc/Task';
-import { assert } from '../misc/utils';
+import { assert, assertNotEmpty, Brand } from '../misc/utils';
 import { CONNECTION_CONFIG } from '../private';
-import { AssistantMessage, Message, ToolMeta } from './message';
+import { Message, ToolMeta, ToolName } from './message';
 
-export type LLM = (body: LLMBody) => Task<LLMFailure, LLMResponse>;
+export const dumbai: LLM = async function* () {
+  yield {
+    choices: [{ delta: { content: 'I am dumb AI.' as AssistantContentChunk } }],
+  };
 
-export type LLMFailure = Failure<'LLMRequestFailure', unknown>;
+  return Either.right(undefined);
+};
 
-export const openai: LLM = async (body) => {
+export const openai: LLM = async function* (body) {
   try {
     const result = await fetch(
       `${CONNECTION_CONFIG.configuration.baseURL}/chat/completions`,
@@ -17,7 +21,7 @@ export const openai: LLM = async (body) => {
         method: 'POST',
         body: JSON.stringify({
           model: CONNECTION_CONFIG.model,
-          stream: false,
+          stream: true,
           ...body,
         }),
         headers: [
@@ -28,20 +32,54 @@ export const openai: LLM = async (body) => {
     );
 
     assert(result.ok, result.statusText);
+    assertNotEmpty(result.body);
 
-    return Either.right(await result.json());
+    for await (const event of parseServerSentEvents(result)) {
+      if (event.data === '[DONE]') {
+        continue;
+      }
+
+      yield JSON.parse(event.data);
+    }
+
+    return Either.right(undefined);
   } catch (error: unknown) {
     return Either.left({ kind: 'LLMRequestFailure', body: error });
   }
 };
+
+export type LLM = (body: LLMBody) => LLMResponse;
+
+export type LLMResponse = AsyncGenerator<
+  LLMResponseChunk,
+  Either<LLMFailure, void>,
+  void
+>;
+
+export type LLMFailure = Failure<'LLMRequestFailure', unknown>;
+
+export type AssistantContentChunk = Brand<string, 'AssistantContentChunk'>;
 
 type LLMBody = {
   tools: ToolMeta[];
   messages: Message[];
 };
 
-type LLMResponse = {
-  choices: Array<{
-    message: AssistantMessage;
-  }>;
+export type LLMResponseChunk = { choices: LLMChoiceChunk[] };
+
+type LLMChoiceChunk = {
+  delta: {
+    content?: AssistantContentChunk;
+    tool_calls?: ToolCallChunk[];
+  };
 };
+
+type ToolCallChunk = {
+  index: number;
+  function: {
+    name?: ToolName;
+    arguments?: ToolArgumentsChunk;
+  };
+};
+
+export type ToolArgumentsChunk = Brand<string, 'ToolArgumentsChunk'>;
