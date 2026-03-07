@@ -23,33 +23,53 @@ type Invoke = (history: Message[], config: InvokeConfig) => InvokeResult;
 
 type InvokeResult = AsyncGenerator<
   AssistantContentChunk,
-  Either<InvokeFailure, AssistantMessage>,
+  Either<InvokeFailure, AssistantResponse>,
   void
 >;
 
+type AssistantResponse = { message: AssistantMessage; tools: ToolsRegistry };
+
 export type InvokeFailure = LLMFailure | ParseFailure;
 
-export type InvokeConfig = { llm: LLM; tools: Tool[] };
+export type ToolsRegistry = Map<ToolName, Tool>;
 
-export const invoke: Invoke = (history, config) =>
-  _invoke(
-    config.llm({
-      messages: history,
-      tools: config.tools.map((it) => it.meta),
-    }),
-    [],
-  );
+export type ToolsFactory = (messages: Message[]) => ToolsRegistry;
+
+export type InvokeConfig = { llm: LLM; tools: ToolsFactory };
+
+export const invoke: Invoke = (history, config) => {
+  const tools = config.tools(history);
+
+  const inference = config.llm({
+    messages: history,
+    tools: tools
+      .values()
+      .map((it) => it.meta)
+      .toArray(),
+  });
+
+  return _invoke(inference, tools, []);
+};
 
 async function* _invoke(
   inference: LLMResponse,
+  tools: ToolsRegistry,
   chunks: LLMResponseChunk[],
 ): InvokeResult {
   const result = await inference.next();
 
   if (result.done) {
-    return Either.isLeft(result.value)
-      ? result.value
-      : createAssistantMessage(chunks);
+    if (Either.isLeft(result.value)) {
+      return result.value;
+    }
+
+    const message = createAssistantMessage(chunks);
+
+    if (Either.isLeft(message)) {
+      return message;
+    }
+
+    return Either.right({ message: message.value, tools });
   }
 
   const content = result.value.choices[0]?.delta.content;
@@ -58,7 +78,7 @@ async function* _invoke(
     yield content;
   }
 
-  return yield* _invoke(inference, [...chunks, result.value]);
+  return yield* _invoke(inference, tools, [...chunks, result.value]);
 }
 
 type ParseFailure = Failure<'LLMBadResponse', string>;

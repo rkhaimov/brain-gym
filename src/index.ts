@@ -1,33 +1,36 @@
 import { z } from 'zod';
 import { chat } from './chat';
-import { AssistantContentChunk, dumbai } from './core/llm';
+import { AssistantContentChunk, openai } from './core/llm';
 import { tool } from './core/tool';
-import { createHITLTool } from './createHITLTool';
-import { createLLMEmulatedTool } from './createLLMEmulatedTool';
+import { createToolErrorFallback } from './createToolErrorFallback';
+import { createToolsFactory } from './createToolsFactory';
+import { loggable } from './loggable';
 import { UserProvider } from './UserContext';
 
 async function main() {
-  const work = chat(
-    {
-      role: 'system',
-      content:
-        'You are forecast assistant who uses getWeather tool.' +
-        'Use emojis to encourage user.',
-    },
-    {
-      llm: dumbai,
-      tools: [createHITLTool(createLLMEmulatedTool(getWeather, dumbai))],
-    },
-  );
+  return UserProvider(() => {
+    const work = chat(
+      {
+        role: 'system',
+        content:
+          'You are forecast assistant who uses getWeather tool.' +
+          'Use emojis to encourage user.',
+      },
+      {
+        llm: loggable(openai, 'low'),
+        tools: createToolsFactory([createToolErrorFallback(getWeather)]),
+      },
+    );
 
-  return UserProvider(() => render(work));
+    return render(work);
+  });
 }
 
 const getWeather = tool({
   name: 'getWeather',
   description: 'Get the weather for a given city',
   schema: z.object({ city: z.string() }),
-  fn: async ({ city }) => `It is always sunny in ${city}`,
+  fn: async ({ city }) => `The weather in ${city} is always sunny!`,
 });
 
 void main();

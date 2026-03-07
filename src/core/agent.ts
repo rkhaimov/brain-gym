@@ -1,10 +1,10 @@
 import { Either } from '../misc/Either';
 import { Failure } from '../misc/failure';
 import { isNil } from '../misc/utils';
-import { invoke, InvokeConfig, InvokeFailure } from './invoke';
+import { invoke, InvokeConfig, InvokeFailure, ToolsRegistry } from './invoke';
 import { AssistantContentChunk } from './llm';
 import { Message, ToolCall, ToolMessage, ToolName } from './message';
-import { Tool, ToolFailure } from './tool';
+import { ToolFailure } from './tool';
 
 export type AgentFailure = InvokeFailure | RunFailure;
 
@@ -18,30 +18,32 @@ export async function* agent(
   history: Message[],
   config: InvokeConfig,
 ): AgentResult {
-  const message = yield* invoke(history, config);
+  const inference = yield* invoke(history, config);
 
-  if (Either.isLeft(message)) {
-    return message;
+  if (Either.isLeft(inference)) {
+    return inference;
   }
 
-  if (message.value.tool_calls.length === 0) {
-    return Either.right([...history, message.value]);
+  const { message, tools } = inference.value;
+
+  if (message.tool_calls.length === 0) {
+    return Either.right([...history, message]);
   }
 
-  const ran = await run(message.value.tool_calls, config.tools);
+  const ran = await run(message.tool_calls, tools);
 
   if (Either.isLeft(ran)) {
     return ran;
   }
 
-  return yield* agent([...history, message.value, ...ran.value], config);
+  return yield* agent([...history, message, ...ran.value], config);
 }
 
 type RunFailure = ToolFailure | Failure<'ToolNotFound', ToolName>;
 
 async function run(
   calls: ToolCall[],
-  tools: Tool[],
+  tools: ToolsRegistry,
 ): Promise<Either<RunFailure, ToolMessage[]>> {
   const [call, ...others] = calls;
 
@@ -49,7 +51,7 @@ async function run(
     return Either.right([]);
   }
 
-  const tool = tools.find((it) => it.meta.function.name === call.function.name);
+  const tool = tools.get(call.function.name);
 
   if (isNil(tool)) {
     return Either.left({ kind: 'ToolNotFound', body: call.function.name });

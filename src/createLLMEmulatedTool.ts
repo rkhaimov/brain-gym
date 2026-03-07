@@ -1,6 +1,7 @@
 import { invoke } from './core/invoke';
 import { LLM } from './core/llm';
 import { Tool } from './core/tool';
+import { createToolsFactory } from './createToolsFactory';
 import { Either } from './misc/Either';
 
 export function createLLMEmulatedTool(tool: Tool, llm: LLM): Tool {
@@ -19,7 +20,7 @@ export function createLLMEmulatedTool(tool: Tool, llm: LLM): Tool {
       const result = await drain(
         invoke([{ role: 'user', content: prompt }], {
           llm,
-          tools: [],
+          tools: createToolsFactory([]),
         }),
       );
 
@@ -30,7 +31,7 @@ export function createLLMEmulatedTool(tool: Tool, llm: LLM): Tool {
       return Either.right({
         role: 'tool',
         name: tool.meta.function.name,
-        content: result.value.content,
+        content: result.value.message.content,
       });
     },
   };

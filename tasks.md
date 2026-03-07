@@ -5,3 +5,4 @@
 * Learn https://docs.langchain.com/oss/javascript/integrations/tools/webbrowser
 * ASCII picture generator loop (one model generates -> another model verifies)
 * Translator for docuzaurus docs
+* Migrate to https://github.com/openai/openai-node
