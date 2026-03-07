@@ -1,7 +1,7 @@
 import { createInterface } from 'node:readline/promises';
-import { UserMessage } from './core/message';
-import { Either } from './misc/Either';
-import { Failure } from './misc/failure';
+import { UserMessage } from '../message';
+import { Either } from '../../utils/Either';
+import { Failure } from '../../utils/Failure';
 
 export type AskFailure = Failure<'ReadLineFailure', void>;
 

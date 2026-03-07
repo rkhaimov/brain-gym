@@ -8,9 +8,6 @@
     "compile": "tsc --noEmit"
   },
   "dependencies": {
-    "@langchain/deno": "^0.2.1",
-    "@langchain/openai": "^1.2.11",
-    "@langchain/tavily": "^1.2.0",
     "deepagents": "^1.8.0",
     "parse-sse": "^0.1.0",
     "prettier": "^3.8.1",

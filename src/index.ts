@@ -1,49 +1,23 @@
 import { z } from 'zod';
-import { chat } from './chat';
-import { AssistantContentChunk, openai } from './core/llm';
-import { tool } from './core/tool';
-import { createToolErrorFallback } from './createToolErrorFallback';
-import { createToolsFactory } from './createToolsFactory';
-import { loggable } from './loggable';
-import { UserProvider } from './UserContext';
+import { openai } from './core/llm/openai';
+import { structured } from './core/structured';
+import { Schema } from './utils/schema';
 
 async function main() {
-  return UserProvider(() => {
-    const work = chat(
+  const result = await structured(
+    [
       {
-        role: 'system',
-        content:
-          'You are forecast assistant who uses getWeather tool.' +
-          'Use emojis to encourage user.',
+        role: 'user',
+        content: 'Parse following: My name is John and my ID is 10',
       },
-      {
-        llm: loggable(openai, 'low'),
-        tools: createToolsFactory([createToolErrorFallback(getWeather)]),
-      },
-    );
+    ],
+    {
+      llm: openai,
+      schema: Schema.create(z.object({ name: z.string(), id: z.number() })),
+    },
+  );
 
-    return render(work);
-  });
+  console.log(result.value);
 }
-
-const getWeather = tool({
-  name: 'getWeather',
-  description: 'Get the weather for a given city',
-  schema: z.object({ city: z.string() }),
-  fn: async ({ city }) => `The weather in ${city} is always sunny!`,
-});
 
 void main();
-
-async function render(
-  stream: AsyncGenerator<AssistantContentChunk, unknown, void>,
-) {
-  let iter = await stream.next();
-  while (!iter.done) {
-    process.stdout.write(iter.value);
-
-    iter = await stream.next();
-  }
-
-  console.log('EXIT REASON', iter.value);
-}

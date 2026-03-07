@@ -1,91 +1,23 @@
-import { Either } from '../misc/Either';
-import { Failure } from '../misc/failure';
-import { isNil } from '../misc/utils';
+import { AssistantContent, AssistantMessage } from '../llm/message-types';
 import {
   AssistantContentChunk,
-  LLM,
-  LLMFailure,
-  LLMResponse,
   LLMResponseChunk,
-  ToolArgumentsChunk,
-} from './llm';
+} from '../llm/response-chunk-types';
 import {
-  AssistantContent,
-  AssistantMessage,
-  Message,
   ToolArguments,
+  ToolArgumentsChunk,
   ToolCallID,
   ToolName,
-} from './message';
-import { Tool } from './tool';
+} from '../llm/tool-types';
+import { Either } from '../../utils/Either';
+import { Failure } from '../../utils/Failure';
+import { isNil } from '../../utils/utils';
 
-type Invoke = (history: Message[], config: InvokeConfig) => InvokeResult;
+export type AssistantParseFailure = Failure<'AssistantParseFailure', string>;
 
-type InvokeResult = AsyncGenerator<
-  AssistantContentChunk,
-  Either<InvokeFailure, AssistantResponse>,
-  void
->;
-
-type AssistantResponse = { message: AssistantMessage; tools: ToolsRegistry };
-
-export type InvokeFailure = LLMFailure | ParseFailure;
-
-export type ToolsRegistry = Map<ToolName, Tool>;
-
-export type ToolsFactory = (messages: Message[]) => ToolsRegistry;
-
-export type InvokeConfig = { llm: LLM; tools: ToolsFactory };
-
-export const invoke: Invoke = (history, config) => {
-  const tools = config.tools(history);
-
-  const inference = config.llm({
-    messages: history,
-    tools: tools
-      .values()
-      .map((it) => it.meta)
-      .toArray(),
-  });
-
-  return _invoke(inference, tools, []);
-};
-
-async function* _invoke(
-  inference: LLMResponse,
-  tools: ToolsRegistry,
+export function createAssistantMessage(
   chunks: LLMResponseChunk[],
-): InvokeResult {
-  const result = await inference.next();
-
-  if (result.done) {
-    if (Either.isLeft(result.value)) {
-      return result.value;
-    }
-
-    const message = createAssistantMessage(chunks);
-
-    if (Either.isLeft(message)) {
-      return message;
-    }
-
-    return Either.right({ message: message.value, tools });
-  }
-
-  const content = result.value.choices[0]?.delta.content;
-
-  if (content) {
-    yield content;
-  }
-
-  return yield* _invoke(inference, tools, [...chunks, result.value]);
-}
-
-type ParseFailure = Failure<'LLMBadResponse', string>;
-
-function createAssistantMessage(
-  chunks: LLMResponseChunk[],
-): Either<ParseFailure, AssistantMessage> {
+): Either<AssistantParseFailure, AssistantMessage> {
   const result = createRawAssistantMessage(chunks);
 
   if (Either.isLeft(result)) {
@@ -108,7 +40,7 @@ function createAssistantMessage(
 
 function createRawAssistantMessage(
   chunks: LLMResponseChunk[],
-): Either<ParseFailure, RawAssistantMessage> {
+): Either<AssistantParseFailure, RawAssistantMessage> {
   const [chunk, ...rest] = chunks;
 
   if (isNil(chunk)) {
@@ -130,7 +62,7 @@ function createRawAssistantMessage(
 
     if (isNil(choice.delta.content)) {
       return Either.left({
-        kind: 'LLMBadResponse',
+        kind: 'AssistantParseFailure',
         body: 'Expected to content to be defined',
       });
     }
@@ -145,14 +77,14 @@ function createRawAssistantMessage(
 
   if (isNil(call)) {
     return Either.left({
-      kind: 'LLMBadResponse',
+      kind: 'AssistantParseFailure',
       body: 'Expected for tool_calls not to be empty',
     });
   }
 
   if (isNil(call.function.name)) {
     return Either.left({
-      kind: 'LLMBadResponse',
+      kind: 'AssistantParseFailure',
       body: 'Expected to receive function name',
     });
   }
@@ -172,12 +104,12 @@ function createRawAssistantMessage(
 function createToolCall(
   call: RawToolCall,
   chunks: LLMResponseChunk[],
-): Either<ParseFailure, RawAssistantMessage> {
+): Either<AssistantParseFailure, RawAssistantMessage> {
   const [chunk, ...rest] = chunks;
 
   if (isNil(chunk)) {
     return Either.left({
-      kind: 'LLMBadResponse',
+      kind: 'AssistantParseFailure',
       body: 'Unexpected chunks end',
     });
   }
@@ -199,7 +131,7 @@ function createToolCall(
 
   if (isNil(fn.function.arguments)) {
     return Either.left({
-      kind: 'LLMBadResponse',
+      kind: 'AssistantParseFailure',
       body: 'Expected to receive tool arguments',
     });
   }

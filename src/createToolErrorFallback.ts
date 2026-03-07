@@ -1,5 +1,5 @@
-import { Tool } from './core/tool';
-import { Either } from './misc/Either';
+import { Either } from './utils/Either';
+import { Tool } from './core/tool/types';
 
 export function createToolErrorFallback(tool: Tool): Tool {
   return {

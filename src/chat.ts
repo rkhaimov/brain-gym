@@ -1,9 +1,9 @@
-import { ask, AskFailure } from './ask';
 import { agent, AgentFailure } from './core/agent';
 import { InvokeConfig } from './core/invoke';
-import { AssistantContentChunk } from './core/llm';
-import { Message, SystemMessage } from './core/message';
-import { Either } from './misc/Either';
+import { Message, SystemMessage } from './core/llm/message-types';
+import { AssistantContentChunk } from './core/llm/response-chunk-types';
+import { ask, AskFailure } from './core/user/ask';
+import { Either } from './utils/Either';
 
 export function chat(system: SystemMessage, config: InvokeConfig) {
   return _chat(

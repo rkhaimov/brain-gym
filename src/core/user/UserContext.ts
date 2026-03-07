@@ -1,7 +1,7 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { Either } from './misc/Either';
-import { Failure } from './misc/failure';
-import { isNil } from './misc/utils';
+import { Either } from '../../utils/Either';
+import { Failure } from '../../utils/Failure';
+import { isNil } from '../../utils/utils';
 
 type User = { user: { id: number; name: string } };
 

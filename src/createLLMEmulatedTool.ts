@@ -1,8 +1,8 @@
 import { invoke } from './core/invoke';
-import { LLM } from './core/llm';
-import { Tool } from './core/tool';
-import { createToolsFactory } from './createToolsFactory';
-import { Either } from './misc/Either';
+import { LLM } from './core/llm/types';
+import { Either } from './utils/Either';
+import { RStream } from './utils/RStream';
+import { Tool } from './core/tool/types';
 
 export function createLLMEmulatedTool(tool: Tool, llm: LLM): Tool {
   return {
@@ -17,10 +17,10 @@ export function createLLMEmulatedTool(tool: Tool, llm: LLM): Tool {
       Generate a realistic response that this tool would return given these arguments.
       Return ONLY the tool's output, no explanation or preamble. Introduce variation into your responses.`;
 
-      const result = await drain(
+      const [_, result] = await RStream.toPromise(
         invoke([{ role: 'user', content: prompt }], {
           llm,
-          tools: createToolsFactory([]),
+          tools: [],
         }),
       );
 
@@ -31,17 +31,8 @@ export function createLLMEmulatedTool(tool: Tool, llm: LLM): Tool {
       return Either.right({
         role: 'tool',
         name: tool.meta.function.name,
-        content: result.value.message.content,
+        content: result.value.content,
       });
     },
   };
-}
-
-async function drain<T>(stream: AsyncGenerator<unknown, T, void>): Promise<T> {
-  let iter = await stream.next();
-  while (!iter.done) {
-    iter = await stream.next();
-  }
-
-  return iter.value;
 }

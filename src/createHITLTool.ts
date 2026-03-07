@@ -1,6 +1,6 @@
-import { ask } from './ask';
-import { Tool } from './core/tool';
-import { Either } from './misc/Either';
+import { ask } from './core/user/ask';
+import { Either } from './utils/Either';
+import { Tool } from './core/tool/types';
 
 export function createHITLTool(tool: Tool): Tool {
   return {

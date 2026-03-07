@@ -1,4 +1,4 @@
-import { LLM } from './core/llm';
+import { LLM } from './types';
 
 export function loggable(llm: LLM, verbosity: 'low' | 'high'): LLM {
   return (body) => {
