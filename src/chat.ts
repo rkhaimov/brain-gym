@@ -1,19 +1,20 @@
 import { agent, AgentFailure } from './core/agent';
 import { InvokeConfig } from './core/invoke';
-import { Message, SystemMessage } from './core/llm/message-types';
+import { Message } from './core/llm/message-types';
 import { LLMResponseChunk } from './core/llm/response-chunk-types';
 import { ask, AskFailure } from './core/user/ask';
 import { Either } from './utils/Either';
 
-export function chat(system: SystemMessage, config: InvokeConfig) {
-  return _chat(
+export async function* chat(
+  { system, welcome }: { system: string; welcome: string },
+  config: InvokeConfig,
+) {
+  yield { choices: [{ delta: { content: welcome } }] };
+
+  return yield* _chat(
     [
-      system,
-      {
-        role: 'user',
-        content:
-          'Present yourself by describing your role and main capabilities.',
-      },
+      { role: 'system', content: system },
+      { role: 'assistant', content: welcome, tool_calls: [] },
     ],
     config,
   );
@@ -27,17 +28,17 @@ type Chat = (
 type ChatFailure = AgentFailure | AskFailure;
 
 const _chat: Chat = async function* (history, config) {
-  const messages = yield* agent(history, config);
-
-  if (Either.isLeft(messages)) {
-    return messages.value;
-  }
-
   const question = await ask();
 
   if (Either.isLeft(question)) {
     return question.value;
   }
 
-  return yield* _chat([...messages.value, question.value], config);
+  const messages = yield* agent([...history, question.value], config);
+
+  if (Either.isLeft(messages)) {
+    return messages.value;
+  }
+
+  return yield* _chat(messages.value, config);
 };

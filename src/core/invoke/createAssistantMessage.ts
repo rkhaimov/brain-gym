@@ -1,7 +1,7 @@
 import { Either } from '../../utils/Either';
 import { Failure } from '../../utils/Failure';
 import { isDefined, isNil } from '../../utils/utils';
-import { AssistantContent, AssistantMessage } from '../llm/message-types';
+import { AssistantMessage } from '../llm/message-types';
 import { LLMResponseChunk } from '../llm/response-chunk-types';
 import { ToolArguments, ToolCallID } from '../llm/tool-types';
 
@@ -19,7 +19,7 @@ export function createAssistantMessage(
 function createNullMessage(): AssistantMessage {
   return {
     role: 'assistant',
-    content: '' as AssistantContent,
+    content: '',
     tool_calls: [],
   };
 }
@@ -43,8 +43,7 @@ function concat(
       return message;
     }
 
-    message.value.content =
-      `${message.value.content}${choice.delta.content}` as AssistantContent;
+    message.value.content = `${message.value.content}${choice.delta.content}`;
 
     return message;
   }

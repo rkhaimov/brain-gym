@@ -1,4 +1,3 @@
-import { Brand } from '../../utils/utils';
 import { ToolCall, ToolMessage } from './tool-types';
 
 export type Message =
@@ -19,8 +18,6 @@ export type UserMessage = {
 
 export type AssistantMessage = {
   role: 'assistant';
-  content: AssistantContent;
+  content: string;
   tool_calls: ToolCall[];
 };
-
-export type AssistantContent = Brand<string, 'AssistantContent'>;

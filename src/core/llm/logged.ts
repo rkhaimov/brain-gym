@@ -1,6 +1,6 @@
 import { LLM } from './types';
 
-export function loggable(llm: LLM, verbosity: 'low' | 'high'): LLM {
+export function logged(llm: LLM, verbosity: 'low' | 'high'): LLM {
   return (body) => {
     console.log(
       'LLM called with',
