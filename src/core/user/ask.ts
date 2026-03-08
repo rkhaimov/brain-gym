@@ -1,7 +1,7 @@
 import { createInterface } from 'node:readline/promises';
-import { UserMessage } from '../message';
 import { Either } from '../../utils/Either';
 import { Failure } from '../../utils/Failure';
+import { UserMessage } from '../llm/message-types';
 
 export type AskFailure = Failure<'ReadLineFailure', void>;
 

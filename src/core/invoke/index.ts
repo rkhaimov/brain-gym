@@ -1,25 +1,22 @@
-import { AssistantMessage, Message } from '../llm/message-types';
-import {
-  AssistantContentChunk,
-  LLMResponseChunk,
-} from '../llm/response-chunk-types';
-import { LLM, LLMFailure } from '../llm/types';
-import { Tool } from '../tool/types';
 import { Either } from '../../utils/Either';
 import { RStream } from '../../utils/RStream';
+import { AssistantMessage, Message } from '../llm/message-types';
+import { LLMResponseChunk } from '../llm/response-chunk-types';
+import { LLM, LLMFailure } from '../llm/types';
+import { Tool } from '../tool/types';
 import {
-  AssistantParseFailure,
+  AssistantMessageFailure,
   createAssistantMessage,
 } from './createAssistantMessage';
 
 type Invoke = (history: Message[], config: InvokeConfig) => InvokeResult;
 
 type InvokeResult = RStream<
-  AssistantContentChunk,
+  LLMResponseChunk,
   Either<InvokeFailure, AssistantMessage>
 >;
 
-export type InvokeFailure = LLMFailure | AssistantParseFailure;
+export type InvokeFailure = LLMFailure | AssistantMessageFailure;
 
 export type InvokeConfig = { llm: LLM; tools: Tool[] };
 
@@ -41,10 +38,6 @@ export const invoke: Invoke = async function* (history, config) {
 
     chunks.push(iter.value);
 
-    const content = iter.value.choices[0]?.delta.content;
-
-    if (content) {
-      yield content;
-    }
+    yield iter.value;
   }
 };

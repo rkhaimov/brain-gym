@@ -1,23 +1,22 @@
-import { z } from 'zod';
+import { invoke } from './core/invoke';
 import { openai } from './core/llm/openai';
-import { structured } from './core/structured';
-import { Schema } from './utils/schema';
+import { render } from './render';
 
 async function main() {
-  const result = await structured(
+  const inference = invoke(
     [
       {
         role: 'user',
-        content: 'Parse following: My name is John and my ID is 10',
+        content: 'Hello!',
       },
     ],
     {
       llm: openai,
-      schema: Schema.create(z.object({ name: z.string(), id: z.number() })),
+      tools: [],
     },
   );
 
-  console.log(result.value);
+  return render(inference);
 }
 
 void main();

@@ -1,16 +1,16 @@
-import { invoke, InvokeConfig, InvokeFailure } from './invoke';
-import { Message } from './llm/message-types';
-import { AssistantContentChunk } from './llm/response-chunk-types';
-import { ToolCall, ToolMessage, ToolName } from './llm/tool-types';
-import { Tool, ToolFailure } from './tool/types';
 import { Either } from '../utils/Either';
 import { Failure } from '../utils/Failure';
 import { isNil } from '../utils/utils';
+import { invoke, InvokeConfig, InvokeFailure } from './invoke';
+import { Message } from './llm/message-types';
+import { LLMResponseChunk } from './llm/response-chunk-types';
+import { ToolCall, ToolMessage, ToolName } from './llm/tool-types';
+import { Tool, ToolFailure } from './tool/types';
 
 export type AgentFailure = InvokeFailure | RunFailure;
 
 type AgentResult = AsyncGenerator<
-  AssistantContentChunk,
+  LLMResponseChunk,
   Either<AgentFailure, Message[]>,
   void
 >;

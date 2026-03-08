@@ -5,9 +5,11 @@ export type LLMResponseChunk = { choices: LLMChoiceChunk[] };
 
 type LLMChoiceChunk = {
   delta: {
-    content?: AssistantContentChunk;
+    content?: LLMContentChunk;
+    reasoning?: LLMReasoningChunk;
     tool_calls?: ToolCallChunk[];
   };
 };
 
-export type AssistantContentChunk = Brand<string, 'AssistantContentChunk'>;
+export type LLMContentChunk = Brand<string, 'LLMContentChunk'>;
+export type LLMReasoningChunk = Brand<string, 'LLMReasoningChunk'>;

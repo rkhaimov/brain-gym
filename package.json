@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "deepagents": "^1.8.0",
+    "openai": "^6.27.0",
     "parse-sse": "^0.1.0",
     "prettier": "^3.8.1",
     "ts-node": "^10.9.2",
