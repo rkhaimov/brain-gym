@@ -1,4 +1,4 @@
-import { JSONSchema, JSONString } from '../../utils/schema';
+import { JSONSchema, JSONString } from '../../utils/Schema';
 import { Brand, ExtendsBrand } from '../../utils/utils';
 
 export type ToolMessage = {

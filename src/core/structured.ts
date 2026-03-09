@@ -1,20 +1,27 @@
+import { z } from 'zod';
 import { Either } from '../utils/Either';
-import { RStream } from '../utils/RStream';
-import { JSONString, Schema, SchemaParseFailure } from '../utils/schema';
+import { Stream } from '../utils/Stream';
+import { JSONString, Schema, SchemaParseFailure } from '../utils/Schema';
 import { Message } from './llm/message-types';
+import { LLMResponseChunk } from './llm/response-chunk-types';
 import { LLM, LLMFailure } from './llm/types';
 
-type Structured = <T>(
-  history: Message[],
+type Structured = <T extends z.ZodType>(
+  messages: Message[],
   config: {
     llm: LLM;
-    schema: Schema<T>;
+    schema: T;
   },
-) => Promise<Either<StructuredFailure, T>>;
+) => StructuredResult<T>;
 
-type StructuredFailure = LLMFailure | SchemaParseFailure;
+type StructuredResult<T extends z.ZodType> = Stream<
+  LLMResponseChunk,
+  Either<StructuredFailure, z.Infer<T>>
+>;
 
-export const structured: Structured = async (history, config) => {
+export type StructuredFailure = LLMFailure | SchemaParseFailure;
+
+export const structured: Structured = async function* (history, config) {
   const inference = config.llm({
     tools: [],
     messages: history,
@@ -28,7 +35,7 @@ export const structured: Structured = async (history, config) => {
     },
   });
 
-  const [chunks, result] = await RStream.toPromise(inference);
+  const [chunks, result] = yield* Stream.toFold(inference);
 
   if (Either.isLeft(result)) {
     return result;
@@ -38,5 +45,5 @@ export const structured: Structured = async (history, config) => {
     .map((it) => it.choices[0]?.delta.content)
     .join('') as JSONString;
 
-  return Schema.parse(config.schema, json);
+  return Schema.parseJSON(config.schema, json);
 };

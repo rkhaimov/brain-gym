@@ -35,6 +35,6 @@ export const openai: LLM = async function* (body) {
 
     return Either.right(undefined);
   } catch (error: unknown) {
-    return Either.left({ kind: 'LLMRequestFailure', body: error });
+    return Either.left({ kind: 'LLMFailure', body: error });
   }
 };

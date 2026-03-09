@@ -1,21 +1,8 @@
 import { LLM } from './types';
 
-export function logged(llm: LLM, verbosity: 'low' | 'high'): LLM {
+export function logged(llm: LLM): LLM {
   return (body) => {
-    console.log(
-      'LLM called with',
-      JSON.stringify(
-        {
-          ...body,
-          tools:
-            verbosity === 'low'
-              ? body.tools.map((it) => it.function.name)
-              : body.tools,
-        },
-        null,
-        2,
-      ),
-    );
+    console.log('\nLLM called with', JSON.stringify(body, null, 2));
 
     return llm(body);
   };

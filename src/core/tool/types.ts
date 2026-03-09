@@ -1,13 +1,17 @@
-import { ToolArguments, ToolMessage, ToolMeta } from '../llm/tool-types';
 import { Either } from '../../utils/Either';
 import { Failure } from '../../utils/Failure';
-import { SchemaParseFailure } from '../../utils/schema';
+import { Stream } from '../../utils/Stream';
+import { LLMResponseChunk } from '../llm/response-chunk-types';
+import { ToolArguments, ToolMessage, ToolMeta } from '../llm/tool-types';
 
 export type Tool = {
   meta: ToolMeta;
-  run(args: ToolArguments): Promise<Either<ToolFailure, ToolMessage>>;
+  run(args: ToolArguments): ToolResult;
 };
 
-export type ToolFailure =
-  | SchemaParseFailure
-  | Failure<'ToolCallFailure', unknown>;
+export type ToolResult = Stream<
+  LLMResponseChunk,
+  Either<ToolFailure, ToolMessage>
+>;
+
+export type ToolFailure = Failure<'ToolCallFailure', unknown>;

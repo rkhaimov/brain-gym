@@ -1,22 +1,36 @@
 import { LLMResponseChunk } from './core/llm/response-chunk-types';
-import { RStream } from './utils/RStream';
+import { ToolCall } from './core/llm/tool-types';
+import { Stream } from './utils/Stream';
 import { isDefined } from './utils/utils';
 
-export async function render(stream: RStream<LLMResponseChunk, unknown>) {
+export async function render(
+  stream: Stream<LLMResponseChunk | ToolCall, unknown>,
+) {
   let thinking = false;
 
   while (true) {
     const chunk = await stream.next();
 
     if (chunk.done) {
-      return console.log('\nDONE', chunk.value);
+      return console.log('\n\nDONE', chunk.value);
     }
 
-    const reasoning = chunk.value.choices[0]?.delta.reasoning;
+    if (isToolCall(chunk.value)) {
+      const call = chunk.value;
+
+      console.log(
+        `\n\nCalling tool ${call.function.name} with ${call.function.arguments}\n`,
+      );
+
+      continue;
+    }
+
+    const message = chunk.value;
+    const reasoning = message.choices[0]?.delta.reasoning;
 
     if (isDefined(reasoning)) {
       if (!thinking) {
-        console.log('### Reasoning START ###');
+        console.log('\n\n### Reasoning START ###\n');
 
         thinking = true;
       }
@@ -27,15 +41,19 @@ export async function render(stream: RStream<LLMResponseChunk, unknown>) {
     }
 
     if (thinking) {
-      console.log('### Reasoning END ###');
+      console.log('\n\n### Reasoning END ###\n');
 
       thinking = false;
     }
 
-    const content = chunk.value.choices[0]?.delta.content;
+    const content = message.choices[0]?.delta.content;
 
     if (isDefined(content)) {
       process.stdout.write(content);
     }
   }
+}
+
+function isToolCall(chunk: LLMResponseChunk | ToolCall): chunk is ToolCall {
+  return 'type' in chunk && chunk.type === 'function';
 }

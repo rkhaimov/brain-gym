@@ -1,5 +1,5 @@
 import { Either } from '../../utils/Either';
-import { RStream } from '../../utils/RStream';
+import { Stream } from '../../utils/Stream';
 import { AssistantMessage, Message } from '../llm/message-types';
 import { LLMResponseChunk } from '../llm/response-chunk-types';
 import { LLM, LLMFailure } from '../llm/types';
@@ -9,9 +9,9 @@ import {
   createAssistantMessage,
 } from './createAssistantMessage';
 
-type Invoke = (history: Message[], config: InvokeConfig) => InvokeResult;
+type Invoke = (messages: Message[], config: InvokeConfig) => InvokeResult;
 
-type InvokeResult = RStream<
+type InvokeResult = Stream<
   LLMResponseChunk,
   Either<InvokeFailure, AssistantMessage>
 >;
@@ -20,24 +20,17 @@ export type InvokeFailure = LLMFailure | AssistantMessageFailure;
 
 export type InvokeConfig = { llm: LLM; tools: Tool[] };
 
-export const invoke: Invoke = async function* (history, config) {
+export const invoke: Invoke = async function* (messages, config) {
   const inference = config.llm({
-    messages: history,
+    messages,
     tools: config.tools.map((it) => it.meta),
   });
 
-  const chunks: LLMResponseChunk[] = [];
-  while (true) {
-    const iter = await inference.next();
+  const [chunks, result] = yield* Stream.toFold(inference);
 
-    if (iter.done) {
-      return Either.isLeft(iter.value)
-        ? iter.value
-        : createAssistantMessage(chunks);
-    }
-
-    chunks.push(iter.value);
-
-    yield iter.value;
+  if (Either.isLeft(result)) {
+    return result;
   }
+
+  return createAssistantMessage(chunks);
 };

@@ -3,15 +3,17 @@ import { Either } from '../../utils/Either';
 import { Failure } from '../../utils/Failure';
 import { isNil } from '../../utils/utils';
 
-type User = { user: { id: number; name: string } };
+type User = { name: string; email: string };
 
 const context = new AsyncLocalStorage<User>();
 
-export function UserProvider<TR>(fn: () => TR): TR {
-  return context.run({ user: { id: 0, name: 'John Doe' } }, fn);
+export function UserProvider<TR>(user: User, fn: () => TR): TR {
+  return context.run(user, fn);
 }
 
-export function useUser(): Either<Failure<'ContextIsMissing', void>, User> {
+export type ContextFailure = Failure<'ContextIsMissing', void>;
+
+export function useUser(): Either<ContextFailure, User> {
   const user = context.getStore();
 
   if (isNil(user)) {

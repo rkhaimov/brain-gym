@@ -1,11 +1,10 @@
 import { createInterface } from 'node:readline/promises';
 import { Either } from '../../utils/Either';
 import { Failure } from '../../utils/Failure';
-import { UserMessage } from '../llm/message-types';
 
 export type AskFailure = Failure<'ReadLineFailure', void>;
 
-export const ask = async (): Promise<Either<AskFailure, UserMessage>> => {
+export const ask = async (): Promise<Either<AskFailure, string>> => {
   console.log('\n');
 
   const rl = createInterface({
@@ -14,10 +13,7 @@ export const ask = async (): Promise<Either<AskFailure, UserMessage>> => {
   });
 
   try {
-    return Either.right({
-      role: 'user',
-      content: await rl.question(''),
-    });
+    return Either.right(await rl.question(''));
   } catch (_) {
     return Either.left({ kind: 'ReadLineFailure', body: undefined });
   } finally {
