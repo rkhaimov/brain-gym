@@ -1,45 +1,50 @@
 import { z } from 'zod';
 import { Either } from '../../utils/Either';
 import { Schema } from '../../utils/Schema';
-import { Stream } from '../../utils/Stream';
-import { LLMResponseChunk } from '../llm/response-chunk-types';
-import { ToolName } from '../llm/tool-types';
-import { Tool, ToolResult } from './types';
+import {
+  ToolArguments,
+  ToolMessage,
+  ToolMeta,
+  ToolName,
+} from '../llm/types/tool-types';
 
-export function tool<T extends z.ZodType>(config: {
+type Tool<T> = {
+  meta: ToolMeta;
+  run(args: ToolArguments): ToolResult<T>;
+};
+
+type ToolResult<T> = Either<ToolMessage, T>;
+
+export function tool<TSchema extends z.ZodType, TReturn>(config: {
   name: string;
   description: string;
-  schema: T;
-  fn(arg: z.Infer<T>): Stream<LLMResponseChunk, string>;
-}): Tool {
+  schema: TSchema;
+  fn(arg: z.Infer<TSchema>): ToolResult<TReturn>;
+}): Tool<TReturn> {
   const name = config.name as ToolName;
 
-  return {
-    meta: {
-      function: {
-        name,
-        description: config.description,
-        parameters: Schema.toJSONSchema(config.schema),
-      },
+  const meta: ToolMeta = {
+    function: {
+      name,
+      description: config.description,
+      parameters: Schema.toJSONSchema(config.schema),
     },
-    run: async function* (args): ToolResult {
+  };
+
+  return {
+    meta,
+    run: (args) => {
       const parsed = Schema.parseJSON(config.schema, args);
 
-      if (Either.isLeft(parsed)) {
-        return Either.right({
-          role: 'tool',
-          name,
-          content: `Arguments parsing error, correct your mistakes ${parsed.value.body}`,
-        });
+      if (Either.isRight(parsed)) {
+        return config.fn(parsed.value);
       }
 
-      try {
-        const result = yield* config.fn(parsed.value);
-
-        return Either.right({ role: 'tool', name, content: result });
-      } catch (error: unknown) {
-        return Either.left({ kind: 'ToolCallFailure', body: error });
-      }
+      return Either.left({
+        role: 'tool',
+        name,
+        content: `Arguments parsing error, correct your mistakes ${parsed.value.body}`,
+      });
     },
   };
 }

@@ -1,18 +1,14 @@
 import { Either } from '../../utils/Either';
 import { Failure } from '../../utils/Failure';
 import { isDefined, isNil } from '../../utils/utils';
-import { AssistantMessage } from '../llm/message-types';
-import { LLMResponseChunk } from '../llm/response-chunk-types';
-import { ToolArguments, ToolCallID } from '../llm/tool-types';
+import { AssistantMessage } from './types/message-types';
+import { LLMResponseChunk } from './types/response-chunk-types';
+import { ToolArguments, ToolCallID } from './types/tool-types';
+import { LLMFailure } from './types/types';
 
-export type AssistantMessageFailure = Failure<
-  'AssistantMessageFailure',
-  string
->;
-
-export function createAssistantMessage(
+export function toMessage(
   chunks: LLMResponseChunk[],
-): Either<AssistantMessageFailure, AssistantMessage> {
+): Either<LLMFailure, AssistantMessage> {
   return chunks.reduce(concat, Either.right(createNullMessage()));
 }
 
@@ -25,9 +21,9 @@ function createNullMessage(): AssistantMessage {
 }
 
 function concat(
-  message: Either<AssistantMessageFailure, AssistantMessage>,
+  message: Either<LLMFailure, AssistantMessage>,
   chunk: LLMResponseChunk,
-): Either<AssistantMessageFailure, AssistantMessage> {
+): Either<LLMFailure, AssistantMessage> {
   const [choice] = chunk.choices;
 
   if (isNil(choice)) {
@@ -75,7 +71,7 @@ function concat(
 
   if (isNil(call.function.arguments)) {
     return Either.left({
-      kind: 'AssistantMessageFailure',
+      kind: 'LLMBadResponse',
       body: 'Tool arguments are empty',
     });
   }
@@ -88,7 +84,7 @@ function concat(
 
   if (isNil(tool)) {
     return Either.left({
-      kind: 'AssistantMessageFailure',
+      kind: 'LLMBadResponse',
       body: 'Tool was not found by index',
     });
   }

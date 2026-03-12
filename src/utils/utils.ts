@@ -35,6 +35,10 @@ export function isDefined<T>(input: T): input is Exclude<T, undefined | null> {
   return !isNil(input);
 }
 
+export function throws(): never {
+  throw new Error('Must not be called');
+}
+
 export type Brand<TType, TProperty extends string> = TType & {
   [Key in `__${TProperty}`]: TProperty;
 };

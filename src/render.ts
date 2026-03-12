@@ -1,11 +1,8 @@
-import { LLMResponseChunk } from './core/llm/response-chunk-types';
-import { ToolCall } from './core/llm/tool-types';
+import { LLMResponseChunk } from './core/llm/types/response-chunk-types';
 import { Stream } from './utils/Stream';
 import { isDefined } from './utils/utils';
 
-export async function render(
-  stream: Stream<LLMResponseChunk | ToolCall, unknown>,
-) {
+export async function render(stream: Stream<LLMResponseChunk, unknown>) {
   let thinking = false;
 
   while (true) {
@@ -13,16 +10,6 @@ export async function render(
 
     if (chunk.done) {
       return console.log('\n\nDONE', chunk.value);
-    }
-
-    if (isToolCall(chunk.value)) {
-      const call = chunk.value;
-
-      console.log(
-        `\n\nCalling tool ${call.function.name} with ${call.function.arguments}\n`,
-      );
-
-      continue;
     }
 
     const message = chunk.value;
@@ -52,8 +39,4 @@ export async function render(
       process.stdout.write(content);
     }
   }
-}
-
-function isToolCall(chunk: LLMResponseChunk | ToolCall): chunk is ToolCall {
-  return 'type' in chunk && chunk.type === 'function';
 }

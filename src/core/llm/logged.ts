@@ -1,9 +1,13 @@
-import { LLM } from './types';
+import { LLM } from './types/types';
 
 export function logged(llm: LLM): LLM {
-  return (body) => {
+  return async function* (body) {
     console.log('\nLLM called with', JSON.stringify(body, null, 2));
 
-    return llm(body);
+    const result = yield* llm(body);
+
+    console.log('\nLLM responded with', JSON.stringify(result, null, 2));
+
+    return result;
   };
 }

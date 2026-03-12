@@ -1,5 +1,5 @@
-import { JSONSchema, JSONString } from '../../utils/Schema';
-import { Brand, ExtendsBrand } from '../../utils/utils';
+import { JSONSchema, JSONString } from '../../../utils/Schema';
+import { Brand, ExtendsBrand } from '../../../utils/utils';
 
 export type ToolMessage = {
   role: 'tool';
