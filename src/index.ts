@@ -1,54 +1,50 @@
-import { classify, Source } from './classify';
-import { LLMFailure } from './core/llm/types/types';
-import { createGithubExpert } from './createGithubExpert';
-import { createSlackExpert } from './createSlackExpert';
-import { Result, synthesize } from './synthesize';
+import { logged } from './core/llm/logged';
+import { openai } from './core/llm/openai';
+import { LLMState } from './core/LLMState';
+import { Tool } from './core/tool';
+import { render } from './render';
+import { Skills } from './Skills';
 import { Either } from './utils/Either';
-import { Task } from './utils/Task';
 
-// https://docs.langchain.com/oss/javascript/langchain/multi-agent/router-knowledge-base
+// https://docs.langchain.com/oss/javascript/deepagents/data-analysis
 async function main() {
-  return console.log(await run('How to rebase on a branch'));
-}
-
-async function run(question: string) {
-  const classified = await classify(question);
-
-  if (Either.isLeft(classified)) {
-    return classified;
-  }
-
-  const { classifications } = classified.value;
-
-  const results = await Task.all(
-    classifications.map(async ({ source, query }): Task<LLMFailure, Result> => {
-      const result = await EXPERTS[source](query);
-
-      if (Either.isLeft(result)) {
-        return result;
-      }
-
-      return Either.right({ source, message: result.value });
-    }),
+  return render(
+    run(
+      'Write a SQL query to find all customers who made orders over $1000 in the last month',
+    ),
   );
-
-  if (Either.isLeft(results)) {
-    return results;
-  }
-
-  const synthesis = await synthesize(question, results.value);
-
-  if (Either.isLeft(synthesis)) {
-    return synthesis;
-  }
-
-  console.log(`\n\n### FINAL ANSWER ###`);
-  console.log(synthesis.value.content);
 }
 
-const EXPERTS = {
-  github: createGithubExpert,
-  slack: createSlackExpert,
-} satisfies Record<Source, unknown>;
+async function* run(question: string) {
+  let state = LLMState.create(
+    `
+  You are a SQL query assistant that helps users write queries against business databases.
+  
+  ${Skills.system}
+  `,
+  ).advance({
+    role: 'user',
+    content: question,
+  });
+
+  while (true) {
+    const inference = yield* logged(openai)({
+      messages: state.toHistory(),
+      tools: [Skills.tool.meta],
+    });
+
+    if (Either.isLeft(inference)) {
+      return inference;
+    }
+
+    if (inference.value.tool_calls.length === 0) {
+      return;
+    }
+
+    const ran = await Tool.all(inference.value, [Skills.tool]);
+
+    state = state.advance(inference.value, ...ran);
+  }
+}
 
 void main();

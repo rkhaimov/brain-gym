@@ -1,16 +1,15 @@
-import { ToolCall } from './core/llm/types/tool-types';
-import { ActorMessage } from './core/LLMState';
-import { Tool } from './core/tool';
-import { Either } from './utils/Either';
-import { isNil } from './utils/utils';
+import { Either } from '../../utils/Either';
+import { isNil } from '../../utils/utils';
+import { AssistantMessage } from '../llm/types/message-types';
+import { ToolCall } from '../llm/types/tool-types';
+import { ActorMessage } from '../LLMState';
+import { Tool } from './types';
 
-type AsyncMessageTool = Tool<Promise<ActorMessage>>;
-
-export async function run(
-  calls: ToolCall[],
-  tools: AsyncMessageTool[],
+export async function all(
+  message: AssistantMessage,
+  tools: MessageTool[],
 ): Promise<ActorMessage[]> {
-  const resolved = resolve(calls, tools);
+  const resolved = resolve(message.tool_calls, tools);
 
   if (Either.isLeft(resolved)) {
     return [
@@ -31,8 +30,8 @@ export async function run(
 
 function resolve(
   calls: ToolCall[],
-  tools: AsyncMessageTool[],
-): Either<ToolCall[], [ToolCall, AsyncMessageTool][]> {
+  tools: MessageTool[],
+): Either<ToolCall[], [ToolCall, MessageTool][]> {
   const [call, ...others] = calls;
 
   if (isNil(call)) {
@@ -53,3 +52,7 @@ function resolve(
 
   return Either.right([[call, tool], ...rest.value]);
 }
+
+type MessageTool = Tool<Awaitable<ActorMessage>>;
+
+type Awaitable<T> = Promise<T> | T;

@@ -1,9 +1,9 @@
-import { ToolMessage } from './core/llm/types/tool-types';
-import { LLM } from './core/llm/types/types';
-import { LLMState } from './core/LLMState';
-import { ToolFn } from './core/tool';
-import { Either } from './utils/Either';
-import { Stream } from './utils/Stream';
+import { ToolMessage } from '../core/llm/types/tool-types';
+import { LLM } from '../core/llm/types/types';
+import { LLMState } from '../core/LLMState';
+import { ToolFn } from '../core/tool';
+import { Either } from '../utils/Either';
+import { Stream } from '../utils/Stream';
 
 export function emulated(llm: LLM): ToolFn<unknown, Promise<ToolMessage>> {
   return async (args, context) => {
