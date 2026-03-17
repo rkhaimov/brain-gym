@@ -8,18 +8,26 @@ import {
   ToolName,
 } from '../llm/types/tool-types';
 
-type Tool<T> = {
+export type Tool<TReturn> = {
   meta: ToolMeta;
-  run(args: ToolArguments): ToolResult<T>;
+  run(args: ToolArguments): TReturn;
 };
 
-type ToolResult<T> = Either<ToolMessage, T>;
+export type ToolFn<TArgs, TReturn> = (
+  args: Either<ToolMessage, TArgs>,
+  context: ToolContext,
+) => TReturn;
+
+type ToolContext = {
+  args: ToolArguments;
+  meta: ToolMeta;
+};
 
 export function tool<TSchema extends z.ZodType, TReturn>(config: {
   name: string;
   description: string;
   schema: TSchema;
-  fn(arg: z.Infer<TSchema>): ToolResult<TReturn>;
+  fn: ToolFn<z.Infer<TSchema>, TReturn>;
 }): Tool<TReturn> {
   const name = config.name as ToolName;
 
@@ -34,17 +42,21 @@ export function tool<TSchema extends z.ZodType, TReturn>(config: {
   return {
     meta,
     run: (args) => {
+      const context: ToolContext = { meta, args };
       const parsed = Schema.parseJSON(config.schema, args);
 
       if (Either.isRight(parsed)) {
-        return config.fn(parsed.value);
+        return config.fn(parsed, context);
       }
 
-      return Either.left({
-        role: 'tool',
-        name,
-        content: `Arguments parsing error, correct your mistakes ${parsed.value.body}`,
-      });
+      return config.fn(
+        Either.left({
+          role: 'tool',
+          name,
+          content: `Arguments parsing error, correct your mistakes ${parsed.value.body}`,
+        }),
+        context,
+      );
     },
   };
 }
