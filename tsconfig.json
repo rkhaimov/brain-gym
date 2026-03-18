@@ -8,6 +8,11 @@
     "noUncheckedIndexedAccess": true,
     "skipLibCheck": true,
     "moduleResolution": "Node",
+    "baseUrl": ".",
+    "paths": {
+      "@lib/*": ["./lib/*"],
+      "@utils/*": ["./utils/*"]
+    },
     "lib": ["ESNext"]
   }
 }

@@ -1,0 +1,344 @@
+{
+  "requirements": {
+    "title": "Double a Number",
+    "description": "A CLI tool that takes a single number as a positional argument and outputs its double.",
+    "preconditions": {
+      "api": {
+        "command": "double",
+        "args": [
+          {
+            "type": "positional",
+            "placeholder": "number"
+          }
+        ]
+      },
+      "conditions": []
+    },
+    "postconditions": [
+      "The output is the input number multiplied by 2."
+    ],
+    "mainFlow": [
+      {
+        "actor": "user",
+        "action": "Run the command `double <number>` with a valid number as input."
+      },
+      {
+        "actor": "system",
+        "action": "Parse the input as a number."
+      },
+      {
+        "actor": "system",
+        "action": "Multiply the number by 2."
+      },
+      {
+        "actor": "system",
+        "action": "Output the result to stdout."
+      }
+    ],
+    "alternativeFlow": [
+      {
+        "title": "Extra arguments provided",
+        "steps": [
+          {
+            "actor": "user",
+            "action": "Run the command `double <number> <extra>` with additional arguments."
+          },
+          {
+            "actor": "system",
+            "action": "Detect extra arguments beyond the required positional argument."
+          },
+          {
+            "actor": "system",
+            "action": "Output the error message: 'Error: Too many arguments. Usage: double <number>\\\\n'"
+          },
+          {
+            "actor": "system",
+            "action": "Exit with status code 1."
+          }
+        ]
+      }
+    ],
+    "exceptionFlows": [
+      {
+        "title": "No input provided",
+        "steps": [
+          {
+            "actor": "user",
+            "action": "Run the command `double` without any arguments."
+          },
+          {
+            "actor": "system",
+            "action": "Detect missing required positional argument."
+          },
+          {
+            "actor": "system",
+            "action": "Output the error message: 'Error: Please provide a valid number.\\\\n'"
+          },
+          {
+            "actor": "system",
+            "action": "Exit with status code 1."
+          }
+        ]
+      },
+      {
+        "title": "Invalid number provided",
+        "steps": [
+          {
+            "actor": "user",
+            "action": "Run the command `double <non-numeric>` with a non-numeric value."
+          },
+          {
+            "actor": "system",
+            "action": "Fail to parse the input as a number."
+          },
+          {
+            "actor": "system",
+            "action": "Output the error message: 'Error: Please provide a valid number.\\\\n'"
+          },
+          {
+            "actor": "system",
+            "action": "Exit with status code 1."
+          }
+        ]
+      }
+    ]
+  },
+  "tests": {
+    "description": "Tests the double CLI tool that takes a single number as a positional argument and outputs its double.",
+    "suits": [
+      {
+        "description": "Outputs the double of a valid number when provided",
+        "args": [
+          "42"
+        ],
+        "steps": [
+          {
+            "type": "output",
+            "target": "stdout",
+            "output": "84\\n"
+          }
+        ],
+        "exit": 0
+      },
+      {
+        "description": "Outputs the double of a valid non-integer number when provided",
+        "args": [
+          "3.14"
+        ],
+        "steps": [
+          {
+            "type": "output",
+            "target": "stdout",
+            "output": "6.28\\n"
+          }
+        ],
+        "exit": 0
+      },
+      {
+        "description": "Reports error when extra arguments are provided",
+        "args": [
+          "5",
+          "extra"
+        ],
+        "steps": [
+          {
+            "type": "output",
+            "target": "stderr",
+            "output": "Error: Too many arguments. Usage: double <number>\\n"
+          }
+        ],
+        "exit": 1
+      },
+      {
+        "description": "Reports error when no input is provided",
+        "args": [],
+        "steps": [
+          {
+            "type": "output",
+            "target": "stderr",
+            "output": "Error: Please provide a valid number.\\n"
+          }
+        ],
+        "exit": 1
+      },
+      {
+        "description": "Reports error when invalid number is provided",
+        "args": [
+          "abc"
+        ],
+        "steps": [
+          {
+            "type": "output",
+            "target": "stderr",
+            "output": "Error: Please provide a valid number.\\n"
+          }
+        ],
+        "exit": 1
+      }
+    ]
+  },
+  "fixed": [
+    {
+      "title": "Missing main flow coverage for non-integer numbers",
+      "where": [
+        "tests",
+        "suits",
+        0
+      ],
+      "problem": "The test for valid input only covers integer values (e.g., 42). The main flow does not verify behavior with non-integer numbers (e.g., 3.14), which is part of the requirement since 'number' is not restricted to integers. This creates a gap in coverage for valid floating-point inputs."
+    },
+    {
+      "title": "Insufficient coverage for non-integer main flow",
+      "where": [
+        "tests",
+        "suits",
+        1
+      ],
+      "problem": "The test for non-integer input (3.14) is present, but it is not properly linked to the main flow. The test suite 'Outputs the double of a valid non-integer number when provided' is correctly implemented but is not marked as part of the main flow in the requirements. This creates ambiguity: is this behavior considered part of the main flow or an alternative/exception? The requirement states that the input is a 'number' without restriction, so floating-point values must be treated as valid main flow inputs. However, the test suite is not explicitly tied to the main flow, leading to implementation ambiguity."
+    },
+    {
+      "title": "Missing main flow coverage for non-integer numbers",
+      "where": [
+        "tests",
+        "suits",
+        0
+      ],
+      "problem": "The test for valid input only covers integer values (e.g., 42). The main flow does not verify behavior with non-integer numbers (e.g., 3.14), which is part of the requirement since 'number' is not restricted to integers. This creates a gap in coverage for valid floating-point inputs."
+    },
+    {
+      "title": "Insufficient coverage for non-integer main flow",
+      "where": [
+        "tests",
+        "suits",
+        1
+      ],
+      "problem": "The test for non-integer input (3.14) is present, but it is not properly linked to the main flow. The test suite 'Outputs the double of a valid non-integer number when provided' is correctly implemented but is not marked as part of the main flow in the requirements. This creates ambiguity: is this behavior considered part of the main flow or an alternative/exception? The requirement states that the input is a 'number' without restriction, so floating-point values must be treated as valid main flow inputs. However, the test suite is not explicitly tied to the main flow, leading to implementation ambiguity."
+    },
+    {
+      "title": "Missing main flow coverage for non-integer numbers",
+      "where": [
+        "tests",
+        "suits",
+        0
+      ],
+      "problem": "The test for valid input only covers integer values (e.g., 42). The main flow does not verify behavior with non-integer numbers (e.g., 3.14), which is part of the requirement since 'number' is not restricted to integers. This creates a gap in coverage for valid floating-point inputs."
+    },
+    {
+      "title": "Insufficient coverage for non-integer main flow",
+      "where": [
+        "tests",
+        "suits",
+        1
+      ],
+      "problem": "The test for non-integer input (3.14) is present, but it is not properly linked to the main flow. The test suite 'Outputs the double of a valid non-integer number when provided' is correctly implemented but is not marked as part of the main flow in the requirements. This creates ambiguity: is this behavior considered part of the main flow or an alternative/exception? The requirement states that the input is a 'number' without restriction, so floating-point values must be treated as valid main flow inputs. However, the test suite is not explicitly tied to the main flow, leading to implementation ambiguity."
+    },
+    {
+      "title": "Missing main flow coverage for non-integer numbers",
+      "where": [
+        "tests",
+        "suits",
+        0
+      ],
+      "problem": "The test for valid input only covers integer values (e.g., 42). The main flow does not verify behavior with non-integer numbers (e.g., 3.14), which is part of the requirement since 'number' is not restricted to integers. This creates a gap in coverage for valid floating-point inputs."
+    },
+    {
+      "title": "Insufficient coverage for non-integer main flow",
+      "where": [
+        "tests",
+        "suits",
+        1
+      ],
+      "problem": "The test for non-integer input (3.14) is present, but it is not properly linked to the main flow. The test suite 'Outputs the double of a valid non-integer number when provided' is correctly implemented but is not marked as part of the main flow in the requirements. This creates ambiguity: is this behavior considered part of the main flow or an alternative/exception? The requirement states that the input is a 'number' without restriction, so floating-point values must be treated as valid main flow inputs. However, the test suite is not explicitly tied to the main flow, leading to implementation ambiguity."
+    },
+    {
+      "title": "Missing main flow coverage for non-integer numbers",
+      "where": [
+        "tests",
+        "suits",
+        0
+      ],
+      "problem": "The test for valid input only covers integer values (e.g., 42). The main flow does not verify behavior with non-integer numbers (e.g., 3.14), which is part of the requirement since 'number' is not restricted to integers. This creates a gap in coverage for valid floating-point inputs."
+    },
+    {
+      "title": "Insufficient coverage for non-integer main flow",
+      "where": [
+        "tests",
+        "suits",
+        1
+      ],
+      "problem": "The test for non-integer input (3.14) is present, but it is not properly linked to the main flow. The test suite 'Outputs the double of a valid non-integer number when provided' is correctly implemented but is not marked as part of the main flow in the requirements. This creates ambiguity: is this behavior considered part of the main flow or an alternative/exception? The requirement states that the input is a 'number' without restriction, so floating-point values must be treated as valid main flow inputs. However, the test suite is not explicitly tied to the main flow, leading to implementation ambiguity."
+    },
+    {
+      "title": "Missing main flow coverage for non-integer numbers",
+      "where": [
+        "tests",
+        "suits",
+        0
+      ],
+      "problem": "The test for valid input only covers integer values (e.g., 42). The main flow does not verify behavior with non-integer numbers (e.g., 3.14), which is part of the requirement since 'number' is not restricted to integers. This creates a gap in coverage for valid floating-point inputs."
+    },
+    {
+      "title": "Insufficient coverage for non-integer main flow",
+      "where": [
+        "tests",
+        "suits",
+        1
+      ],
+      "problem": "The test for non-integer input (3.14) is present, but it is not properly linked to the main flow. The test suite 'Outputs the double of a valid non-integer number when provided' is correctly implemented but is not marked as part of the main flow in the requirements. This creates ambiguity: is this behavior considered part of the main flow or an alternative/exception? The requirement states that the input is a 'number' without restriction, so floating-point values must be treated as valid main flow inputs. However, the test suite is not explicitly tied to the main flow, leading to implementation ambiguity."
+    },
+    {
+      "title": "Missing main flow coverage for non-integer numbers",
+      "where": [
+        "tests",
+        "suits",
+        0
+      ],
+      "problem": "The test for valid input only covers integer values (e.g., 42). The main flow does not verify behavior with non-integer numbers (e.g., 3.14), which is part of the requirement since 'number' is not restricted to integers. This creates a gap in coverage for valid floating-point inputs."
+    },
+    {
+      "title": "Insufficient coverage for non-integer main flow",
+      "where": [
+        "tests",
+        "suits",
+        1
+      ],
+      "problem": "The test for non-integer input (3.14) is present, but it is not properly linked to the main flow. The test suite 'Outputs the double of a valid non-integer number when provided' is correctly implemented but is not marked as part of the main flow in the requirements. This creates ambiguity: is this behavior considered part of the main flow or an alternative/exception? The requirement states that the input is a 'number' without restriction, so floating-point values must be treated as valid main flow inputs. However, the test suite is not explicitly tied to the main flow, leading to implementation ambiguity."
+    },
+    {
+      "title": "Missing main flow coverage for non-integer numbers",
+      "where": [
+        "tests",
+        "suits",
+        0
+      ],
+      "problem": "The test for valid input only covers integer values (e.g., 42). The main flow does not verify behavior with non-integer numbers (e.g., 3.14), which is part of the requirement since 'number' is not restricted to integers. This creates a gap in coverage for valid floating-point inputs."
+    },
+    {
+      "title": "Insufficient coverage for non-integer main flow",
+      "where": [
+        "tests",
+        "suits",
+        1
+      ],
+      "problem": "The test for non-integer input (3.14) is present, but it is not properly linked to the main flow. The test suite 'Outputs the double of a valid non-integer number when provided' is correctly implemented but is not marked as part of the main flow in the requirements. This creates ambiguity: is this behavior considered part of the main flow or an alternative/exception? The requirement states that the input is a 'number' without restriction, so floating-point values must be treated as valid main flow inputs. However, the test suite is not explicitly tied to the main flow, leading to implementation ambiguity."
+    },
+    {
+      "title": "Missing main flow coverage for non-integer numbers",
+      "where": [
+        "tests",
+        "suits",
+        0
+      ],
+      "problem": "The test for valid input only covers integer values (e.g., 42). The main flow does not verify behavior with non-integer numbers (e.g., 3.14), which is part of the requirement since 'number' is not restricted to integers. This creates a gap in coverage for valid floating-point inputs."
+    },
+    {
+      "title": "Insufficient coverage for non-integer main flow",
+      "where": [
+        "tests",
+        "suits",
+        1
+      ],
+      "problem": "The test for non-integer input (3.14) is present, but it is not properly linked to the main flow. The test suite 'Outputs the double of a valid non-integer number when provided' is correctly implemented but is not marked as part of the main flow in the requirements. This creates ambiguity: is this behavior considered part of the main flow or an alternative/exception? The requirement states that the input is a 'number' without restriction, so floating-point values must be treated as valid main flow inputs. However, the test suite is not explicitly tied to the main flow, leading to implementation ambiguity."
+    }
+  ]
+}

@@ -1,50 +1,42 @@
-import { logged } from './core/llm/logged';
-import { openai } from './core/llm/openai';
-import { LLMState } from './core/LLMState';
-import { Tool } from './core/tool';
-import { render } from './render';
-import { Skills } from './Skills';
-import { Either } from './utils/Either';
+import { LLMResponseChunk } from '@lib/llm/types/response-chunk-types';
+import { render } from '@lib/render';
+import { Either } from '@utils/Either';
+import { Stream } from '@utils/Stream';
+import { createImplementation } from './implementor/create-implementation';
+import { createRequirements } from './requirements-creator/create-requirements';
+import { createTests } from './test-writer/create-tests';
 
-// https://docs.langchain.com/oss/javascript/deepagents/data-analysis
 async function main() {
-  return render(
-    run(
-      'Write a SQL query to find all customers who made orders over $1000 in the last month',
-    ),
-  );
+  return render(run('I want to build a function that doubles a number'));
 }
 
-async function* run(question: string) {
-  let state = LLMState.create(
-    `
-  You are a SQL query assistant that helps users write queries against business databases.
-  
-  ${Skills.system}
-  `,
-  ).advance({
-    role: 'user',
-    content: question,
-  });
+async function* run(query: string): Stream<LLMResponseChunk, unknown> {
+  const requirements = yield* createRequirements(query);
 
-  while (true) {
-    const inference = yield* logged(openai)({
-      messages: state.toHistory(),
-      tools: [Skills.tool.meta],
-    });
-
-    if (Either.isLeft(inference)) {
-      return inference;
-    }
-
-    if (inference.value.tool_calls.length === 0) {
-      return;
-    }
-
-    const ran = await Tool.all(inference.value, [Skills.tool]);
-
-    state = state.advance(inference.value, ...ran);
+  if (Either.isLeft(requirements)) {
+    return requirements;
   }
+
+  const tests = yield* createTests(requirements.value);
+
+  if (Either.isLeft(tests)) {
+    return tests;
+  }
+
+  const implementation = yield* createImplementation(
+    requirements.value,
+    tests.value,
+  );
+
+  return JSON.stringify(
+    {
+      requirements: requirements.value,
+      tests: tests.value,
+      implementation: implementation.value,
+    },
+    null,
+    2,
+  );
 }
 
 void main();

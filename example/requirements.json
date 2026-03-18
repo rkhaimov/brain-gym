@@ -1,0 +1,119 @@
+{
+  "title": "Number Doubling CLI",
+  "description": "A command-line tool that reads a single numeric value from a positional argument, doubles it, and outputs the result. It accepts both integer and floating‑point input. On success, the doubled number is printed without a trailing newline and the program exits with code 0. On error (missing or invalid input, or too many positional arguments), a short custom error message is printed to standard error and the program exits with code 1.",
+  "preconditions": {
+    "api": {
+      "command": "double",
+      "args": [
+        {
+          "type": "positional",
+          "placeholder": "number"
+        }
+      ]
+    },
+    "conditions": [
+      "The user has invoked the command with at least one positional argument."
+    ]
+  },
+  "postconditions": [
+    "If the input is valid, the program writes the doubled number to stdout with no newline and exits with code 0. If an error occurs, it writes an error message to stderr and exits with code 1."
+  ],
+  "mainFlow": [
+    {
+      "actor": "user",
+      "action": "Invokes the CLI with one positional argument, e.g. \"double 3.5\"."
+    },
+    {
+      "actor": "system",
+      "action": "Parses the positional argument as a decimal number."
+    },
+    {
+      "actor": "system",
+      "action": "Multiplies the parsed number by 2."
+    },
+    {
+      "actor": "system",
+      "action": "Writes the resulting number to standard output without appending a newline."
+    },
+    {
+      "actor": "system",
+      "action": "Exits with exit code 0."
+    }
+  ],
+  "alternativeFlow": [
+    {
+      "title": "No newline termination",
+      "steps": [
+        {
+          "actor": "system",
+          "action": "Ensures that the output contains no trailing newline."
+        }
+      ]
+    }
+  ],
+  "exceptionFlows": [
+    {
+      "title": "Missing argument",
+      "steps": [
+        {
+          "actor": "user",
+          "action": "Invokes the CLI with no positional arguments, e.g. \"double\"."
+        },
+        {
+          "actor": "system",
+          "action": "Detects that the required positional argument is missing."
+        },
+        {
+          "actor": "system",
+          "action": "Writes \"Error: missing argument\" to standard error."
+        },
+        {
+          "actor": "system",
+          "action": "Exits with exit code 1."
+        }
+      ]
+    },
+    {
+      "title": "Too many arguments",
+      "steps": [
+        {
+          "actor": "user",
+          "action": "Invokes the CLI with more than one positional argument, e.g. \"double 3 4\"."
+        },
+        {
+          "actor": "system",
+          "action": "Detects that there are more than one positional arguments."
+        },
+        {
+          "actor": "system",
+          "action": "Writes \"Error: too many arguments\" to standard error."
+        },
+        {
+          "actor": "system",
+          "action": "Exits with exit code 1."
+        }
+      ]
+    },
+    {
+      "title": "Invalid number",
+      "steps": [
+        {
+          "actor": "user",
+          "action": "Invokes the CLI with a non‑numeric positional argument, e.g. \"double abc\"."
+        },
+        {
+          "actor": "system",
+          "action": "Attempts to parse the argument as a number and fails."
+        },
+        {
+          "actor": "system",
+          "action": "Writes \"Error: invalid number\" to standard error."
+        },
+        {
+          "actor": "system",
+          "action": "Exits with exit code 1."
+        }
+      ]
+    }
+  ]
+}

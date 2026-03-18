@@ -1,0 +1,74 @@
+{
+  "description": "Double a number, validate correct output or error handling",
+  "suits": [
+    {
+      "description": "Prints doubled integer",
+      "args": [
+        "4"
+      ],
+      "steps": [
+        {
+          "type": "output",
+          "target": "stdout",
+          "output": "8"
+        }
+      ],
+      "exit": 0
+    },
+    {
+      "description": "Prints doubled floating point",
+      "args": [
+        "3.5"
+      ],
+      "steps": [
+        {
+          "type": "output",
+          "target": "stdout",
+          "output": "7"
+        }
+      ],
+      "exit": 0
+    },
+    {
+      "description": "Fails when argument is missing",
+      "args": [],
+      "steps": [
+        {
+          "type": "output",
+          "target": "stderr",
+          "output": "Error: missing argument"
+        }
+      ],
+      "exit": 1
+    },
+    {
+      "description": "Fails when too many arguments are supplied",
+      "args": [
+        "3",
+        "4"
+      ],
+      "steps": [
+        {
+          "type": "output",
+          "target": "stderr",
+          "output": "Error: too many arguments"
+        }
+      ],
+      "exit": 1
+    },
+    {
+      "description": "Fails when argument is not a number",
+      "args": [
+        "abc"
+      ],
+      "steps": [
+        {
+          "type": "output",
+          "target": "stderr",
+          "output": "Error: invalid number"
+        }
+      ],
+      "exit": 1
+    }
+  ]
+}
