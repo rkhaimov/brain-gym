@@ -1,0 +1,1374 @@
+[
+  {
+    "doc": "docs\\installation.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "Быстрый старт"
+      },
+      {
+        "level": 2,
+        "title": "Установка и сборка"
+      },
+      {
+        "level": 2,
+        "title": "Интеграция в проект"
+      },
+      {
+        "level": 2,
+        "title": "Описание превью"
+      },
+      {
+        "level": 2,
+        "title": "Описание менеджера"
+      },
+      {
+        "level": 2,
+        "title": "Примеры"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\ui\\index.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "UI режим"
+      },
+      {
+        "level": 2,
+        "title": "Навигатор"
+      },
+      {
+        "level": 2,
+        "title": "Превью"
+      },
+      {
+        "level": 2,
+        "title": "Запуск"
+      },
+      {
+        "level": 2,
+        "title": "Журнал"
+      },
+      {
+        "level": 2,
+        "title": "Снимки"
+      },
+      {
+        "level": 2,
+        "title": "Массовые действия"
+      },
+      {
+        "level": 2,
+        "title": "Изменение журнала"
+      },
+      {
+        "level": 2,
+        "title": "Изменение снимков"
+      },
+      {
+        "level": 2,
+        "title": "Ошибки"
+      },
+      {
+        "level": 2,
+        "title": "Локатор"
+      },
+      {
+        "level": 2,
+        "title": "Выбор устройства"
+      },
+      {
+        "level": 2,
+        "title": "Полный запуск"
+      },
+      {
+        "level": 2,
+        "title": "Эмуляция"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\specification\\index.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "Спецификация"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\specification\\main-problems.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "Проблемы"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\specification\\main-role.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "Задача"
+      },
+      {
+        "level": 2,
+        "title": "Сложность"
+      },
+      {
+        "level": 2,
+        "title": "Рефакторинг"
+      },
+      {
+        "level": 2,
+        "title": "Тесты"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\specification\\metrics.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "Метрики"
+      },
+      {
+        "level": 2,
+        "title": "🛡️ Защита от регресса"
+      },
+      {
+        "level": 2,
+        "title": "🔧 Устойчивость к рефакторингу"
+      },
+      {
+        "level": 2,
+        "title": "📈 Поддерживаемость"
+      },
+      {
+        "level": 2,
+        "title": "⚡ Быстродействие"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\specification\\scheme.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "Архитектура"
+      },
+      {
+        "level": 2,
+        "title": "AUT"
+      },
+      {
+        "level": 3,
+        "title": "IExternals"
+      },
+      {
+        "level": 2,
+        "title": "Менеджер историй"
+      },
+      {
+        "level": 3,
+        "title": "IPreviewClient"
+      },
+      {
+        "level": 3,
+        "title": "IPreviewServer"
+      },
+      {
+        "level": 5,
+        "title": "at"
+      },
+      {
+        "level": 4,
+        "title": "cleanup"
+      },
+      {
+        "level": 2,
+        "title": "Клиенты AUT"
+      },
+      {
+        "level": 2,
+        "title": "Серверы AUT"
+      },
+      {
+        "level": 2,
+        "title": "Адаптеры внешней среды"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\specification\\requirements\\analisys.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "Анализ"
+      },
+      {
+        "level": 2,
+        "title": "Границы тестирования"
+      },
+      {
+        "level": 4,
+        "title": "FE-компонент"
+      },
+      {
+        "level": 4,
+        "title": "Util-библиотека"
+      },
+      {
+        "level": 2,
+        "title": "Гибкость тестирования"
+      },
+      {
+        "level": 2,
+        "title": "Защита от регресса"
+      },
+      {
+        "level": 4,
+        "title": "Свойства"
+      },
+      {
+        "level": 4,
+        "title": "Ограничения"
+      },
+      {
+        "level": 2,
+        "title": "Устойчивость к рефакторингу"
+      },
+      {
+        "level": 2,
+        "title": "Поддерживаемость"
+      },
+      {
+        "level": 4,
+        "title": "Свойства"
+      },
+      {
+        "level": 4,
+        "title": "Ограничения"
+      },
+      {
+        "level": 2,
+        "title": "Быстродействие"
+      },
+      {
+        "level": 4,
+        "title": "Свойства"
+      },
+      {
+        "level": 4,
+        "title": "Ограничения"
+      },
+      {
+        "level": 2,
+        "title": "Вывод"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\specification\\requirements\\borders.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "Границы тестирования"
+      },
+      {
+        "level": 2,
+        "title": "Определение границ"
+      },
+      {
+        "level": 3,
+        "title": "Аргументы"
+      },
+      {
+        "level": 3,
+        "title": "Результат"
+      },
+      {
+        "level": 3,
+        "title": "Функция"
+      },
+      {
+        "level": 2,
+        "title": "Верификация"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\specification\\requirements\\query.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "Запросы"
+      },
+      {
+        "level": 2,
+        "title": "Детерминированность"
+      },
+      {
+        "level": 2,
+        "title": "Изменяемое окружение"
+      },
+      {
+        "level": 2,
+        "title": "Запросы к серверу"
+      },
+      {
+        "level": 2,
+        "title": "События среды"
+      },
+      {
+        "level": 2,
+        "title": "Анимации"
+      },
+      {
+        "level": 2,
+        "title": "Связь с библиотекой"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\specification\\requirements\\user.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "Пользователь"
+      },
+      {
+        "level": 2,
+        "title": "Связь с библиотекой"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\specification\\requirements\\command.mdx",
+    "titles": [
+      {
+        "level": 1,
+        "title": "Команды"
+      },
+      {
+        "level": 2,
+        "title": "Сайд-эффект"
+      },
+      {
+        "level": 2,
+        "title": "Внешняя среда"
+      },
+      {
+        "level": 2,
+        "title": "Способ верификации"
+      },
+      {
+        "level": 3,
+        "title": "Эмуляция"
+      },
+      {
+        "level": 2,
+        "title": "Связь с библиотекой"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\specification\\requirements\\monitor.mdx",
+    "titles": [
+      {
+        "level": 1,
+        "title": "Монитор"
+      },
+      {
+        "level": 2,
+        "title": "Верификация"
+      },
+      {
+        "level": 2,
+        "title": "Связь с библиотекой"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\patterns\\actor.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "Актор"
+      },
+      {
+        "level": 2,
+        "title": "Семантические селекторы"
+      },
+      {
+        "level": 2,
+        "title": "data-testid селекторы"
+      },
+      {
+        "level": 3,
+        "title": "Достоинства"
+      },
+      {
+        "level": 3,
+        "title": "Недостатки"
+      },
+      {
+        "level": 2,
+        "title": "Компонентный подход"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\patterns\\adaptive.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "Адаптивность"
+      },
+      {
+        "level": 2,
+        "title": "Одной историей все устройства"
+      },
+      {
+        "level": 2,
+        "title": "По истории на устройство"
+      },
+      {
+        "level": 2,
+        "title": "Сокращение устройств"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\patterns\\application.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "Порядок работ"
+      },
+      {
+        "level": 2,
+        "title": "Сценарии работ"
+      },
+      {
+        "level": 3,
+        "title": "При разработке без API"
+      },
+      {
+        "level": 3,
+        "title": "При разработке с API"
+      },
+      {
+        "level": 3,
+        "title": "При дефекте"
+      },
+      {
+        "level": 3,
+        "title": "При рефакторинге"
+      },
+      {
+        "level": 2,
+        "title": "Разделение эталонов"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\patterns\\ex-env.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "Внешняя среда"
+      },
+      {
+        "level": 2,
+        "title": "Игнорирование query"
+      },
+      {
+        "level": 2,
+        "title": "Нестабильные представления"
+      },
+      {
+        "level": 2,
+        "title": "Таймеры"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\patterns\\externals.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "Externals"
+      },
+      {
+        "level": 2,
+        "title": "Тривиальные externals"
+      },
+      {
+        "level": 3,
+        "title": "Сборка"
+      },
+      {
+        "level": 2,
+        "title": "Модульные externals"
+      },
+      {
+        "level": 2,
+        "title": "Композиция externals"
+      },
+      {
+        "level": 2,
+        "title": "Подмена externals"
+      },
+      {
+        "level": 2,
+        "title": "Эмуляция externals"
+      },
+      {
+        "level": 2,
+        "title": "Оптимизация arrange"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\patterns\\files.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "Структура файлов"
+      },
+      {
+        "level": 2,
+        "title": "Дислокация тестов"
+      },
+      {
+        "level": 2,
+        "title": "Виды компонентов"
+      },
+      {
+        "level": 2,
+        "title": "Расположение компонентов"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\patterns\\index.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "Паттерны"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\patterns\\replace.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "Подмена поведений"
+      },
+      {
+        "level": 2,
+        "title": "Подмена через инверсию"
+      },
+      {
+        "level": 3,
+        "title": "Инверсия зависимостей"
+      },
+      {
+        "level": 3,
+        "title": "Инверсия в React"
+      },
+      {
+        "level": 3,
+        "title": "Оценка"
+      },
+      {
+        "level": 2,
+        "title": "Подмена через сайд-эффекты"
+      },
+      {
+        "level": 3,
+        "title": "Monkey-patching в React"
+      },
+      {
+        "level": 3,
+        "title": "Оценка"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\patterns\\stories.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "Истории"
+      },
+      {
+        "level": 2,
+        "title": "Разделение историй"
+      },
+      {
+        "level": 1,
+        "title": "'TODO: Move from here END'"
+      },
+      {
+        "level": 2,
+        "title": "Слияние историй"
+      },
+      {
+        "level": 2,
+        "title": "Приоритеты историй"
+      },
+      {
+        "level": 2,
+        "title": "Универсальный render"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\patterns\\stubs.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "Написание заглушек"
+      },
+      {
+        "level": 2,
+        "title": "Заглушки фабрики"
+      },
+      {
+        "level": 3,
+        "title": "Меньше времени на инициализацию"
+      },
+      {
+        "level": 3,
+        "title": "Упрощение изменений"
+      },
+      {
+        "level": 2,
+        "title": "Модульные заглушки"
+      },
+      {
+        "level": 2,
+        "title": "Неизбыточные заглушки"
+      },
+      {
+        "level": 2,
+        "title": "Релевантные заглушки"
+      },
+      {
+        "level": 2,
+        "title": "Достаточные заглушки"
+      },
+      {
+        "level": 2,
+        "title": "Упрощённые заглушки"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\modules\\arrangers.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "@storyshots/arrangers"
+      },
+      {
+        "level": 2,
+        "title": "createArrangers"
+      },
+      {
+        "level": 2,
+        "title": "set"
+      },
+      {
+        "level": 2,
+        "title": "record"
+      },
+      {
+        "level": 2,
+        "title": "transform"
+      },
+      {
+        "level": 2,
+        "title": "compose"
+      },
+      {
+        "level": 2,
+        "title": "focus"
+      },
+      {
+        "level": 2,
+        "title": "arrange"
+      },
+      {
+        "level": 2,
+        "title": "resolves"
+      },
+      {
+        "level": 2,
+        "title": "rejects"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\modules\\core.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "@storyshots/core"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\modules\\exec.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "@storyshots/exec-preview"
+      },
+      {
+        "level": 2,
+        "title": "createExecPreview"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\modules\\index.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "Модули"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\modules\\msw.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "@storyshots/msw-externals"
+      },
+      {
+        "level": 2,
+        "title": "Endpoints"
+      },
+      {
+        "level": 2,
+        "title": "createMSWArrangers"
+      },
+      {
+        "level": 2,
+        "title": "endpoint"
+      },
+      {
+        "level": 2,
+        "title": "record"
+      },
+      {
+        "level": 2,
+        "title": "handle"
+      },
+      {
+        "level": 2,
+        "title": "transform"
+      },
+      {
+        "level": 2,
+        "title": "toRequestHandlers"
+      },
+      {
+        "level": 2,
+        "title": "params"
+      },
+      {
+        "level": 2,
+        "title": "query"
+      },
+      {
+        "level": 2,
+        "title": "body"
+      },
+      {
+        "level": 2,
+        "title": "native"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\modules\\next.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "@storyshots/next"
+      },
+      {
+        "level": 2,
+        "title": "Externals"
+      },
+      {
+        "level": 2,
+        "title": "createStoryFactories"
+      },
+      {
+        "level": 2,
+        "title": "createOnStorySwitch"
+      },
+      {
+        "level": 2,
+        "title": "createStoryRootComponent"
+      },
+      {
+        "level": 2,
+        "title": "ModeInjector"
+      },
+      {
+        "level": 2,
+        "title": "createNextPreview"
+      },
+      {
+        "level": 2,
+        "title": "extendNextConfig"
+      },
+      {
+        "level": 2,
+        "title": "createSharedState"
+      },
+      {
+        "level": 2,
+        "title": "Расширения"
+      },
+      {
+        "level": 3,
+        "title": "at"
+      },
+      {
+        "level": 3,
+        "title": "arrange"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\modules\\react.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "@storyshots/react"
+      },
+      {
+        "level": 2,
+        "title": "ExternalsFactory"
+      },
+      {
+        "level": 3,
+        "title": "createExternals"
+      },
+      {
+        "level": 3,
+        "title": "createJournalExternals"
+      },
+      {
+        "level": 2,
+        "title": "run"
+      },
+      {
+        "level": 2,
+        "title": "Расширения"
+      },
+      {
+        "level": 3,
+        "title": "render"
+      },
+      {
+        "level": 3,
+        "title": "arrange"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\modules\\web-api.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "@storyshots/web-api-mocks"
+      },
+      {
+        "level": 2,
+        "title": "install"
+      },
+      {
+        "level": 2,
+        "title": "clock"
+      },
+      {
+        "level": 3,
+        "title": "tick"
+      },
+      {
+        "level": 3,
+        "title": "setSystemTime"
+      },
+      {
+        "level": 3,
+        "title": "unfreeze"
+      },
+      {
+        "level": 2,
+        "title": "Состояние"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\API\\index.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "API"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\API\\utils\\filter.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "filter"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\API\\utils\\index.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "Утилиты"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\API\\utils\\map.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "map"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\API\\utils\\masked.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "masked"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\API\\utils\\only.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "only"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\API\\utils\\resized.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "resized"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\API\\test-components\\actor.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "actor"
+      },
+      {
+        "level": 2,
+        "title": "hover"
+      },
+      {
+        "level": 2,
+        "title": "click"
+      },
+      {
+        "level": 2,
+        "title": "dblclick"
+      },
+      {
+        "level": 2,
+        "title": "fill"
+      },
+      {
+        "level": 2,
+        "title": "wait"
+      },
+      {
+        "level": 2,
+        "title": "scrollTo"
+      },
+      {
+        "level": 2,
+        "title": "select"
+      },
+      {
+        "level": 2,
+        "title": "keyboard"
+      },
+      {
+        "level": 3,
+        "title": "press"
+      },
+      {
+        "level": 3,
+        "title": "down"
+      },
+      {
+        "level": 3,
+        "title": "up"
+      },
+      {
+        "level": 2,
+        "title": "mouse"
+      },
+      {
+        "level": 3,
+        "title": "move"
+      },
+      {
+        "level": 3,
+        "title": "down"
+      },
+      {
+        "level": 3,
+        "title": "up"
+      },
+      {
+        "level": 3,
+        "title": "wheel"
+      },
+      {
+        "level": 2,
+        "title": "clear"
+      },
+      {
+        "level": 2,
+        "title": "highlight"
+      },
+      {
+        "level": 2,
+        "title": "drag"
+      },
+      {
+        "level": 2,
+        "title": "blur"
+      },
+      {
+        "level": 2,
+        "title": "pressSequentially"
+      },
+      {
+        "level": 2,
+        "title": "waitFor"
+      },
+      {
+        "level": 2,
+        "title": "waitForURL"
+      },
+      {
+        "level": 2,
+        "title": "resize"
+      },
+      {
+        "level": 2,
+        "title": "screenshot"
+      },
+      {
+        "level": 3,
+        "title": "Маскирование"
+      },
+      {
+        "level": 2,
+        "title": "uploadFile"
+      },
+      {
+        "level": 2,
+        "title": "do"
+      },
+      {
+        "level": 2,
+        "title": "stop"
+      },
+      {
+        "level": 2,
+        "title": "exec"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\API\\test-components\\finder.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "finder"
+      },
+      {
+        "level": 2,
+        "title": "getByRole"
+      },
+      {
+        "level": 2,
+        "title": "getByText"
+      },
+      {
+        "level": 2,
+        "title": "getByLabel"
+      },
+      {
+        "level": 2,
+        "title": "getByPlaceholder"
+      },
+      {
+        "level": 2,
+        "title": "getByAltText"
+      },
+      {
+        "level": 2,
+        "title": "getByTitle"
+      },
+      {
+        "level": 2,
+        "title": "getByTestId"
+      },
+      {
+        "level": 2,
+        "title": "locator"
+      },
+      {
+        "level": 2,
+        "title": "filter"
+      },
+      {
+        "level": 2,
+        "title": "nth"
+      },
+      {
+        "level": 2,
+        "title": "first"
+      },
+      {
+        "level": 2,
+        "title": "last"
+      },
+      {
+        "level": 2,
+        "title": "and"
+      },
+      {
+        "level": 2,
+        "title": "get"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\API\\test-components\\story-config.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "StoryConfig"
+      },
+      {
+        "level": 2,
+        "title": "device"
+      },
+      {
+        "level": 2,
+        "title": "journal"
+      },
+      {
+        "level": 3,
+        "title": "record"
+      },
+      {
+        "level": 3,
+        "title": "asRecordable"
+      },
+      {
+        "level": 2,
+        "title": "previewing"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\API\\run-modes\\manager-config.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "ManagerConfig"
+      },
+      {
+        "level": 2,
+        "title": "devices"
+      },
+      {
+        "level": 2,
+        "title": "preview"
+      },
+      {
+        "level": 2,
+        "title": "paths"
+      },
+      {
+        "level": 2,
+        "title": "runner"
+      },
+      {
+        "level": 2,
+        "title": "capture"
+      },
+      {
+        "level": 2,
+        "title": "compare"
+      },
+      {
+        "level": 3,
+        "title": "withPlaywright"
+      },
+      {
+        "level": 4,
+        "title": "comparator"
+      },
+      {
+        "level": 4,
+        "title": "threshold"
+      },
+      {
+        "level": 4,
+        "title": "maxDiffPixels"
+      },
+      {
+        "level": 5,
+        "title": "maxDiffPixelRatio"
+      },
+      {
+        "level": 3,
+        "title": "withLooksSame"
+      },
+      {
+        "level": 3,
+        "title": "Оптимальный алгоритм"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\API\\run-modes\\runCI.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "runCI"
+      },
+      {
+        "level": 2,
+        "title": "Особенности режима"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\API\\run-modes\\runUI.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "runUI"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\API\\factories\\describe.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "describe"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\API\\factories\\each.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "each"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\API\\factories\\it.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "it"
+      },
+      {
+        "level": 2,
+        "title": "retries"
+      },
+      {
+        "level": 2,
+        "title": "act"
+      },
+      {
+        "level": 2,
+        "title": "StoryAttributes"
+      }
+    ]
+  },
+  {
+    "doc": "docs\\about\\index.md",
+    "titles": [
+      {
+        "level": 1,
+        "title": "Об инструменте"
+      },
+      {
+        "level": 2,
+        "title": "Что такое storyshots"
+      },
+      {
+        "level": 3,
+        "title": "Взаимодействие с UI"
+      },
+      {
+        "level": 2,
+        "title": "Тест, в котором можно разрабатывать"
+      },
+      {
+        "level": 2,
+        "title": "Верификация поведения, а не реализации"
+      },
+      {
+        "level": 2,
+        "title": "Стабильность на архитектурном уровне"
+      },
+      {
+        "level": 2,
+        "title": "Почему storyshots"
+      },
+      {
+        "level": 2,
+        "title": "Кому подойдёт"
+      },
+      {
+        "level": 2,
+        "title": "Начало работы"
+      }
+    ]
+  }
+]
