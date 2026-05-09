@@ -1,0 +1,4 @@
+﻿interface:
+  display_name: "Job Application Enhancer"
+  short_description: "Разбирает вакансию, делает gap-анализ и готовит письмо"
+  default_prompt: "Use $job-application-enhancer to analyze a vacancy, map it to CV_CURR.md and CV_MASTER.md, ask targeted confirmation questions and draft a Russian cover letter."

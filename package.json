@@ -3,14 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start": "tsx ./src/index.ts",
-    "debug": "tsx --inspect-brk ./src/index.ts",
+    "start": "tsx tasks.ts",
+    "debug": "tsx --inspect-brk tasks.ts",
     "compile": "tsc --noEmit"
   },
   "dependencies": {
     "@types/node": "^25.5.0",
     "prettier": "^3.8.1",
+    "react-dom": "^19.2.6",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@types/react-dom": "^19.2.3"
   }
 }
