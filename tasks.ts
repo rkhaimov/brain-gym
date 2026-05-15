@@ -1,41 +1,71 @@
-type Tree<T> = {
-  value: T;
-  left?: Tree<T>;
-  right?: Tree<T>;
+type NodeID = number;
+
+type NodeEntry = { id: NodeID; children: NodeID[] };
+
+type Tree = {
+  id: NodeID;
+  children: Tree[];
 };
 
-// ┌──
-// │
-// └──
+/**
+ * Builds tree from linked list. Detects multiple or none roots and cycles
+ */
+function createTreeFromList(all: NodeEntry[]): Tree {
+  const roots = findRoots(all);
 
-function printTree<T>(root?: Tree<T>, prefix = "", isLeft = true): void {
-  if (root === undefined) {
-    return;
+  if (roots.length !== 1) {
+    throw new Error("Root must be single");
   }
 
-  if (root.right) {
-    printTree(root.right, prefix + (isLeft ? "│   " : "    "), false);
+  return createTreeFromRoot(
+    roots[0],
+    new Map(all.map((it) => [it.id, it] as const)),
+    new Set(),
+  );
+}
+
+function findRoots(all: NodeEntry[]): NodeEntry[] {
+  const children = new Set(all.flatMap((node) => node.children));
+
+  return all.filter((node) => !children.has(node.id));
+}
+
+function createTreeFromRoot(
+  root: NodeEntry,
+  all: Map<NodeID, NodeEntry>,
+  visited: Set<NodeID>,
+): Tree {
+  if (visited.has(root.id)) {
+    throw new Error("Cycles are prohibited");
   }
 
-  console.log(prefix + (isLeft ? "└── " : "┌── ") + root.value);
+  visited.add(root.id);
 
-  if (root.left) {
-    printTree(root.left, prefix + (isLeft ? "    " : "│   "), true);
+  return {
+    id: root.id,
+    children: root.children
+      .map((child) => all.get(child))
+      .map(assertExists)
+      .map((child) => createTreeFromRoot(child, all, visited)),
+  };
+
+  function assertExists(node: NodeEntry | undefined): NodeEntry {
+    if (node === undefined) {
+      throw new Error("All children must be defined");
+    }
+
+    return node;
   }
 }
 
-const tree = {
-  value: 4,
-  left: {
-    value: 2,
-    left: { value: 1 },
-    right: { value: 3 },
-  },
-  right: {
-    value: 6,
-    left: { value: 5 },
-    right: { value: 7 },
-  },
-};
-
-printTree(tree);
+console.log(
+  JSON.stringify(
+    createTreeFromList([
+      { id: 1, children: [2] },
+      { id: 2, children: [] },
+      { id: 2, children: [] },
+    ]),
+    null,
+    2,
+  ),
+);
