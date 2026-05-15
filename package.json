@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start": "tsx ./src/index.ts",
-    "debug": "tsx --inspect-brk ./src/index.ts",
+    "start": "tsx tasks.ts",
+    "debug": "tsx --inspect-brk tasks.ts",
     "compile": "tsc --noEmit"
   },
   "dependencies": {
