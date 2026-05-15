@@ -1,71 +1,170 @@
-type NodeID = number;
+class LRUCache<K, V> {
+  private list = new LinkedList<[K, V]>();
+  private cache = new Map<K, ListNode<[K, V]>>();
 
-type NodeEntry = { id: NodeID; children: NodeID[] };
+  constructor(private capacity: number) {}
 
-type Tree = {
-  id: NodeID;
-  children: Tree[];
+  get(key: K): V | undefined {
+    const found = this.cache.get(key);
+
+    if (found === undefined) {
+      return undefined;
+    }
+
+    this.list.toFront(found);
+
+    return found.value[1];
+  }
+
+  set(key: K, value: V): void {
+    const found = this.cache.get(key);
+
+    if (found) {
+      found.value = [key, value];
+
+      this.list.toFront(found);
+    } else {
+      this.cache.set(key, this.list.prepend([key, value]));
+    }
+
+    if (this.cache.size > this.capacity) {
+      this.removeLRU();
+    }
+  }
+
+  has(key: K): boolean {
+    return this.cache.has(key);
+  }
+
+  delete(key: K): boolean {
+    const found = this.cache.get(key);
+
+    if (found === undefined) {
+      return false;
+    }
+
+    this.list.remove(found);
+
+    return this.cache.delete(key);
+  }
+
+  private removeLRU() {
+    const removed = this.list.pop();
+
+    if (removed) {
+      this.cache.delete(removed.value[0]);
+    }
+  }
+}
+
+type ListNode<V> = {
+  value: V;
+  prev: ListNode<V>;
+  next: ListNode<V>;
 };
 
-/**
- * Builds tree from linked list. Detects multiple or none roots and cycles
- */
-function createTreeFromList(all: NodeEntry[]): Tree {
-  const roots = findRoots(all);
+class LinkedList<V> {
+  private head: ListNode<V> | undefined;
 
-  if (roots.length !== 1) {
-    throw new Error("Root must be single");
-  }
+  prepend(value: V): ListNode<V> {
+    if (this.head === undefined) {
+      const node = { value } as ListNode<V>;
 
-  return createTreeFromRoot(
-    roots[0],
-    new Map(all.map((it) => [it.id, it] as const)),
-    new Set(),
-  );
-}
+      node.next = node;
+      node.prev = node;
 
-function findRoots(all: NodeEntry[]): NodeEntry[] {
-  const children = new Set(all.flatMap((node) => node.children));
+      this.head = node;
 
-  return all.filter((node) => !children.has(node.id));
-}
-
-function createTreeFromRoot(
-  root: NodeEntry,
-  all: Map<NodeID, NodeEntry>,
-  visited: Set<NodeID>,
-): Tree {
-  if (visited.has(root.id)) {
-    throw new Error("Cycles are prohibited");
-  }
-
-  visited.add(root.id);
-
-  return {
-    id: root.id,
-    children: root.children
-      .map((child) => all.get(child))
-      .map(assertExists)
-      .map((child) => createTreeFromRoot(child, all, visited)),
-  };
-
-  function assertExists(node: NodeEntry | undefined): NodeEntry {
-    if (node === undefined) {
-      throw new Error("All children must be defined");
+      return node;
     }
+
+    const node: ListNode<V> = { value, next: this.head, prev: this.head.prev };
+
+    this.head.prev.next = node;
+    this.head.prev = node;
+
+    this.head = node;
 
     return node;
   }
+
+  toFront(node: ListNode<V>) {
+    if (this.head === undefined) {
+      this.head = node;
+
+      return;
+    }
+
+    node.prev.next = node.next;
+    node.next.prev = node.prev;
+
+    node.prev = this.head.prev;
+    node.next = this.head;
+
+    this.head.prev.next = node;
+    this.head.prev = node;
+
+    this.head = node;
+  }
+
+  remove(node: ListNode<V>) {
+    if (node.next === node) {
+      this.head = undefined;
+
+      return;
+    }
+
+    node.prev.next = node.next;
+    node.next.prev = node.prev;
+
+    if (node === this.head) {
+      this.head = node.next;
+    }
+  }
+
+  pop(): ListNode<V> | undefined {
+    if (this.head === undefined) {
+      return;
+    }
+
+    const removed = this.head.prev;
+
+    this.remove(removed);
+
+    return removed;
+  }
+
+  toArray(): V[] {
+    const visited = new Set<ListNode<V>>();
+    const result = [];
+
+    let element = this.head;
+
+    while (element !== undefined) {
+      if (visited.has(element)) {
+        break;
+      }
+
+      visited.add(element);
+
+      result.push(element.value);
+
+      element = element.next;
+    }
+
+    return result;
+  }
 }
 
-console.log(
-  JSON.stringify(
-    createTreeFromList([
-      { id: 1, children: [2] },
-      { id: 2, children: [] },
-      { id: 2, children: [] },
-    ]),
-    null,
-    2,
-  ),
-);
+const list = new LinkedList<number>();
+
+const first = list.prepend(1);
+const second = list.prepend(2);
+const third = list.prepend(3);
+const fourth = list.prepend(4);
+
+console.log(list.toArray()); // [ 4, 3, 2, 1 ]
+
+list.toFront(third);
+
+console.log(list.toArray()); // [ 3, 4, 2, 1 ]
