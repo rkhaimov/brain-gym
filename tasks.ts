@@ -1,170 +1,79 @@
-class LRUCache<K, V> {
-  private list = new LinkedList<[K, V]>();
-  private cache = new Map<K, ListNode<[K, V]>>();
+type QueueElement<T> = {
+  value: T;
+  next: QueueElement<T>;
+};
 
-  constructor(private capacity: number) {}
+class Queue<T> {
+  private state: undefined | { head: QueueElement<T>; tail: QueueElement<T> };
 
-  get(key: K): V | undefined {
-    const found = this.cache.get(key);
+  enqueue(value: T): void {
+    if (this.state === undefined) {
+      const element = { value } as QueueElement<T>;
 
-    if (found === undefined) {
+      element.next = element;
+
+      this.state = { head: element, tail: element };
+
+      return;
+    }
+
+    const element: QueueElement<T> = { value, next: this.state.head };
+
+    this.state.tail.next = element;
+    this.state.tail = element;
+  }
+
+  dequeue(): T | undefined {
+    if (this.state === undefined) {
       return undefined;
     }
 
-    this.list.toFront(found);
+    if (this.state.head === this.state.head.next) {
+      const head = this.state.head;
 
-    return found.value[1];
-  }
+      this.state = undefined;
 
-  set(key: K, value: V): void {
-    const found = this.cache.get(key);
-
-    if (found) {
-      found.value = [key, value];
-
-      this.list.toFront(found);
-    } else {
-      this.cache.set(key, this.list.prepend([key, value]));
+      return head.value;
     }
 
-    if (this.cache.size > this.capacity) {
-      this.removeLRU();
-    }
+    const head = this.state.head;
+
+    this.state.head = head.next;
+    this.state.tail.next = head.next;
+
+    return head.value;
   }
 
-  has(key: K): boolean {
-    return this.cache.has(key);
-  }
+  toArray() {
+    const elements: T[] = [];
 
-  delete(key: K): boolean {
-    const found = this.cache.get(key);
-
-    if (found === undefined) {
-      return false;
+    if (this.state === undefined) {
+      return elements;
     }
 
-    this.list.remove(found);
+    let element = this.state.head;
 
-    return this.cache.delete(key);
-  }
-
-  private removeLRU() {
-    const removed = this.list.pop();
-
-    if (removed) {
-      this.cache.delete(removed.value[0]);
-    }
-  }
-}
-
-type ListNode<V> = {
-  value: V;
-  prev: ListNode<V>;
-  next: ListNode<V>;
-};
-
-class LinkedList<V> {
-  private head: ListNode<V> | undefined;
-
-  prepend(value: V): ListNode<V> {
-    if (this.head === undefined) {
-      const node = { value } as ListNode<V>;
-
-      node.next = node;
-      node.prev = node;
-
-      this.head = node;
-
-      return node;
-    }
-
-    const node: ListNode<V> = { value, next: this.head, prev: this.head.prev };
-
-    this.head.prev.next = node;
-    this.head.prev = node;
-
-    this.head = node;
-
-    return node;
-  }
-
-  toFront(node: ListNode<V>) {
-    if (this.head === undefined) {
-      this.head = node;
-
-      return;
-    }
-
-    node.prev.next = node.next;
-    node.next.prev = node.prev;
-
-    node.prev = this.head.prev;
-    node.next = this.head;
-
-    this.head.prev.next = node;
-    this.head.prev = node;
-
-    this.head = node;
-  }
-
-  remove(node: ListNode<V>) {
-    if (node.next === node) {
-      this.head = undefined;
-
-      return;
-    }
-
-    node.prev.next = node.next;
-    node.next.prev = node.prev;
-
-    if (node === this.head) {
-      this.head = node.next;
-    }
-  }
-
-  pop(): ListNode<V> | undefined {
-    if (this.head === undefined) {
-      return;
-    }
-
-    const removed = this.head.prev;
-
-    this.remove(removed);
-
-    return removed;
-  }
-
-  toArray(): V[] {
-    const visited = new Set<ListNode<V>>();
-    const result = [];
-
-    let element = this.head;
-
-    while (element !== undefined) {
-      if (visited.has(element)) {
-        break;
+    while (true) {
+      if (elements.length > 0 && element === this.state.head) {
+        return elements;
       }
 
-      visited.add(element);
-
-      result.push(element.value);
+      elements.push(element.value);
 
       element = element.next;
     }
-
-    return result;
   }
 }
 
-const list = new LinkedList<number>();
+const list = new Queue<number>();
 
-const first = list.prepend(1);
-const second = list.prepend(2);
-const third = list.prepend(3);
-const fourth = list.prepend(4);
+list.enqueue(1);
+list.enqueue(2);
+list.enqueue(3);
+list.enqueue(4);
 
 console.log(list.toArray()); // [ 4, 3, 2, 1 ]
 
-list.toFront(third);
+list.dequeue();
 
 console.log(list.toArray()); // [ 3, 4, 2, 1 ]
