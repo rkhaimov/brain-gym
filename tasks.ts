@@ -1,101 +1,54 @@
 // tree
 // graph
-// trie
 // bloom filter
 // segment tree
-type TrieNode = {
-  children: Map<string, TrieNode>;
-  isWord: boolean;
+
+type Tree = {
+  value: number;
+  left?: Tree;
+  right?: Tree;
 };
 
-const ROOT = { isWord: false, children: new Map() };
+function maxDepth(tree: Tree | undefined): number {
+  if (tree === undefined) {
+    return 0;
+  }
 
-const t0 = insert(ROOT, "cat");
-const t1 = insert(t0, "cate");
-const t2 = remove(t1, "cat");
+  return 1 + Math.max(maxDepth(tree.left), maxDepth(tree.right));
+}
 
-console.log(search(t2!, "cate")); // outputs true
-console.log(search(t2!, "cat")); // outputs false
+function maxDepthIter(tree: Tree | undefined) {
+  let depth = 0;
+  let max = 0;
+  let curr = tree;
+  const stack: Tree[] = [];
+  while (curr || stack.length > 0) {
+    while (curr) {
+      depth += 1;
 
-function remove(root: TrieNode, word: string): TrieNode | undefined {
-  const char = word.at(0);
+      stack.push(curr);
 
-  if (char === undefined) {
-    if (root.children.size === 0) {
-      return undefined;
+      curr = curr.left;
     }
 
-    root.isWord = false;
+    max = Math.max(max, depth);
 
-    return root;
-  }
+    const node = stack.pop()!;
 
-  const child = root.children.get(char);
-
-  if (child === undefined) {
-    return root;
-  }
-
-  const updated = remove(child, word.slice(1));
-
-  if (updated === undefined) {
-    root.children.delete(char);
-  }
-
-  if (root.children.size === 0 && !root.isWord) {
-    return undefined;
-  }
-
-  return root;
-}
-
-function insert(root: TrieNode, word: string): TrieNode {
-  let curr: TrieNode = root;
-
-  for (const char of word) {
-    const child = curr.children.get(char);
-
-    if (child) {
-      curr = child;
-
-      continue;
+    if (node.right === undefined) {
+      depth -= 1;
     }
 
-    const node: TrieNode = { children: new Map(), isWord: false };
-
-    curr.children.set(char, node);
-
-    curr = node;
+    curr = node.right;
   }
 
-  curr.isWord = true;
-
-  return root;
+  return max;
 }
 
-function search(root: TrieNode, word: string): boolean {
-  return _findNodeByPrefix(root, word)?.isWord ?? false;
-}
-
-function startsWith(root: TrieNode, prefix: string): boolean {
-  return _findNodeByPrefix(root, prefix) !== undefined;
-}
-
-function _findNodeByPrefix(
-  root: TrieNode,
-  prefix: string,
-): TrieNode | undefined {
-  let curr: TrieNode = root;
-
-  for (const char of prefix) {
-    const child = curr.children.get(char);
-
-    if (child === undefined) {
-      return undefined;
-    }
-
-    curr = child;
-  }
-
-  return curr;
-}
+console.log(
+  maxDepthIter({
+    value: 1,
+    left: { value: 2 },
+    right: { value: 3, left: { value: 6 } },
+  }),
+);
