@@ -1,94 +1,86 @@
-class Queue<T> {
-  enqueue(value: T): void {}
-
-  dequeue(): T | undefined {}
-
-  detach(value: T): void {}
-
-  exists(value: T): boolean {}
-
-  get size(): number {}
-}
-
-type PendingTask<T> = {
-  signal: AbortSignal;
-  start: PromiseWithResolvers<void>;
-  finish: PromiseWithResolvers<T>;
-  handle(signal: AbortSignal): Promise<T>;
+type Transaction = {
+  commit(): ShouldCommit;
+  rollback(): ShouldCommit;
 };
 
-class TaskPool {
-  private queue = new Queue<PendingTask<unknown>>();
-  private working = 0;
+type Store = Map<string, string>;
 
-  constructor(private concurrency: number) {}
+type TransactionState = Mutations[];
+type Mutations = (store: Store) => void;
 
-  async run<T>(
-    handle: (signal: AbortSignal) => Promise<T>,
-    signal = new AbortController().signal,
-  ): Promise<T> {
-    signal.throwIfAborted();
+type ShouldCommit = boolean;
 
-    const pending: PendingTask<unknown> = {
-      handle,
-      signal,
-      start: Promise.withResolvers(),
-      finish: Promise.withResolvers(),
-    };
+class KVStore {
+  private transactions: TransactionState[] = [];
+  private _store = new Map<string, string>();
 
-    if (this.working < this.concurrency) {
-      void this.start(pending);
+  begin(fn: (transaction: Transaction) => ShouldCommit): void {
+    try {
+      const transaction: TransactionState = [];
+
+      this.transactions.push(transaction);
+
+      const commit = fn({
+        commit: () => true,
+        rollback: () => false,
+      });
+
+      if (commit) {
+        this.commit(transaction);
+      }
+    } finally {
+      this.transactions.pop();
+    }
+  }
+
+  get(key: string): string | undefined {
+    return this.store().get(key);
+  }
+
+  set(key: string, value: string): void {
+    const transaction = this.transactions.at(-1);
+
+    if (transaction === undefined) {
+      this._store.set(key, value);
     } else {
-      void this.enqueue(pending);
-    }
-
-    return pending.finish.promise as Promise<T>;
-  }
-
-  private async enqueue(pending: PendingTask<unknown>) {
-    this.queue.enqueue(pending);
-
-    const abort = Promise.withResolvers();
-
-    try {
-      pending.signal.addEventListener("abort", abort.resolve);
-
-      const aborted = await Promise.race([
-        pending.start.promise.then(() => false),
-        abort.promise.then(() => true),
-      ]);
-
-      if (aborted) {
-        this.queue.detach(pending);
-
-        pending.finish.reject(pending.signal.reason);
-      }
-    } finally {
-      pending.signal.removeEventListener("abort", abort.resolve);
+      transaction.push((store) => store.set(key, value));
     }
   }
 
-  private async start(pending: PendingTask<unknown>): Promise<void> {
-    pending.start.resolve();
+  delete(key: string): void {
+    const transaction = this.transactions.at(-1);
 
-    this.working += 1;
-
-    try {
-      pending.signal.throwIfAborted();
-
-      const result = await pending.handle(pending.signal);
-
-      pending.finish.resolve(result);
-    } catch (error) {
-      pending.finish.reject(error);
-    } finally {
-      this.working -= 1;
-
-      const pending = this.queue.dequeue();
-
-      if (pending) {
-        void this.start(pending);
-      }
+    if (transaction === undefined) {
+      this._store.delete(key);
+    } else {
+      transaction.push((store) => store.delete(key));
     }
   }
+
+  private store() {
+    const copy = new Map(this._store);
+
+    this.transactions.flat().forEach((mutate) => mutate(copy));
+
+    return copy;
+  }
+
+  private commit(transaction: TransactionState) {
+    const parent = this.transactions.at(-2);
+
+    if (parent === undefined) {
+      this._store = this.store();
+    } else {
+      parent.push(...transaction);
+    }
+  }
+}
+
+function main(store: KVStore) {
+  store.begin((transaction) => {
+    store.set("a", "2");
+    store.get("a");
+
+    return transaction.rollback();
+  });
 }
