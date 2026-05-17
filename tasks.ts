@@ -1,86 +1,54 @@
-type Transaction = {
-  commit(): ShouldCommit;
-  rollback(): ShouldCommit;
-};
+class EventEmitter<TEvents extends Record<string, unknown>> {
+  // `any` is on purpose here to avoid unnecessary type-casts and maintain strong public interface
+  private listeners = new Map<keyof TEvents, Set<(arg: any) => void>>();
 
-type Store = Map<string, string>;
+  on<TEvent extends keyof TEvents>(
+    event: TEvent,
+    listener: (value: TEvents[TEvent]) => void,
+  ) {
+    const listeners = this.listeners.get(event);
 
-type TransactionState = Mutations[];
-type Mutations = (store: Store) => void;
+    if (listeners === undefined) {
+      this.listeners.set(event, new Set([listener]));
+    } else {
+      listeners.add(listener);
+    }
+  }
 
-type ShouldCommit = boolean;
+  off<TEvent extends keyof TEvents>(
+    event: TEvent,
+    listener: (value: TEvents[TEvent]) => void,
+  ) {
+    this.listeners.get(event)?.delete(listener);
+  }
 
-class KVStore {
-  private transactions: TransactionState[] = [];
-  private _store = new Map<string, string>();
-
-  begin(fn: (transaction: Transaction) => ShouldCommit): void {
-    try {
-      const transaction: TransactionState = [];
-
-      this.transactions.push(transaction);
-
-      const commit = fn({
-        commit: () => true,
-        rollback: () => false,
-      });
-
-      if (commit) {
-        this.commit(transaction);
+  once<TEvent extends keyof TEvents>(
+    event: TEvent,
+    listener: (value: TEvents[TEvent]) => void,
+  ) {
+    const once = (data: TEvents[TEvent]) => {
+      try {
+        listener(data);
+      } finally {
+        this.off(event, once);
       }
-    } finally {
-      this.transactions.pop();
+    };
+
+    this.on(event, once);
+  }
+
+  emit<TEvent extends keyof TEvents>(
+    event: TEvent,
+    arg: TEvents[TEvent],
+  ): void {
+    const listeners = this.listeners.get(event);
+
+    if (listeners === undefined) {
+      return;
+    }
+
+    for (const listener of listeners) {
+      listener(arg);
     }
   }
-
-  get(key: string): string | undefined {
-    return this.store().get(key);
-  }
-
-  set(key: string, value: string): void {
-    const transaction = this.transactions.at(-1);
-
-    if (transaction === undefined) {
-      this._store.set(key, value);
-    } else {
-      transaction.push((store) => store.set(key, value));
-    }
-  }
-
-  delete(key: string): void {
-    const transaction = this.transactions.at(-1);
-
-    if (transaction === undefined) {
-      this._store.delete(key);
-    } else {
-      transaction.push((store) => store.delete(key));
-    }
-  }
-
-  private store() {
-    const copy = new Map(this._store);
-
-    this.transactions.flat().forEach((mutate) => mutate(copy));
-
-    return copy;
-  }
-
-  private commit(transaction: TransactionState) {
-    const parent = this.transactions.at(-2);
-
-    if (parent === undefined) {
-      this._store = this.store();
-    } else {
-      parent.push(...transaction);
-    }
-  }
-}
-
-function main(store: KVStore) {
-  store.begin((transaction) => {
-    store.set("a", "2");
-    store.get("a");
-
-    return transaction.rollback();
-  });
 }
