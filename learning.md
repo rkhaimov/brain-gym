@@ -1,9 +1,14 @@
+Learn
+
+https://developers.openai.com/codex
+
 Watch
 
 https://www.youtube.com/c/FrontEndEngineer
 https://www.youtube.com/@icodeit.juntao/playlists
 https://www.youtube.com/playlist?list=PLKhlp2qtUcSaSnNnNffRPIU3DRQ2xAdj8
 https://www.youtube.com/watch?v=sV_4pOGosnU&list=PL4CFloQ4GGWICE0Tz6iXKfN3XWkXRlboU
+https://sre.google/sre-book/table-of-contents
 
 # Correctness
 

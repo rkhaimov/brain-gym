@@ -394,3 +394,16 @@ Solutions:
 * event-driven contracts
 * typed schemas
 * feature isolation
+
+# All
+
+* Correctness
+* Reliability
+* Performance
+* Security
+* Scalability
+* Maintainability
+* Observability
+* Simplicity
+* Modularity
+* Evolvability
