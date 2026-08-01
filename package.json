@@ -2,15 +2,28 @@
   "name": "my-app",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
+  "bin": {
+    "heal": "./bin/heal.cmd"
+  },
   "scripts": {
-    "start": "tsx ./src/index.ts",
-    "debug": "tsx --inspect-brk ./src/index.ts",
-    "compile": "tsc --noEmit"
+    "build": "node scripts/build-client.mjs && tailwindcss -i ./src/browser/styles.css -o ./dist/index.css",
+    "start": "node --import tsx src/node/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@tailwindcss/cli": "^4.3.3",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.1.2",
+    "esbuild": "^0.28.1",
+    "oxfmt": "^0.61.0",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.1",
+    "typescript": "^7.1.0-dev.20260801.1"
   },
   "dependencies": {
-    "@types/node": "^25.5.0",
-    "prettier": "^3.8.1",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "express": "^5.2.1",
+    "zod": "^4.4.3"
   }
 }
