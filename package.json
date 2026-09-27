@@ -3,14 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start": "tsx ./src/index.ts",
-    "debug": "tsx --inspect-brk ./src/index.ts",
-    "compile": "tsc --noEmit"
+    "start": "tsx src/playground.ts",
+    "debug": "tsx --inspect-brk src/playground.ts",
+    "test": "tsx --test --test-isolation=none src/**/*.test.ts",
+    "change:after": "prettier -w system-design.md src && tsc --noEmit"
   },
   "dependencies": {
-    "@types/node": "^25.5.0",
-    "prettier": "^3.8.1",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "prettier": "^3.9.9",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3"
   }
 }
