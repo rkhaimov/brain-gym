@@ -655,6 +655,11 @@ For write heavy system seek for:
 
 # Misc
 
+## To Try
+
+* Transactions
+* Locks
+
 ## Vocabulary
 
 **Transaction** - is a group of reads and writes that form a logical unit.
