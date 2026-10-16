@@ -657,8 +657,8 @@ For write heavy system seek for:
 
 ## To Try
 
-* Transactions
-* Locks
+- Transactions
+- Locks
 
 ## Vocabulary
 

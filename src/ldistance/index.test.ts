@@ -142,8 +142,8 @@ describe("ldistance", () => {
     const right = ["B", "B"];
 
     assert.deepEqual(ldistance(left, right), [
-      { type: "insert", index: 0, value: "B" },
-      { type: "replace", index: 1, oldValue: "A", newValue: "B" },
+      { type: "replace", oldValue: "A", newValue: "B", index: 0 },
+      { type: "insert", value: "B", index: 1 },
     ]);
   });
 
