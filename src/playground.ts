@@ -1,15 +1,20 @@
-import { EditCosts, weightedEditDistance } from "./weighted-edit-distance";
+import { treeEditDistance, type TreeNode } from "./zhang-shasha";
 
-const unitCosts: EditCosts<string> = {
-  insert: () => 1,
-  delete: () => 1,
-  replace: () => 1,
-};
+function node(
+  value: string,
+  children: TreeNode<string>[] = [],
+): TreeNode<string> {
+  return { value, children };
+}
 
-const costs: EditCosts<string> = {
-  insert: (value) => (value === "B" ? 1 : 5),
-  delete: () => 4,
-  replace: () => 3,
-};
+const left = node("R", [node("A", [node("B"), node("C")])]);
+const right = node("R", [node("B"), node("C")]);
 
-console.log(weightedEditDistance(["A", "A"], ["B", "A", "A"], costs));
+
+console.log(
+  treeEditDistance(left, right, {
+    insert: () => 1,
+    delete: () => 1,
+    replace: (leftValue, rightValue) => (leftValue === rightValue ? 0 : 1),
+  }),
+);

@@ -666,6 +666,15 @@ For write heavy system seek for:
 **Systems of record** - essential true state. Facts are represented exactly once (normalized).
 **Derived data systems** - data derived from true state. Is a form of redundancy.
 
+_Cluster_: the group of servers managed by Kubernetes.
+_Node_: one server in the cluster.
+_Pod_: the smallest deployable unit, usually containing one application container.
+_Deployment_: manages copies of pods and application updates.
+_Service_: provides a stable network address for pods.
+_Ingress_: routes external HTTP traffic to services.
+_ConfigMap/Secret_: supplies application configuration and credentials.
+_Namespace_: separates resources into logical groups.
+
 ## Operational Aspects
 
 - Capacity planning - disk memory space, CPU, RAM
