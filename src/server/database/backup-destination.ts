@@ -1,10 +1,11 @@
 import { createHash } from 'node:crypto';
-import { constants, copyFile, mkdir, open, readdir, readFile, rename, rm } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rm } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 
 import { Mutex } from 'async-mutex';
 import BetterSqlite3 from 'better-sqlite3';
 
+import { durablyReplaceFileWithCopy, syncDirectory } from './durable-file.js';
 import { assertSqliteIntegrity } from './sqlite-integrity.js';
 
 export type BackupKind = 'routine' | 'pre-migration';
@@ -41,10 +42,16 @@ async function fileHash(path: string): Promise<string> {
   return createHash('sha256').update(contents).digest('hex');
 }
 
-function backupFilename(request: PublishBackupRequest): string {
+function backupSequence(name: string, kind: BackupKind): number {
+  const sequence = name.slice(`${kind}-s`.length, `${kind}-s0000000000000000`.length);
+  return /^\d{16}$/.test(sequence) ? Number(sequence) : 0;
+}
+
+function backupFilename(request: PublishBackupRequest, sequence: number): string {
   const timestamp = request.createdAt.toISOString().replaceAll(':', '-').replaceAll('.', '-');
   const id = request.id.replaceAll(/[^a-zA-Z0-9_-]/g, '-');
-  return `${request.kind}-${timestamp}-${id}.sqlite`;
+  const sortableSequence = String(sequence).padStart(16, '0');
+  return `${request.kind}-s${sortableSequence}-${timestamp}-${id}.sqlite`;
 }
 
 function isBackupName(name: string, kind: BackupKind): boolean {
@@ -66,27 +73,6 @@ async function isVerifiedDatabase(path: string): Promise<boolean> {
     return true;
   } catch {
     return false;
-  }
-}
-
-async function syncFile(path: string): Promise<void> {
-  const file = await open(path, 'r+');
-  try {
-    await file.sync();
-  } finally {
-    await file.close();
-  }
-}
-
-async function syncDirectory(path: string): Promise<void> {
-  if (process.platform === 'win32') {
-    return;
-  }
-  const directory = await open(path, 'r');
-  try {
-    await directory.sync();
-  } finally {
-    await directory.close();
   }
 }
 
@@ -151,6 +137,11 @@ export class LocalFilesystemBackupDestination implements BackupDestination {
       .filter((name) => isBackupName(name, request.kind))
       .sort()
       .reverse();
+    const nextSequence =
+      existingNames.reduce(
+        (latestSequence, name) => Math.max(latestSequence, backupSequence(name, request.kind)),
+        0,
+      ) + 1;
     const verifiedExistingNames: string[] = [];
     for (const name of existingNames) {
       if (await isVerifiedDatabase(join(this.#directory, name))) {
@@ -168,21 +159,23 @@ export class LocalFilesystemBackupDestination implements BackupDestination {
       return 'unchanged';
     }
 
-    const finalName = backupFilename(request);
+    const finalName = backupFilename(request, nextSequence);
     const finalPath = join(this.#directory, finalName);
     const publishingPath = `${finalPath}.publishing`;
+    await durablyReplaceFileWithCopy({
+      destinationPath: finalPath,
+      exclusiveStaging: true,
+      sourcePath: request.candidatePath,
+      stagingPath: publishingPath,
+    });
+
     try {
-      await copyFile(request.candidatePath, publishingPath, constants.COPYFILE_EXCL);
-      await syncFile(publishingPath);
-      await rename(publishingPath, finalPath);
-      await syncFile(finalPath);
-      await syncDirectory(this.#directory);
+      verifyDatabase(finalPath);
     } catch (error) {
-      await rm(publishingPath, { force: true });
+      await rm(finalPath, { force: true });
+      await syncDirectory(this.#directory);
       throw error;
     }
-
-    verifyDatabase(finalPath);
 
     const backupsToRemove = [...verifiedExistingNames, finalName].sort().reverse().slice(5);
     await Promise.all(

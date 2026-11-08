@@ -1,4 +1,4 @@
-import { copyFile, mkdir, open, rename, rm } from 'node:fs/promises';
+import { mkdir, rm } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 
 import BetterSqlite3 from 'better-sqlite3';
@@ -8,6 +8,7 @@ import type { MigrationProvider } from 'kysely/migration';
 
 import type { BackupDestination, BackupKind } from './backup-destination.js';
 import type { DB } from './generated.js';
+import { durablyReplaceFileWithCopy } from './durable-file.js';
 import { migrationProvider } from './migrations.js';
 import { assertSqliteIntegrity } from './sqlite-integrity.js';
 import type { EnvService } from '../env.js';
@@ -79,20 +80,11 @@ async function publishDatabaseCopy(
 }
 
 async function replaceDatabaseWithCopy(databasePath: string, copyPath: string): Promise<void> {
-  const replacementPath = `${databasePath}.restoring`;
-  try {
-    await copyFile(copyPath, replacementPath);
-    const replacement = await open(replacementPath, 'r+');
-    try {
-      await replacement.sync();
-    } finally {
-      await replacement.close();
-    }
-    await rename(replacementPath, databasePath);
-  } catch (error) {
-    await rm(replacementPath, { force: true });
-    throw error;
-  }
+  await durablyReplaceFileWithCopy({
+    destinationPath: databasePath,
+    sourcePath: copyPath,
+    stagingPath: `${databasePath}.restoring`,
+  });
 }
 
 export async function prepareApplicationDatabase(

@@ -6,6 +6,7 @@ import { afterEach, describe, expect, test } from 'vitest';
 import BetterSqlite3 from 'better-sqlite3';
 import type { MigrationProvider } from 'kysely/migration';
 
+import type { EnvService } from '../env.js';
 import { testEnv } from '../../test/server/env.js';
 import type { BackupDestination, PublishBackupRequest } from './backup-destination.js';
 import { LocalFilesystemBackupDestination } from './backup-destination.js';
@@ -18,6 +19,18 @@ async function temporaryDirectory(): Promise<string> {
   const directory = await mkdtemp(join(tmpdir(), 'ceramics-ledger-startup-'));
   temporaryDirectories.push(directory);
   return directory;
+}
+
+async function startupTestContext() {
+  const directory = await temporaryDirectory();
+  const databasePath = join(directory, 'ceramics-ledger.sqlite');
+  const backupDirectory = join(directory, 'backups');
+  return {
+    backupDestination: new LocalFilesystemBackupDestination(backupDirectory),
+    backupDirectory,
+    databasePath,
+    directory,
+  };
 }
 
 async function backupNames(backupDirectory: string, kind: 'routine' | 'pre-migration') {
@@ -75,10 +88,7 @@ afterEach(async () => {
 
 describe('prepareApplicationDatabase', () => {
   test('publishes one routine backup when data changes and none when it does not', async () => {
-    const directory = await temporaryDirectory();
-    const databasePath = join(directory, 'ceramics-ledger.sqlite');
-    const backupDirectory = join(directory, 'backups');
-    const backupDestination = new LocalFilesystemBackupDestination(backupDirectory);
+    const { backupDestination, backupDirectory, databasePath } = await startupTestContext();
 
     const initialDatabase = await prepareApplicationDatabase({
       backupDestination,
@@ -111,9 +121,7 @@ describe('prepareApplicationDatabase', () => {
   });
 
   test('retains the latest five routine and pre-migration backups independently', async () => {
-    const directory = await temporaryDirectory();
-    const backupDirectory = join(directory, 'backups');
-    const backupDestination = new LocalFilesystemBackupDestination(backupDirectory);
+    const { backupDestination, backupDirectory, directory } = await startupTestContext();
 
     for (let index = 0; index < 7; index += 1) {
       const databasePath = join(directory, `database-${index}.sqlite`);
@@ -133,10 +141,7 @@ describe('prepareApplicationDatabase', () => {
   });
 
   test('rejects a corrupt primary database without changing existing backups', async () => {
-    const directory = await temporaryDirectory();
-    const databasePath = join(directory, 'ceramics-ledger.sqlite');
-    const backupDirectory = join(directory, 'backups');
-    const backupDestination = new LocalFilesystemBackupDestination(backupDirectory);
+    const { backupDestination, backupDirectory, databasePath } = await startupTestContext();
     const database = await prepareApplicationDatabase({
       backupDestination,
       databasePath,
@@ -154,10 +159,7 @@ describe('prepareApplicationDatabase', () => {
   });
 
   test('rejects failed backup creation without changing existing backups', async () => {
-    const directory = await temporaryDirectory();
-    const databasePath = join(directory, 'ceramics-ledger.sqlite');
-    const backupDirectory = join(directory, 'backups');
-    const backupDestination = new LocalFilesystemBackupDestination(backupDirectory);
+    const { backupDestination, backupDirectory, databasePath } = await startupTestContext();
     const database = await prepareApplicationDatabase({
       backupDestination,
       databasePath,
@@ -181,10 +183,7 @@ describe('prepareApplicationDatabase', () => {
   });
 
   test('verifies a published backup before removing any older verified backup', async () => {
-    const directory = await temporaryDirectory();
-    const databasePath = join(directory, 'ceramics-ledger.sqlite');
-    const backupDirectory = join(directory, 'backups');
-    const backupDestination = new LocalFilesystemBackupDestination(backupDirectory);
+    const { backupDestination, backupDirectory, databasePath } = await startupTestContext();
 
     for (let index = 0; index < 5; index += 1) {
       const database = await prepareApplicationDatabase({
@@ -210,12 +209,39 @@ describe('prepareApplicationDatabase', () => {
     ).rejects.toThrow();
     const remainingBackupNames = await readdir(backupDirectory);
     expect(verifiedBackupNames.every((name) => remainingBackupNames.includes(name))).toBe(true);
+    expect(await backupNames(backupDirectory, 'routine')).toHaveLength(5);
+  });
+
+  test('retains the newest backup when several publications have the same timestamp', async () => {
+    const { backupDestination, backupDirectory, databasePath } = await startupTestContext();
+    const ids = ['z', 'pre-migration', 'y', 'x', 'w', 'v', 'a'];
+    const env = {
+      now: () => new Date('2026-11-08T12:00:00.000Z'),
+      randomUUID() {
+        const id = ids.shift();
+        if (id === undefined) {
+          throw new Error('Test exhausted its backup identifiers');
+        }
+        return id;
+      },
+    } satisfies EnvService;
+
+    for (let index = 0; index < 6; index += 1) {
+      const database = await prepareApplicationDatabase({ backupDestination, databasePath, env });
+      await database.db
+        .insertInto('products')
+        .values({ created_at_ms: index, id: `product-${index}`, name: `Штучка ${index}` })
+        .execute();
+      await database.close();
+    }
+
+    const routineNames = await backupNames(backupDirectory, 'routine');
+    expect(routineNames).toHaveLength(5);
+    expect(routineNames.some((name) => name.endsWith('-a.sqlite'))).toBe(true);
   });
 
   test('publishes old schema and data before applying a pending migration', async () => {
-    const directory = await temporaryDirectory();
-    const databasePath = join(directory, 'ceramics-ledger.sqlite');
-    const backupDirectory = join(directory, 'backups');
+    const { backupDirectory, databasePath } = await startupTestContext();
     const legacyDatabase = new BetterSqlite3(databasePath);
     legacyDatabase.exec(
       "create table legacy_products (name text); insert into legacy_products values ('Кольцо')",
@@ -257,10 +283,7 @@ describe('prepareApplicationDatabase', () => {
   });
 
   test('rejects a failed migration while preserving the prior schema and pre-migration backup', async () => {
-    const directory = await temporaryDirectory();
-    const databasePath = join(directory, 'ceramics-ledger.sqlite');
-    const backupDirectory = join(directory, 'backups');
-    const backupDestination = new LocalFilesystemBackupDestination(backupDirectory);
+    const { backupDestination, backupDirectory, databasePath } = await startupTestContext();
     const initialMigrations: MigrationProvider = {
       async getMigrations() {
         return {
@@ -314,10 +337,8 @@ describe('prepareApplicationDatabase', () => {
   });
 
   test('restores a complete older backup and applies pending migrations before use', async () => {
-    const directory = await temporaryDirectory();
-    const databasePath = join(directory, 'ceramics-ledger.sqlite');
-    const backupDirectory = join(directory, 'backups');
-    const backupDestination = new LocalFilesystemBackupDestination(backupDirectory);
+    const { backupDestination, backupDirectory, databasePath, directory } =
+      await startupTestContext();
     const database = await prepareApplicationDatabase({
       backupDestination,
       databasePath,
@@ -371,10 +392,7 @@ describe('prepareApplicationDatabase', () => {
   });
 
   test('serializes concurrent startup backup and migration work', async () => {
-    const directory = await temporaryDirectory();
-    const databasePath = join(directory, 'ceramics-ledger.sqlite');
-    const backupDirectory = join(directory, 'backups');
-    const backupDestination = new LocalFilesystemBackupDestination(backupDirectory);
+    const { backupDestination, backupDirectory, databasePath } = await startupTestContext();
 
     const databases = await Promise.all([
       prepareApplicationDatabase({ backupDestination, databasePath, env: testEnv }),
