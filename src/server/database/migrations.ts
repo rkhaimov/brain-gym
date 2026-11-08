@@ -18,8 +18,17 @@ const createProducts: Migration = {
   },
 };
 
+const archiveProducts: Migration = {
+  async up(database) {
+    await database.schema.alterTable('products').addColumn('archived_at_ms', 'integer').execute();
+  },
+};
+
 export const migrationProvider: MigrationProvider = {
   async getMigrations() {
-    return { '001_create_products': createProducts };
+    return {
+      '001_create_products': createProducts,
+      '002_archive_products': archiveProducts,
+    };
   },
 };

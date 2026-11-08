@@ -13,6 +13,10 @@ import {
   ListProductsResponseSchema,
   ProductSchema,
   ProductService,
+  RenameProductRequestSchema,
+  RenameProductResponseSchema,
+  SetProductArchivedRequestSchema,
+  SetProductArchivedResponseSchema,
 } from './product_pb.js';
 import type {
   CreateProductRequest,
@@ -20,6 +24,10 @@ import type {
   ListProductsRequest,
   ListProductsResponse,
   Product,
+  RenameProductRequest,
+  RenameProductResponse,
+  SetProductArchivedRequest,
+  SetProductArchivedResponse,
 } from './product_pb.js';
 
 export type ProductStubOverrides = MessageInitShape<typeof ProductSchema>;
@@ -30,6 +38,7 @@ export function createProductStub(
   return create(ProductSchema, {
     id: 'test-id',
     name: 'test-name',
+    archived: true,
     ...overrides,
   });
 }
@@ -62,7 +71,7 @@ export function createListProductsRequestStub(
   overrides: ListProductsRequestStubOverrides = {},
 ): ListProductsRequest {
   return create(ListProductsRequestSchema, {
-
+    archived: true,
     ...overrides,
   });
 }
@@ -74,6 +83,52 @@ export function createListProductsResponseStub(
 ): ListProductsResponse {
   return create(ListProductsResponseSchema, {
     products: [createProductStub()],
+    ...overrides,
+  });
+}
+
+export type RenameProductRequestStubOverrides = MessageInitShape<typeof RenameProductRequestSchema>;
+
+export function createRenameProductRequestStub(
+  overrides: RenameProductRequestStubOverrides = {},
+): RenameProductRequest {
+  return create(RenameProductRequestSchema, {
+    id: 'test-id',
+    name: 'test-name',
+    ...overrides,
+  });
+}
+
+export type RenameProductResponseStubOverrides = MessageInitShape<typeof RenameProductResponseSchema>;
+
+export function createRenameProductResponseStub(
+  overrides: RenameProductResponseStubOverrides = {},
+): RenameProductResponse {
+  return create(RenameProductResponseSchema, {
+    result: { case: 'success', value: createProductStub() },
+    ...overrides,
+  });
+}
+
+export type SetProductArchivedRequestStubOverrides = MessageInitShape<typeof SetProductArchivedRequestSchema>;
+
+export function createSetProductArchivedRequestStub(
+  overrides: SetProductArchivedRequestStubOverrides = {},
+): SetProductArchivedRequest {
+  return create(SetProductArchivedRequestSchema, {
+    id: 'test-id',
+    archived: true,
+    ...overrides,
+  });
+}
+
+export type SetProductArchivedResponseStubOverrides = MessageInitShape<typeof SetProductArchivedResponseSchema>;
+
+export function createSetProductArchivedResponseStub(
+  overrides: SetProductArchivedResponseStubOverrides = {},
+): SetProductArchivedResponse {
+  return create(SetProductArchivedResponseSchema, {
+    result: { case: 'success', value: createProductStub() },
     ...overrides,
   });
 }
@@ -152,9 +207,85 @@ function createListProductsRpcSpy(): ListProductsRpcSpy {
   };
 }
 
+export interface RenameProductRpcSpy {
+  readonly handler: Mock<(request: RenameProductRequest) => Promise<RenameProductResponse>>;
+  getLastRequest(): Promise<RenameProductRequest>;
+  rejects(error: ConnectError): void;
+  resolves(value: RenameProductResponse): void;
+}
+
+function createRenameProductRpcSpy(): RenameProductRpcSpy {
+  const handler = vi.fn<(request: RenameProductRequest) => Promise<RenameProductResponse>>(
+    async () => createRenameProductResponseStub(),
+  );
+
+  return {
+    handler,
+    async getLastRequest() {
+      let request: RenameProductRequest | undefined;
+      await vi.waitFor(() => {
+        const call = handler.mock.calls.at(-1);
+        if (call === undefined) {
+          throw new Error('renameProduct has not received a request');
+        }
+        request = call[0];
+      });
+      if (request === undefined) {
+        throw new Error('renameProduct request was not captured');
+      }
+      return request;
+    },
+    rejects(error) {
+      handler.mockRejectedValue(error);
+    },
+    resolves(value) {
+      handler.mockResolvedValue(value);
+    },
+  };
+}
+
+export interface SetProductArchivedRpcSpy {
+  readonly handler: Mock<(request: SetProductArchivedRequest) => Promise<SetProductArchivedResponse>>;
+  getLastRequest(): Promise<SetProductArchivedRequest>;
+  rejects(error: ConnectError): void;
+  resolves(value: SetProductArchivedResponse): void;
+}
+
+function createSetProductArchivedRpcSpy(): SetProductArchivedRpcSpy {
+  const handler = vi.fn<(request: SetProductArchivedRequest) => Promise<SetProductArchivedResponse>>(
+    async () => createSetProductArchivedResponseStub(),
+  );
+
+  return {
+    handler,
+    async getLastRequest() {
+      let request: SetProductArchivedRequest | undefined;
+      await vi.waitFor(() => {
+        const call = handler.mock.calls.at(-1);
+        if (call === undefined) {
+          throw new Error('setProductArchived has not received a request');
+        }
+        request = call[0];
+      });
+      if (request === undefined) {
+        throw new Error('setProductArchived request was not captured');
+      }
+      return request;
+    },
+    rejects(error) {
+      handler.mockRejectedValue(error);
+    },
+    resolves(value) {
+      handler.mockResolvedValue(value);
+    },
+  };
+}
+
 export interface ProductServiceSpies {
   readonly createProduct: CreateProductRpcSpy;
   readonly listProducts: ListProductsRpcSpy;
+  readonly renameProduct: RenameProductRpcSpy;
+  readonly setProductArchived: SetProductArchivedRpcSpy;
 }
 
 export interface ProductServiceMock {
@@ -166,11 +297,15 @@ export function createProductServiceMock(): ProductServiceMock {
   const spies: ProductServiceSpies = {
     createProduct: createCreateProductRpcSpy(),
     listProducts: createListProductsRpcSpy(),
+    renameProduct: createRenameProductRpcSpy(),
+    setProductArchived: createSetProductArchivedRpcSpy(),
   };
   const transport = createRouterTransport((router) => {
     router.service(ProductService, {
       createProduct: spies.createProduct.handler,
       listProducts: spies.listProducts.handler,
+      renameProduct: spies.renameProduct.handler,
+      setProductArchived: spies.setProductArchived.handler,
     });
   });
   return { spies, transport };

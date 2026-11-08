@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file ceramics/v1/product.proto.
  */
 export const file_ceramics_v1_product: GenFile = /*@__PURE__*/
-  fileDesc("ChljZXJhbWljcy92MS9wcm9kdWN0LnByb3RvEgtjZXJhbWljcy52MSIjCgdQcm9kdWN0EgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkiJAoUQ3JlYXRlUHJvZHVjdFJlcXVlc3QSDAoEbmFtZRgBIAEoCSJdChVDcmVhdGVQcm9kdWN0UmVzcG9uc2USJwoHc3VjY2VzcxgBIAEoCzIULmNlcmFtaWNzLnYxLlByb2R1Y3RIABIRCgdmYWlsdXJlGAIgASgJSABCCAoGcmVzdWx0IhUKE0xpc3RQcm9kdWN0c1JlcXVlc3QiPgoUTGlzdFByb2R1Y3RzUmVzcG9uc2USJgoIcHJvZHVjdHMYASADKAsyFC5jZXJhbWljcy52MS5Qcm9kdWN0MsEBCg5Qcm9kdWN0U2VydmljZRJYCg1DcmVhdGVQcm9kdWN0EiEuY2VyYW1pY3MudjEuQ3JlYXRlUHJvZHVjdFJlcXVlc3QaIi5jZXJhbWljcy52MS5DcmVhdGVQcm9kdWN0UmVzcG9uc2UiABJVCgxMaXN0UHJvZHVjdHMSIC5jZXJhbWljcy52MS5MaXN0UHJvZHVjdHNSZXF1ZXN0GiEuY2VyYW1pY3MudjEuTGlzdFByb2R1Y3RzUmVzcG9uc2UiAGIGcHJvdG8z");
+  fileDesc("ChljZXJhbWljcy92MS9wcm9kdWN0LnByb3RvEgtjZXJhbWljcy52MSI1CgdQcm9kdWN0EgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSEAoIYXJjaGl2ZWQYAyABKAgiJAoUQ3JlYXRlUHJvZHVjdFJlcXVlc3QSDAoEbmFtZRgBIAEoCSJdChVDcmVhdGVQcm9kdWN0UmVzcG9uc2USJwoHc3VjY2VzcxgBIAEoCzIULmNlcmFtaWNzLnYxLlByb2R1Y3RIABIRCgdmYWlsdXJlGAIgASgJSABCCAoGcmVzdWx0IicKE0xpc3RQcm9kdWN0c1JlcXVlc3QSEAoIYXJjaGl2ZWQYASABKAgiPgoUTGlzdFByb2R1Y3RzUmVzcG9uc2USJgoIcHJvZHVjdHMYASADKAsyFC5jZXJhbWljcy52MS5Qcm9kdWN0IjAKFFJlbmFtZVByb2R1Y3RSZXF1ZXN0EgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkiXQoVUmVuYW1lUHJvZHVjdFJlc3BvbnNlEicKB3N1Y2Nlc3MYASABKAsyFC5jZXJhbWljcy52MS5Qcm9kdWN0SAASEQoHZmFpbHVyZRgCIAEoCUgAQggKBnJlc3VsdCI5ChlTZXRQcm9kdWN0QXJjaGl2ZWRSZXF1ZXN0EgoKAmlkGAEgASgJEhAKCGFyY2hpdmVkGAIgASgIImIKGlNldFByb2R1Y3RBcmNoaXZlZFJlc3BvbnNlEicKB3N1Y2Nlc3MYASABKAsyFC5jZXJhbWljcy52MS5Qcm9kdWN0SAASEQoHZmFpbHVyZRgCIAEoCUgAQggKBnJlc3VsdDKEAwoOUHJvZHVjdFNlcnZpY2USWAoNQ3JlYXRlUHJvZHVjdBIhLmNlcmFtaWNzLnYxLkNyZWF0ZVByb2R1Y3RSZXF1ZXN0GiIuY2VyYW1pY3MudjEuQ3JlYXRlUHJvZHVjdFJlc3BvbnNlIgASVQoMTGlzdFByb2R1Y3RzEiAuY2VyYW1pY3MudjEuTGlzdFByb2R1Y3RzUmVxdWVzdBohLmNlcmFtaWNzLnYxLkxpc3RQcm9kdWN0c1Jlc3BvbnNlIgASWAoNUmVuYW1lUHJvZHVjdBIhLmNlcmFtaWNzLnYxLlJlbmFtZVByb2R1Y3RSZXF1ZXN0GiIuY2VyYW1pY3MudjEuUmVuYW1lUHJvZHVjdFJlc3BvbnNlIgASZwoSU2V0UHJvZHVjdEFyY2hpdmVkEiYuY2VyYW1pY3MudjEuU2V0UHJvZHVjdEFyY2hpdmVkUmVxdWVzdBonLmNlcmFtaWNzLnYxLlNldFByb2R1Y3RBcmNoaXZlZFJlc3BvbnNlIgBiBnByb3RvMw");
 
 /**
  * @generated from message ceramics.v1.Product
@@ -25,6 +25,11 @@ export type Product = Message<"ceramics.v1.Product"> & {
    * @generated from field: string name = 2;
    */
   name: string;
+
+  /**
+   * @generated from field: bool archived = 3;
+   */
+  archived: boolean;
 };
 
 /**
@@ -84,6 +89,10 @@ export const CreateProductResponseSchema: GenMessage<CreateProductResponse> = /*
  * @generated from message ceramics.v1.ListProductsRequest
  */
 export type ListProductsRequest = Message<"ceramics.v1.ListProductsRequest"> & {
+  /**
+   * @generated from field: bool archived = 1;
+   */
+  archived: boolean;
 };
 
 /**
@@ -111,6 +120,108 @@ export const ListProductsResponseSchema: GenMessage<ListProductsResponse> = /*@_
   messageDesc(file_ceramics_v1_product, 4);
 
 /**
+ * @generated from message ceramics.v1.RenameProductRequest
+ */
+export type RenameProductRequest = Message<"ceramics.v1.RenameProductRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+};
+
+/**
+ * Describes the message ceramics.v1.RenameProductRequest.
+ * Use `create(RenameProductRequestSchema)` to create a new message.
+ */
+export const RenameProductRequestSchema: GenMessage<RenameProductRequest> = /*@__PURE__*/
+  messageDesc(file_ceramics_v1_product, 5);
+
+/**
+ * @generated from message ceramics.v1.RenameProductResponse
+ */
+export type RenameProductResponse = Message<"ceramics.v1.RenameProductResponse"> & {
+  /**
+   * @generated from oneof ceramics.v1.RenameProductResponse.result
+   */
+  result: {
+    /**
+     * @generated from field: ceramics.v1.Product success = 1;
+     */
+    value: Product;
+    case: "success";
+  } | {
+    /**
+     * @generated from field: string failure = 2;
+     */
+    value: string;
+    case: "failure";
+  } | { case: undefined; value?: undefined };
+};
+
+/**
+ * Describes the message ceramics.v1.RenameProductResponse.
+ * Use `create(RenameProductResponseSchema)` to create a new message.
+ */
+export const RenameProductResponseSchema: GenMessage<RenameProductResponse> = /*@__PURE__*/
+  messageDesc(file_ceramics_v1_product, 6);
+
+/**
+ * @generated from message ceramics.v1.SetProductArchivedRequest
+ */
+export type SetProductArchivedRequest = Message<"ceramics.v1.SetProductArchivedRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: bool archived = 2;
+   */
+  archived: boolean;
+};
+
+/**
+ * Describes the message ceramics.v1.SetProductArchivedRequest.
+ * Use `create(SetProductArchivedRequestSchema)` to create a new message.
+ */
+export const SetProductArchivedRequestSchema: GenMessage<SetProductArchivedRequest> = /*@__PURE__*/
+  messageDesc(file_ceramics_v1_product, 7);
+
+/**
+ * @generated from message ceramics.v1.SetProductArchivedResponse
+ */
+export type SetProductArchivedResponse = Message<"ceramics.v1.SetProductArchivedResponse"> & {
+  /**
+   * @generated from oneof ceramics.v1.SetProductArchivedResponse.result
+   */
+  result: {
+    /**
+     * @generated from field: ceramics.v1.Product success = 1;
+     */
+    value: Product;
+    case: "success";
+  } | {
+    /**
+     * @generated from field: string failure = 2;
+     */
+    value: string;
+    case: "failure";
+  } | { case: undefined; value?: undefined };
+};
+
+/**
+ * Describes the message ceramics.v1.SetProductArchivedResponse.
+ * Use `create(SetProductArchivedResponseSchema)` to create a new message.
+ */
+export const SetProductArchivedResponseSchema: GenMessage<SetProductArchivedResponse> = /*@__PURE__*/
+  messageDesc(file_ceramics_v1_product, 8);
+
+/**
  * @generated from service ceramics.v1.ProductService
  */
 export const ProductService: GenService<{
@@ -129,6 +240,22 @@ export const ProductService: GenService<{
     methodKind: "unary";
     input: typeof ListProductsRequestSchema;
     output: typeof ListProductsResponseSchema;
+  },
+  /**
+   * @generated from rpc ceramics.v1.ProductService.RenameProduct
+   */
+  renameProduct: {
+    methodKind: "unary";
+    input: typeof RenameProductRequestSchema;
+    output: typeof RenameProductResponseSchema;
+  },
+  /**
+   * @generated from rpc ceramics.v1.ProductService.SetProductArchived
+   */
+  setProductArchived: {
+    methodKind: "unary";
+    input: typeof SetProductArchivedRequestSchema;
+    output: typeof SetProductArchivedResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_ceramics_v1_product, 0);

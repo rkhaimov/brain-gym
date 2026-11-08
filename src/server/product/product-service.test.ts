@@ -59,6 +59,81 @@ describe('ProductService', () => {
     });
   });
 
+  test('creator can rename, archive, and restore a Product without changing its identity', async ({
+    productService,
+  }) => {
+    let client = productService.client;
+    const created = await client.createProduct({ name: 'Кольцо' });
+    if (created.result.case !== 'success') {
+      throw new Error('Expected Product creation to succeed');
+    }
+    const productId = created.result.value.id;
+
+    await expect(
+      client.renameProduct({ id: productId, name: 'Кольцо с гранатом' }),
+    ).resolves.toMatchObject({
+      result: {
+        case: 'success',
+        value: { id: productId, name: 'Кольцо с гранатом', archived: false },
+      },
+    });
+    await expect(
+      client.setProductArchived({ id: productId, archived: true }),
+    ).resolves.toMatchObject({
+      result: {
+        case: 'success',
+        value: { id: productId, name: 'Кольцо с гранатом', archived: true },
+      },
+    });
+    client = await productService.restart();
+    await expect(client.listProducts({})).resolves.toMatchObject({ products: [] });
+    await expect(client.listProducts({ archived: true })).resolves.toMatchObject({
+      products: [{ id: productId, name: 'Кольцо с гранатом', archived: true }],
+    });
+
+    await expect(
+      client.setProductArchived({ id: productId, archived: false }),
+    ).resolves.toMatchObject({
+      result: {
+        case: 'success',
+        value: { id: productId, name: 'Кольцо с гранатом', archived: false },
+      },
+    });
+    client = await productService.restart();
+    await expect(client.listProducts({})).resolves.toMatchObject({
+      products: [{ id: productId, name: 'Кольцо с гранатом', archived: false }],
+    });
+  });
+
+  test('archived Product names remain reserved with exact equality for create and rename', async ({
+    productService,
+  }) => {
+    const client = productService.client;
+    const archived = await client.createProduct({ name: 'Кольцо' });
+    if (archived.result.case !== 'success') {
+      throw new Error('Expected Product creation to succeed');
+    }
+    await client.setProductArchived({ id: archived.result.value.id, archived: true });
+
+    await expect(client.createProduct({ name: 'Кольцо' })).resolves.toMatchObject({
+      result: { case: 'failure', value: 'Штучка с таким названием уже существует' },
+    });
+    const active = await client.createProduct({ name: 'Кулон' });
+    if (active.result.case !== 'success') {
+      throw new Error('Expected Product creation to succeed');
+    }
+    await expect(
+      client.renameProduct({ id: active.result.value.id, name: 'Кольцо' }),
+    ).resolves.toMatchObject({
+      result: { case: 'failure', value: 'Штучка с таким названием уже существует' },
+    });
+    await expect(
+      client.renameProduct({ id: active.result.value.id, name: 'кольцо' }),
+    ).resolves.toMatchObject({
+      result: { case: 'success', value: { id: active.result.value.id, name: 'кольцо' } },
+    });
+  });
+
   test('creator receives a Russian failure when a Product name is empty', async ({
     productService,
   }) => {

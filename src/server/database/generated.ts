@@ -4,6 +4,7 @@
  */
 
 export interface Products {
+  archived_at_ms: number | null;
   created_at_ms: number;
   id: string;
   name: string;

@@ -1,5 +1,4 @@
 import { createQueryOptions, useMutation, useTransport } from '@connectrpc/connect-query';
-import { useForm } from '@tanstack/react-form';
 import { useQueryClient } from '@tanstack/react-query';
 import type { FormEvent, RefObject } from 'react';
 import { z } from 'zod';
@@ -17,6 +16,7 @@ import {
 } from '@/client/components/ui/dialog.js';
 import { Field, FieldError, FieldLabel } from '@/client/components/ui/field.js';
 import { Input } from '@/client/components/ui/input.js';
+import { useDraftForm } from '@/client/form.js';
 import {
   createProduct,
   listProducts,
@@ -24,6 +24,7 @@ import {
 
 const fieldErrorsSchema = z.array(z.object({ message: z.string() }));
 const submissionErrorSchema = z.string().optional();
+const productDraftSchema = z.object({ name: z.string() });
 
 interface CreateProductDialogProps {
   readonly onOpenChange: (open: boolean) => void;
@@ -39,8 +40,9 @@ export function CreateProductDialog({
   const createProductMutation = useMutation(createProduct);
   const queryClient = useQueryClient();
   const transport = useTransport();
-  const form = useForm({
+  const { clearDraft, form } = useDraftForm({
     defaultValues: { name: '' },
+    draftKey: 'product:create',
     async onSubmit({ formApi, value }) {
       function rejectUnexpected(error: unknown): never {
         console.error('Unexpected Product form failure', error);
@@ -84,14 +86,12 @@ export function CreateProductDialog({
         }
       }
     },
+    schema: productDraftSchema,
   });
 
   function changeOpen(nextOpen: boolean): void {
     if (!nextOpen && form.state.isSubmitting) {
       return;
-    }
-    if (!nextOpen) {
-      form.reset();
     }
     onOpenChange(nextOpen);
   }
@@ -181,6 +181,9 @@ export function CreateProductDialog({
               </form.Subscribe>
 
               <DialogFooter>
+                <Button disabled={isSubmitting} onClick={clearDraft} type="button" variant="ghost">
+                  Очистить
+                </Button>
                 <DialogClose asChild>
                   <Button disabled={isSubmitting} type="button" variant="outline">
                     Отмена

@@ -8,6 +8,7 @@ import type { MutationQueue } from '../mutation-queue.js';
 
 const NAME_REQUIRED_MESSAGE = 'Введите название штучки';
 const NAME_ALREADY_EXISTS_MESSAGE = 'Штучка с таким названием уже существует';
+const PRODUCT_NOT_FOUND_MESSAGE = 'Штучка не найдена';
 
 type ProductId = string & { readonly __productId: true };
 
@@ -22,11 +23,13 @@ export interface ProductRouteDependencies {
 }
 
 interface DomainProduct {
+  readonly archived: boolean;
   readonly id: ProductId;
   readonly name: string;
 }
 
 interface PersistedProduct {
+  readonly archived_at_ms: number | null;
   readonly id: string;
   readonly name: string;
 }
@@ -34,11 +37,12 @@ interface PersistedProduct {
 function productFromDatabase(row: PersistedProduct): DomainProduct {
   const id = row.id;
   assertProductId(id);
-  return { id, name: row.name };
+  return { archived: row.archived_at_ms !== null, id, name: row.name };
 }
 
 function productToProtobuf(product: DomainProduct) {
   return create(ProductSchema, {
+    archived: product.archived,
     id: product.id,
     name: product.name,
   });
@@ -77,7 +81,7 @@ function createProductService(
 
             const id = env.randomUUID();
             assertProductId(id);
-            const product: DomainProduct = { id, name: request.name };
+            const product: DomainProduct = { archived: false, id, name: request.name };
             await transaction
               .insertInto('products')
               .values({
@@ -100,15 +104,65 @@ function createProductService(
       });
     },
 
-    async listProducts() {
+    async listProducts(request) {
       const rows = await database.db
         .selectFrom('products')
-        .select(['id', 'name'])
+        .select(['archived_at_ms', 'id', 'name'])
+        .where('archived_at_ms', request.archived ? 'is not' : 'is', null)
         .orderBy('created_at_ms', 'asc')
         .orderBy('id', 'asc')
         .execute();
 
       return { products: rows.map(productFromDatabase).map(productToProtobuf) };
+    },
+
+    async renameProduct(request) {
+      if (request.name.length === 0) {
+        return productFailure(NAME_REQUIRED_MESSAGE);
+      }
+
+      return mutationQueue.run(async () => {
+        try {
+          const row = await database.db
+            .updateTable('products')
+            .set({ name: request.name })
+            .where('id', '=', request.id)
+            .returning(['archived_at_ms', 'id', 'name'])
+            .executeTakeFirst();
+          return row === undefined
+            ? productFailure(PRODUCT_NOT_FOUND_MESSAGE)
+            : {
+                result: {
+                  case: 'success' as const,
+                  value: productToProtobuf(productFromDatabase(row)),
+                },
+              };
+        } catch (error) {
+          if (isUniqueConstraintError(error)) {
+            return productFailure(NAME_ALREADY_EXISTS_MESSAGE);
+          }
+          throw error;
+        }
+      });
+    },
+
+    async setProductArchived(request) {
+      return mutationQueue.run(async () => {
+        const row = await database.db
+          .updateTable('products')
+          .set({ archived_at_ms: request.archived ? env.now().getTime() : null })
+          .where('id', '=', request.id)
+          .returning(['archived_at_ms', 'id', 'name'])
+          .executeTakeFirst();
+        return row === undefined
+          ? productFailure(PRODUCT_NOT_FOUND_MESSAGE)
+          : {
+              result: {
+                case: 'success' as const,
+                value: productToProtobuf(productFromDatabase(row)),
+              },
+            };
+      });
     },
   };
 }

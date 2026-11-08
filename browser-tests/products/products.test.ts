@@ -1,11 +1,13 @@
 import { Code, ConnectError } from '@connectrpc/connect';
-import { expect } from 'vitest';
+import { expect, vi } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 
 import {
   createCreateProductResponseStub,
   createListProductsResponseStub,
   createProductStub,
+  createRenameProductResponseStub,
+  createSetProductArchivedResponseStub,
 } from '@/shared/gen/ceramics/v1/product_test.js';
 import type {
   CreateProductResponse,
@@ -13,6 +15,8 @@ import type {
 } from '@/shared/gen/ceramics/v1/product_pb.js';
 import { screenshot } from '@/test/browser/runtime/screenshot.js';
 import { test } from '@/test/browser/runtime/test.js';
+
+const CREATE_DRAFT_STORAGE_KEY = 'ceramics:form-draft:product:create';
 
 test.describe('Product catalog', () => {
   test('displays the empty catalog', async ({ productService }) => {
@@ -195,6 +199,139 @@ test.describe('Product catalog', () => {
     await products.screenshotPage('Created Product');
   });
 
+  test('renames a Product and moves it between active and archived filters', async ({
+    productService,
+  }) => {
+    let product = createProductStub({ archived: false, id: 'ring-id', name: 'Кольцо' });
+    productService.listProducts.handler.mockImplementation(async (request) =>
+      createListProductsResponseStub({
+        products: request.archived === product.archived ? [product] : [],
+      }),
+    );
+    productService.renameProduct.handler.mockImplementation(async (request) => {
+      product = createProductStub({ ...product, name: request.name });
+      return createRenameProductResponseStub({
+        result: { case: 'success', value: product },
+      });
+    });
+    productService.setProductArchived.handler.mockImplementation(async (request) => {
+      product = createProductStub({ ...product, archived: request.archived });
+      return createSetProductArchivedResponseStub({
+        result: { case: 'success', value: product },
+      });
+    });
+
+    const products = createProductsPage();
+    await products.open();
+    await products.rename('Кольцо', 'Кольцо с гранатом');
+
+    await expect.element(products.product('Кольцо с гранатом')).toBeVisible();
+    await expect(productService.renameProduct.getLastRequest()).resolves.toMatchObject({
+      id: 'ring-id',
+      name: 'Кольцо с гранатом',
+    });
+
+    await products.archive('Кольцо с гранатом');
+    await expect.element(products.product('Кольцо с гранатом')).not.toBeInTheDocument();
+    await products.showArchived();
+    await expect.element(products.product('Кольцо с гранатом')).toBeVisible();
+
+    await products.restore('Кольцо с гранатом');
+    await expect.element(products.product('Кольцо с гранатом')).not.toBeInTheDocument();
+    await products.showActive();
+    await expect.element(products.product('Кольцо с гранатом')).toBeVisible();
+  });
+
+  test('restores create and edit drafts after dismissal and application restart', async ({
+    productService,
+  }) => {
+    const product = createProductStub({ archived: false, id: 'ring-id', name: 'Кольцо' });
+    productService.listProducts.resolves(createListProductsResponseStub({ products: [product] }));
+
+    const products = createProductsPage();
+    await products.open();
+    await products.openCreateDialog();
+    await products.name().fill('Новый кулон');
+    await vi.advanceTimersByTimeAsync(5_000);
+    await products.cancel();
+
+    await products.open();
+    await products.openCreateDialog();
+    await expect.element(products.name()).toHaveValue('Новый кулон');
+    await products.cancel();
+
+    await products.openRenameDialog('Кольцо');
+    await products.renameName().fill('Кольцо с гранатом');
+    window.dispatchEvent(new Event('pagehide'));
+    await products.open();
+    await products.openRenameDialog('Кольцо');
+    await expect.element(products.renameName()).toHaveValue('Кольцо с гранатом');
+  });
+
+  test('clears a create draft after a confirmed save', async ({ productService }) => {
+    const product = createProductStub({ archived: false, name: 'Кольцо' });
+    productService.createProduct.resolves(
+      createCreateProductResponseStub({ result: { case: 'success', value: product } }),
+    );
+    productService.listProducts.handler.mockImplementation(async () =>
+      createListProductsResponseStub({
+        products: productService.createProduct.handler.mock.calls.length === 0 ? [] : [product],
+      }),
+    );
+
+    const products = createProductsPage();
+    await products.open();
+    await products.openCreateDialog();
+    await products.name().fill(product.name);
+    await vi.advanceTimersByTimeAsync(5_000);
+    await products.submit();
+
+    await products.open();
+    await products.openCreateDialog();
+    await expect.element(products.name()).toHaveValue('');
+  });
+
+  test('clears a draft only through the explicit Clear action', async ({ productService }) => {
+    productService.listProducts.resolves(createListProductsResponseStub({ products: [] }));
+    const products = createProductsPage();
+    await products.open();
+    await products.openCreateDialog();
+    await products.name().fill('Кулон');
+    await vi.advanceTimersByTimeAsync(5_000);
+
+    await products.clearCreateDraft();
+    await expect.element(products.name()).toHaveValue('');
+    await products.cancel();
+    await products.open();
+    await products.openCreateDialog();
+    await expect.element(products.name()).toHaveValue('');
+  });
+
+  test('ignores an invalid draft and prevents an older write from replacing a newer one', async ({
+    productService,
+  }) => {
+    productService.listProducts.resolves(createListProductsResponseStub({ products: [] }));
+    localStorage.setItem(CREATE_DRAFT_STORAGE_KEY, '{invalid');
+    const products = createProductsPage();
+    await products.open();
+    await products.openCreateDialog();
+    await expect.element(products.name()).toHaveValue('');
+
+    await products.name().fill('Старый черновик');
+    localStorage.setItem(
+      CREATE_DRAFT_STORAGE_KEY,
+      JSON.stringify({
+        requestTimestampMs: Date.now() + 10_000,
+        values: { name: 'Более новый черновик' },
+      }),
+    );
+    await vi.advanceTimersByTimeAsync(5_000);
+    await products.cancel();
+    await products.open();
+    await products.openCreateDialog();
+    await expect.element(products.name()).toHaveValue('Более новый черновик');
+  });
+
   test('shows a generic message for a transport failure', async ({ productService }) => {
     productService.listProducts.resolves(createListProductsResponseStub({ products: [] }));
     productService.createProduct.rejects(new ConnectError('Server unavailable', Code.Unavailable));
@@ -237,8 +374,13 @@ function createProductsPage() {
   const headerCreateButton = () => page.getByRole('button', { name: 'Создать штучку' });
 
   return {
+    archive: (name: string) =>
+      catalog()
+        .getByRole('button', { name: `Архивировать ${name}` })
+        .click(),
     cancel: () => dialog().getByRole('button', { name: 'Отмена' }).click(),
     cancelButton: () => dialog().getByRole('button', { name: 'Отмена' }),
+    clearCreateDraft: () => dialog().getByRole('button', { name: 'Очистить' }).click(),
     count: (count: number) => page.getByLabelText(`Количество штучек: ${count}`),
     dialog,
     emptyCreateButton,
@@ -250,11 +392,33 @@ function createProductsPage() {
     open: () => window.openApplicationRoute('/products'),
     openCreateDialog: () => headerCreateButton().click(),
     openEmptyCreateDialog: () => emptyCreateButton().click(),
+    openRenameDialog: (name: string) =>
+      catalog()
+        .getByRole('button', { name: `Переименовать ${name}` })
+        .click(),
     pendingSubmitButton: () => dialog().getByRole('button', { name: 'Сохраняем…' }),
     product: (name: string) => catalog().getByText(name, { exact: true }),
+    rename: async (currentName: string, nextName: string) => {
+      await catalog()
+        .getByRole('button', { name: `Переименовать ${currentName}` })
+        .click();
+      const renameDialog = page.getByRole('dialog', { name: 'Переименовать штучку' });
+      await renameDialog.getByRole('textbox', { name: 'Название' }).fill(nextName);
+      await renameDialog.getByRole('button', { name: 'Сохранить' }).click();
+    },
+    renameName: () =>
+      page
+        .getByRole('dialog', { name: 'Переименовать штучку' })
+        .getByRole('textbox', { name: 'Название' }),
+    restore: (name: string) =>
+      catalog()
+        .getByRole('button', { name: `Восстановить ${name}` })
+        .click(),
     screenshotModalState: (name: string) => screenshot(page.elementLocator(document.body), name),
     screenshotPage: (name: string) => screenshot(page.elementLocator(document.body), name),
     submit: () => dialog().getByRole('button', { name: 'Создать' }).click(),
+    showActive: () => page.getByRole('button', { name: 'Активные' }).click(),
+    showArchived: () => page.getByRole('button', { name: 'Архив' }).click(),
   };
 }
 

@@ -5,6 +5,7 @@ package ceramics.v1;
 message Product {
   string id = 1;
   string name = 2;
+  bool archived = 3;
 }
 
 message CreateProductRequest {
@@ -18,13 +19,41 @@ message CreateProductResponse {
   }
 }
 
-message ListProductsRequest {}
+message ListProductsRequest {
+  bool archived = 1;
+}
 
 message ListProductsResponse {
   repeated Product products = 1;
 }
 
+message RenameProductRequest {
+  string id = 1;
+  string name = 2;
+}
+
+message RenameProductResponse {
+  oneof result {
+    Product success = 1;
+    string failure = 2;
+  }
+}
+
+message SetProductArchivedRequest {
+  string id = 1;
+  bool archived = 2;
+}
+
+message SetProductArchivedResponse {
+  oneof result {
+    Product success = 1;
+    string failure = 2;
+  }
+}
+
 service ProductService {
   rpc CreateProduct(CreateProductRequest) returns (CreateProductResponse) {}
   rpc ListProducts(ListProductsRequest) returns (ListProductsResponse) {}
+  rpc RenameProduct(RenameProductRequest) returns (RenameProductResponse) {}
+  rpc SetProductArchived(SetProductArchivedRequest) returns (SetProductArchivedResponse) {}
 }

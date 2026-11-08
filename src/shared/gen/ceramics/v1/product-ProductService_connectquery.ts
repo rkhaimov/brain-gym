@@ -13,3 +13,13 @@ export const createProduct = ProductService.method.createProduct;
  * @generated from rpc ceramics.v1.ProductService.ListProducts
  */
 export const listProducts = ProductService.method.listProducts;
+
+/**
+ * @generated from rpc ceramics.v1.ProductService.RenameProduct
+ */
+export const renameProduct = ProductService.method.renameProduct;
+
+/**
+ * @generated from rpc ceramics.v1.ProductService.SetProductArchived
+ */
+export const setProductArchived = ProductService.method.setProductArchived;
