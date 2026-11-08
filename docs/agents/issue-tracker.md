@@ -7,8 +7,15 @@ Issues and specs for this repo live as markdown files in `.scratch/`.
 - One feature per directory: `.scratch/<feature-slug>/`
 - The spec is `.scratch/<feature-slug>/spec.md`
 - Implementation issues are one file per ticket at `.scratch/<feature-slug>/issues/<NN>-<slug>.md`, numbered from `01`, never a single combined tickets file
-- Triage state is recorded as a `Status:` line near the top of each issue file (see `triage-labels.md` for the role strings)
+- An implementation issue records its current state in a `Status:` line near the top. While it is open, use one of the triage role strings from `triage-labels.md`; use `completed` only as the terminal state defined below.
 - Comments and conversation history append to the bottom of the file under a `## Comments` heading
+
+## Completing an implementation issue
+
+- Audit every acceptance checkbox against the current implementation and verification evidence. Mark an item `[x]` only when it is actually satisfied.
+- If every acceptance item is checked, set `Status: completed` and append a dated comment naming the implementation commits and verification performed.
+- If any acceptance item remains unchecked, keep an appropriate open triage status and append a comment describing the remaining work.
+- `completed` is an implementation lifecycle state, not a sixth triage label; do not add it to `triage-labels.md`.
 
 ## When a skill says "publish to the issue tracker"
 
