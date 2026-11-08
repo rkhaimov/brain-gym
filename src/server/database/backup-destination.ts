@@ -5,6 +5,8 @@ import { join, resolve } from 'node:path';
 import { Mutex } from 'async-mutex';
 import BetterSqlite3 from 'better-sqlite3';
 
+import { assertSqliteIntegrity } from './sqlite-integrity.js';
+
 export type BackupKind = 'routine' | 'pre-migration';
 
 export interface PublishBackupRequest {
@@ -52,16 +54,7 @@ function isBackupName(name: string, kind: BackupKind): boolean {
 function verifyDatabase(path: string): void {
   const database = new BetterSqlite3(path, { fileMustExist: true, readonly: true });
   try {
-    const result = database.pragma('integrity_check');
-    if (
-      !Array.isArray(result) ||
-      result.length !== 1 ||
-      typeof result[0] !== 'object' ||
-      result[0] === null ||
-      Reflect.get(result[0], 'integrity_check') !== 'ok'
-    ) {
-      throw new Error(`SQLite integrity check failed for ${path}`);
-    }
+    assertSqliteIntegrity(database, path);
   } finally {
     database.close();
   }
@@ -182,6 +175,7 @@ export class LocalFilesystemBackupDestination implements BackupDestination {
       await copyFile(request.candidatePath, publishingPath, constants.COPYFILE_EXCL);
       await syncFile(publishingPath);
       await rename(publishingPath, finalPath);
+      await syncFile(finalPath);
       await syncDirectory(this.#directory);
     } catch (error) {
       await rm(publishingPath, { force: true });

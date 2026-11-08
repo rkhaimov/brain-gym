@@ -9,6 +9,7 @@ import type { MigrationProvider } from 'kysely/migration';
 import type { BackupDestination, BackupKind } from './backup-destination.js';
 import type { DB } from './generated.js';
 import { migrationProvider } from './migrations.js';
+import { assertSqliteIntegrity } from './sqlite-integrity.js';
 import type { EnvService } from '../env.js';
 import { productionEnv } from '../env.js';
 
@@ -22,19 +23,6 @@ export interface PrepareApplicationDatabaseOptions {
   readonly databasePath: string;
   readonly env?: EnvService;
   readonly migrations?: MigrationProvider;
-}
-
-function verifyPrimaryDatabase(database: BetterSqlite3.Database, databasePath: string): void {
-  const result = database.pragma('integrity_check');
-  if (
-    !Array.isArray(result) ||
-    result.length !== 1 ||
-    typeof result[0] !== 'object' ||
-    result[0] === null ||
-    Reflect.get(result[0], 'integrity_check') !== 'ok'
-  ) {
-    throw new Error(`SQLite integrity check failed for ${databasePath}`);
-  }
 }
 
 function executedMigrationNames(database: BetterSqlite3.Database): Set<string> {
@@ -119,7 +107,7 @@ export async function prepareApplicationDatabase(
     let connectionOpen = true;
     let preMigrationCopyPath: string | undefined;
     try {
-      verifyPrimaryDatabase(sqlite, options.databasePath);
+      assertSqliteIntegrity(sqlite, options.databasePath);
       const migrationsPending = await hasPendingMigrations(sqlite, provider);
       await publishDatabaseCopy(
         sqlite,

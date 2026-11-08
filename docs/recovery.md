@@ -38,11 +38,11 @@ If startup reports a migration failure, the server remains unavailable. The prim
 replaced with the verified pre-migration copy made for that attempt, and the published
 `pre-migration-*.sqlite` backup remains available.
 
-Keep the application stopped while investigating. Preserve the failed primary and all backups,
-correct or roll back the application update, and retry startup. If the primary cannot be used,
-follow the routine restore steps with the newest appropriate `pre-migration-*.sqlite` file. A
-compatible application version may be used to inspect that copy; a newer compatible version will
-apply its pending migrations during startup.
+Keep the application stopped while investigating. Preserve the restored primary and all backups,
+record the startup error, correct or roll back the application update, and retry startup. If the
+primary cannot be used, follow the routine restore steps with the newest appropriate
+`pre-migration-*.sqlite` file. A compatible application version may be used to inspect that copy;
+a newer compatible version will apply its pending migrations during startup.
 
 ## Same-device limitation
 
