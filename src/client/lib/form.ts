@@ -64,10 +64,10 @@ function removeStoredDraft(key: string): void {
   }
 }
 
-function writeStoredDraft<T>(key: string, draft: StoredDraft<T>): void {
+function writeStoredDraft<T>(key: string, schema: z.ZodType<T>, draft: StoredDraft<T>): void {
   try {
-    const current = storedDraftSchema.safeParse(JSON.parse(localStorage.getItem(key) ?? 'null'));
-    if (current.success && current.data.requestTimestampMs > draft.requestTimestampMs) {
+    const current = readStoredDraft(key, schema);
+    if (current !== undefined && current.requestTimestampMs > draft.requestTimestampMs) {
       return;
     }
     localStorage.setItem(key, JSON.stringify(draft));
@@ -114,7 +114,7 @@ export function useDraftForm<T>(options: UseDraftFormOptions<T>) {
     function flush(): void {
       const draft = pendingWrite.current;
       if (draft === undefined) return;
-      writeStoredDraft(key, draft);
+      writeStoredDraft(key, schema, draft);
       if (pendingWrite.current === draft) pendingWrite.current = undefined;
     }
 

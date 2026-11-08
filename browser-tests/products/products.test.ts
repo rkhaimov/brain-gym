@@ -324,6 +324,14 @@ test.describe('Product catalog', () => {
     await products.openCreateDialog();
     await expect.element(products.name()).toHaveValue('');
 
+    await products.name().fill('Черновик после ошибки');
+    await vi.advanceTimersByTimeAsync(5_000);
+    await products.cancel();
+    await products.open();
+    await products.openCreateDialog();
+    await expect.element(products.name()).toHaveValue('Черновик после ошибки');
+    await products.clearCreateDraft();
+
     await products.name().fill('Старый черновик');
     localStorage.setItem(
       CREATE_DRAFT_STORAGE_KEY,

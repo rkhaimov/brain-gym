@@ -1,5 +1,4 @@
-import { createQueryOptions, useMutation, useQuery, useTransport } from '@connectrpc/connect-query';
-import { useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@connectrpc/connect-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { Archive, ArchiveRestore, PackageOpen, Pencil, Plus } from 'lucide-react';
 import type { MouseEvent } from 'react';
@@ -25,13 +24,13 @@ import type { Product } from '@/shared/gen/ceramics/v1/product_pb.js';
 
 import { CreateProductDialog } from './-create-product-dialog.js';
 import { EditProductDialog } from './-edit-product-dialog.js';
+import { useRefreshProductCatalog } from './-product-catalog-query.js';
 
 function ProductsPage() {
   const [showArchived, setShowArchived] = useState(false);
   const catalog = useQuery(listProducts, { archived: showArchived });
   const archiveMutation = useMutation(setProductArchived);
-  const queryClient = useQueryClient();
-  const transport = useTransport();
+  const refreshProductCatalog = useRefreshProductCatalog();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editedProduct, setEditedProduct] = useState<Product>();
   const createDialogTrigger = useRef<HTMLButtonElement | null>(null);
@@ -54,14 +53,7 @@ function ProductsPage() {
         response.result.case === 'failure' ? response.result.value : 'Missing result',
       );
     }
-    await Promise.all(
-      [false, true].map((filterArchived) =>
-        queryClient.invalidateQueries({
-          queryKey: createQueryOptions(listProducts, { archived: filterArchived }, { transport })
-            .queryKey,
-        }),
-      ),
-    );
+    await refreshProductCatalog();
   }
 
   return (

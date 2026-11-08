@@ -1,5 +1,3 @@
-import { createQueryOptions, useTransport } from '@connectrpc/connect-query';
-import { useQueryClient } from '@tanstack/react-query';
 import type { FormEvent, RefObject } from 'react';
 import { z } from 'zod';
 
@@ -17,11 +15,12 @@ import {
 import { Field, FieldError, FieldLabel } from '@/client/components/ui/field.js';
 import { Input } from '@/client/components/ui/input.js';
 import { useDraftForm } from '@/client/lib/form.js';
-import { listProducts } from '@/shared/gen/ceramics/v1/product-ProductService_connectquery.js';
 import type {
   CreateProductResponse,
   RenameProductResponse,
 } from '@/shared/gen/ceramics/v1/product_pb.js';
+
+import { useRefreshProductCatalog } from './-product-catalog-query.js';
 
 const fieldErrorsSchema = z.array(z.object({ message: z.string() }));
 const submissionErrorSchema = z.string().optional();
@@ -48,8 +47,7 @@ export function ProductFormDialog({
   submitLabel,
   title,
 }: ProductFormDialogProps) {
-  const queryClient = useQueryClient();
-  const transport = useTransport();
+  const refreshProductCatalog = useRefreshProductCatalog();
   const { clearDraft, form, handleSubmit } = useDraftForm({
     defaultValues: { name: defaultName },
     draftKey,
@@ -80,13 +78,7 @@ export function ProductFormDialog({
           throw new Error(response.result.value);
         case 'success':
           try {
-            await Promise.all(
-              [false, true].map((archived) =>
-                queryClient.invalidateQueries({
-                  queryKey: createQueryOptions(listProducts, { archived }, { transport }).queryKey,
-                }),
-              ),
-            );
+            await refreshProductCatalog();
           } catch (error) {
             rejectUnexpected(error);
           }
