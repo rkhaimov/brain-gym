@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import { connectNodeAdapter } from '@connectrpc/connect-node';
 
@@ -14,7 +14,7 @@ import { registerProductRoutes } from './product/product-service.js';
 
 export interface ApplicationServerOptions {
   readonly backupDestination?: BackupDestination;
-  readonly databasePath: string;
+  readonly dataDirectory: string;
   readonly env?: EnvService;
   readonly host?: string;
   readonly port?: number;
@@ -72,8 +72,8 @@ export async function startApplicationServer(
   const database = await prepareApplicationDatabase({
     backupDestination:
       options.backupDestination ??
-      new LocalFilesystemBackupDestination(join(dirname(options.databasePath), 'backups')),
-    databasePath: options.databasePath,
+      new LocalFilesystemBackupDestination(join(options.dataDirectory, 'backups')),
+    databasePath: join(options.dataDirectory, 'ceramics-ledger.sqlite'),
     env,
   });
   const requestHandler = connectNodeAdapter({

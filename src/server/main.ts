@@ -1,9 +1,10 @@
-import { resolve } from 'node:path';
-
 import { startApplicationServer } from './application-server.js';
+import { resolveApplicationDataDirectory } from './data-directory.js';
+
+const dataDirectory = resolveApplicationDataDirectory(process.env['CERAMICS_DATA_DIR']);
 
 const server = await startApplicationServer({
-  databasePath: resolve('.local', 'ceramics-ledger.sqlite'),
+  dataDirectory,
 });
 
 console.log(`Ceramics server listening at ${server.url}`);
