@@ -240,6 +240,50 @@ describe('prepareApplicationDatabase', () => {
     expect(routineNames.some((name) => name.endsWith('-a.sqlite'))).toBe(true);
   });
 
+  test('finishes interrupted rotation when the primary data is unchanged', async () => {
+    const { backupDestination, backupDirectory, databasePath } = await startupTestContext();
+
+    for (let index = 0; index < 5; index += 1) {
+      const database = await prepareApplicationDatabase({
+        backupDestination,
+        databasePath,
+        env: testEnv,
+      });
+      await database.db
+        .insertInto('products')
+        .values({ created_at_ms: index, id: `product-${index}`, name: `Штучка ${index}` })
+        .execute();
+      await database.close();
+    }
+    const synchronizedDatabase = await prepareApplicationDatabase({
+      backupDestination,
+      databasePath,
+      env: testEnv,
+    });
+    await synchronizedDatabase.close();
+    const latestName = (await backupNames(backupDirectory, 'routine')).sort().at(-1);
+    if (latestName === undefined) {
+      throw new Error('Expected a routine backup');
+    }
+    await copyFile(
+      join(backupDirectory, latestName),
+      join(
+        backupDirectory,
+        'routine-s9999999999999999-2026-11-08T12-00-00-000Z-interrupted.sqlite',
+      ),
+    );
+    expect(await backupNames(backupDirectory, 'routine')).toHaveLength(6);
+
+    const unchangedDatabase = await prepareApplicationDatabase({
+      backupDestination,
+      databasePath,
+      env: testEnv,
+    });
+    await unchangedDatabase.close();
+
+    expect(await backupNames(backupDirectory, 'routine')).toHaveLength(5);
+  });
+
   test('publishes old schema and data before applying a pending migration', async () => {
     const { backupDirectory, databasePath } = await startupTestContext();
     const legacyDatabase = new BetterSqlite3(databasePath);

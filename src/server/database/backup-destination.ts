@@ -11,9 +11,9 @@ import { assertSqliteIntegrity } from './sqlite-integrity.js';
 export type BackupKind = 'routine' | 'pre-migration';
 
 export interface PublishBackupRequest {
+  readonly backupId: string;
   readonly candidatePath: string;
   readonly createdAt: Date;
-  readonly id: string;
   readonly kind: BackupKind;
   readonly skipIfUnchanged: boolean;
 }
@@ -49,9 +49,9 @@ function backupSequence(name: string, kind: BackupKind): number {
 
 function backupFilename(request: PublishBackupRequest, sequence: number): string {
   const timestamp = request.createdAt.toISOString().replaceAll(':', '-').replaceAll('.', '-');
-  const id = request.id.replaceAll(/[^a-zA-Z0-9_-]/g, '-');
+  const backupId = request.backupId.replaceAll(/[^a-zA-Z0-9_-]/g, '-');
   const sortableSequence = String(sequence).padStart(16, '0');
-  return `${request.kind}-s${sortableSequence}-${timestamp}-${id}.sqlite`;
+  return `${request.kind}-s${sortableSequence}-${timestamp}-${backupId}.sqlite`;
 }
 
 function isBackupName(name: string, kind: BackupKind): boolean {
@@ -74,6 +74,15 @@ async function isVerifiedDatabase(path: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+async function rotateVerifiedBackups(directory: string, namesNewestFirst: string[]): Promise<void> {
+  const namesToRemove = namesNewestFirst.slice(5);
+  if (namesToRemove.length === 0) {
+    return;
+  }
+  await Promise.all(namesToRemove.map((name) => rm(join(directory, name), { force: true })));
+  await syncDirectory(directory);
 }
 
 function errorCode(error: unknown): string | undefined {
@@ -156,6 +165,7 @@ export class LocalFilesystemBackupDestination implements BackupDestination {
       (await fileHash(request.candidatePath)) ===
         (await fileHash(join(this.#directory, latestName)))
     ) {
+      await rotateVerifiedBackups(this.#directory, verifiedExistingNames);
       return 'unchanged';
     }
 
@@ -177,11 +187,10 @@ export class LocalFilesystemBackupDestination implements BackupDestination {
       throw error;
     }
 
-    const backupsToRemove = [...verifiedExistingNames, finalName].sort().reverse().slice(5);
-    await Promise.all(
-      backupsToRemove.map((name) => rm(join(this.#directory, name), { force: true })),
+    await rotateVerifiedBackups(
+      this.#directory,
+      [...verifiedExistingNames, finalName].sort().reverse(),
     );
-    await syncDirectory(this.#directory);
     return 'published';
   }
 }

@@ -58,15 +58,18 @@ async function publishDatabaseCopy(
   kind: BackupKind,
   keepCandidate = false,
 ): Promise<string | undefined> {
-  const id = env.randomUUID();
-  const candidatePath = join(dirname(databasePath), `.${basename(databasePath)}.${id}.backup`);
+  const backupId = env.randomUUID();
+  const candidatePath = join(
+    dirname(databasePath),
+    `.${basename(databasePath)}.${backupId}.backup`,
+  );
   let published = false;
   try {
     await database.backup(candidatePath);
     await destination.publish({
+      backupId,
       candidatePath,
       createdAt: env.now(),
-      id,
       kind,
       skipIfUnchanged: kind === 'routine',
     });
