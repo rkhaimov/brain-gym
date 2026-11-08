@@ -20,5 +20,5 @@
 - [ ] TanStack Query uses network-first behavior, always attempts localhost requests, performs no optimistic mutation, and invalidates the Product query after successful creation.
 - [ ] Nondeterministic server operations are exposed through the shared EnvService so tests can control clocks and identities.
 - [ ] A server integration test creates and lists Products through the Connect handler surface using a real isolated temporary SQLite database.
-- [ ] A browser-level smoke test proves that the creator can create and then see a Product through the complete application.
+- [ ] A browser-level smoke test proves that the creator can create and then see a Product through the complete prebuilt client application. After ticket 02, this seam uses the injected generated Connect transport; ticket 12 owns the full-system browser workflow with a real Node.js server and isolated SQLite database.
 

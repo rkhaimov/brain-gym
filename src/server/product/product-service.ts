@@ -1,19 +1,19 @@
 import { create } from '@bufbuild/protobuf';
-import { Code, ConnectError } from '@connectrpc/connect';
 import type { ConnectRouter, ServiceImpl } from '@connectrpc/connect';
 
-import {
-  ProductService,
-  ProductSchema,
-  ProductValidationErrorSchema,
-  ProductValidationField,
-  ProductValidationReason,
-} from '../../shared/gen/ceramics/v1/product_pb.js';
-import { createProductId, productIdToString } from '../../shared/product-id.js';
-import type { ProductId } from '../../shared/product-id.js';
+import { ProductService, ProductSchema } from '../../shared/gen/ceramics/v1/product_pb.js';
 import type { ApplicationDatabase } from '../database/database.js';
 import type { EnvService } from '../env.js';
 import type { MutationQueue } from '../mutation-queue.js';
+
+const NAME_REQUIRED_MESSAGE = 'Введите название штучки';
+const NAME_ALREADY_EXISTS_MESSAGE = 'Штучка с таким названием уже существует';
+
+type ProductId = string & { readonly __productId: true };
+
+function assertProductId(value: string): asserts value is ProductId {
+  void value;
+}
 
 export interface ProductRouteDependencies {
   readonly database: ApplicationDatabase;
@@ -32,34 +32,20 @@ interface PersistedProduct {
 }
 
 function productFromDatabase(row: PersistedProduct): DomainProduct {
-  return { id: createProductId(row.id), name: row.name };
+  const id = row.id;
+  assertProductId(id);
+  return { id, name: row.name };
 }
 
 function productToProtobuf(product: DomainProduct) {
   return create(ProductSchema, {
-    id: productIdToString(product.id),
+    id: product.id,
     name: product.name,
   });
 }
 
-function validationError(reason: ProductValidationReason, code: Code): ConnectError {
-  return new ConnectError('Product validation failed', code, undefined, [
-    {
-      desc: ProductValidationErrorSchema,
-      value: create(ProductValidationErrorSchema, {
-        field: ProductValidationField.NAME,
-        reason,
-      }),
-    },
-  ]);
-}
-
-function nameRequiredError(): ConnectError {
-  return validationError(ProductValidationReason.NAME_REQUIRED, Code.InvalidArgument);
-}
-
-function nameAlreadyExistsError(): ConnectError {
-  return validationError(ProductValidationReason.NAME_ALREADY_EXISTS, Code.AlreadyExists);
+function productFailure(message: string) {
+  return { result: { case: 'failure' as const, value: message } };
 }
 
 function isUniqueConstraintError(error: unknown): boolean {
@@ -74,7 +60,7 @@ function createProductService(
   return {
     async createProduct(request) {
       if (request.name.length === 0) {
-        throw nameRequiredError();
+        return productFailure(NAME_REQUIRED_MESSAGE);
       }
 
       return mutationQueue.run(async () => {
@@ -86,27 +72,28 @@ function createProductService(
               .where('name', '=', request.name)
               .executeTakeFirst();
             if (existing !== undefined) {
-              throw nameAlreadyExistsError();
+              return productFailure(NAME_ALREADY_EXISTS_MESSAGE);
             }
 
-            const product: DomainProduct = { id: env.newProductId(), name: request.name };
+            const id = env.randomUUID();
+            assertProductId(id);
+            const product: DomainProduct = { id, name: request.name };
             await transaction
               .insertInto('products')
               .values({
                 created_at_ms: env.now().getTime(),
-                id: productIdToString(product.id),
+                id: product.id,
                 name: product.name,
               })
               .executeTakeFirstOrThrow();
 
-            return { product: productToProtobuf(product) };
+            return {
+              result: { case: 'success' as const, value: productToProtobuf(product) },
+            };
           });
         } catch (error) {
-          if (error instanceof ConnectError) {
-            throw error;
-          }
           if (isUniqueConstraintError(error)) {
-            throw nameAlreadyExistsError();
+            return productFailure(NAME_ALREADY_EXISTS_MESSAGE);
           }
           throw error;
         }

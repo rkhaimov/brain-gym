@@ -3,3 +3,5 @@ artefacts/
 .local/
 dist/
 *.tsbuildinfo
+.vitest/
+test-results/

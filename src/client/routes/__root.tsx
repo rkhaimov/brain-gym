@@ -1,6 +1,6 @@
 import { createRootRoute, Outlet } from '@tanstack/react-router';
 
-import { AppShell } from '../components/app-shell.js';
+import { AppShell } from './-app-shell.js';
 
 function RootLayout() {
   return (

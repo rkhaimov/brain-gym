@@ -22,6 +22,14 @@ Characteristics:
 - Describes WHAT, not HOW
 - One logical assertion per test
 
+## Keep test bodies at the seam
+
+Infrastructure setup belongs in fixtures. A fixture may create a temporary database, wire adapters, restart a process, and guarantee teardown; the test body receives the public interface it exercises. Arrange state below the seam when necessary, then observe behavior through the seam.
+
+Boundary spies are arrangement controls. Override time, randomness, or remote responses only when a scenario requires a specific value. Assert their calls only when that interaction is itself part of the public contract.
+
+Treat generated identifiers as opaque. Use real generation by default and assert stable behavior around the identifier; substitute or compare an exact value only when identity semantics are the behavior under test.
+
 ## Bad Tests
 
 **Implementation-detail tests**: Coupled to internal structure.

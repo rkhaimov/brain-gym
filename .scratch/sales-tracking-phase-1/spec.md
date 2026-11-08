@@ -285,7 +285,7 @@ flowchart LR
 - Tests assert externally observable user or domain behavior through the highest practical seam. They do not assert internal call order or private implementation details unless that behavior is itself the contract.
 - The primary server seam is the generated Connect handler surface backed by a real isolated SQLite database. Server tests are mostly integration tests through handlers.
 - The primary client seam is the complete prebuilt client application with an injected generated Connect transport. Browser tests are mostly integration and screenshot tests.
-- The full-system seam is the prebuilt client application connected to a real Node.js server and isolated SQLite database, still orchestrated by Vitest.
+- The full-system seam is the prebuilt client application connected to a real Node.js server and isolated SQLite database, still orchestrated by Vitest. Ticket 12 introduces this seam for the critical phase-one workflow; earlier client browser tests use the injected generated transport.
 - Do not create a separate transport test suite. Generated transport code is exercised by compilation and the client/server integration seams.
 
 ### Server tests
@@ -317,18 +317,18 @@ flowchart LR
 
 - Reuse one persistent Chromium context for speed, but restore complete application-level isolation before every test.
 - Set both the browser viewport and the Vitest iframe viewport to the same fixed dimensions.
-- Reset every Vitest mock and mock implementation, generated RPC service, deterministic random-data generator, and sequential identity generator.
+- Reset every Vitest mock and mock implementation and create fresh generated RPC service spies before each test. Generated model stubs use fixed deterministic defaults and carry no resettable identity or random state.
 - Install fake timers at one fixed instant and enable automatic timer advancement required by TanStack Query scheduling.
 - Clear local storage, session storage, and the TanStack Query cache before each test.
 - Fix locale and timezone for the complete browser project.
 - Prevent tester and test-dependency styles from leaking into the application while retaining the prebuilt application's own CSS.
-- Stabilize screenshots by disabling animations, transitions, smooth scrolling, carets, and transient notifications; move the pointer away and wait for loaders, skeletons, and spinners to disappear before capture.
+- Stabilize screenshots by disabling animations, transitions, smooth scrolling, and carets; move the pointer away and wait for loaders, skeletons, and spinners to disappear before capture. Any future transient notification facility must define deterministic screenshot treatment when introduced.
 - Store screenshots at deterministic locations colocated with the corresponding test hierarchy.
 
 #### Generated model stubs and RPC mocks
 
 - Generate typed model stubs and service mocks from the Protobuf contract with a project-owned Buf plugin named `protoc-gen-test`.
-- Generate `create<Model>Stub(overrides)` for every contract model. It returns deterministic populated defaults, builds nested messages, selects deterministic `oneof` variants, and accepts typed partial overrides.
+- Generate `create<Model>Stub(overrides)` for every contract model. It returns fixed deterministic populated defaults, builds nested messages, selects deterministic `oneof` variants, and accepts typed partial overrides.
 - Generate one typed mock-service property for every unary RPC, backed by a Vitest `vi.fn` spy.
 - Give each RPC spy compact typed helpers equivalent to `resolves(value)`, `rejects(error)`, and `getLastRequest()`. The request helper waits for and returns the latest typed request.
 - Give known RPCs generated response-stub defaults so a test configures only behavior relevant to its scenario.

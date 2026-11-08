@@ -1,0 +1,53 @@
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+import { test as baseTest } from 'vitest';
+
+import { openApplicationDatabase } from '../../server/database/database.js';
+import type { ApplicationDatabase } from '../../server/database/database.js';
+
+export interface TestDatabase {
+  readonly value: ApplicationDatabase;
+  restart(): Promise<void>;
+}
+
+interface ServerFixtures {
+  readonly database: TestDatabase;
+}
+
+export const test = baseTest.extend<ServerFixtures>({
+  database: async ({ task: _task }, use) => {
+    const temporaryDirectory = await mkdtemp(join(tmpdir(), 'ceramics-ledger-server-'));
+    const databasePath = join(temporaryDirectory, 'test.sqlite');
+    let currentDatabase: ApplicationDatabase | undefined =
+      await openApplicationDatabase(databasePath);
+
+    function database(): ApplicationDatabase {
+      if (currentDatabase === undefined) {
+        throw new Error('Test database is not open');
+      }
+      return currentDatabase;
+    }
+
+    try {
+      await use({
+        get value() {
+          return database();
+        },
+        async restart() {
+          const openDatabase = database();
+          currentDatabase = undefined;
+          await openDatabase.close();
+          currentDatabase = await openApplicationDatabase(databasePath);
+        },
+      });
+    } finally {
+      try {
+        await currentDatabase?.close();
+      } finally {
+        await rm(temporaryDirectory, { force: true, recursive: true });
+      }
+    }
+  },
+});

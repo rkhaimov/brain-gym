@@ -12,29 +12,16 @@ message CreateProductRequest {
 }
 
 message CreateProductResponse {
-  Product product = 1;
+  oneof result {
+    Product success = 1;
+    string failure = 2;
+  }
 }
 
 message ListProductsRequest {}
 
 message ListProductsResponse {
   repeated Product products = 1;
-}
-
-enum ProductValidationField {
-  PRODUCT_VALIDATION_FIELD_UNSPECIFIED = 0;
-  PRODUCT_VALIDATION_FIELD_NAME = 1;
-}
-
-enum ProductValidationReason {
-  PRODUCT_VALIDATION_REASON_UNSPECIFIED = 0;
-  PRODUCT_VALIDATION_REASON_NAME_REQUIRED = 1;
-  PRODUCT_VALIDATION_REASON_NAME_ALREADY_EXISTS = 2;
-}
-
-message ProductValidationError {
-  ProductValidationField field = 1;
-  ProductValidationReason reason = 2;
 }
 
 service ProductService {

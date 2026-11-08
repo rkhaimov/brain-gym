@@ -2,7 +2,7 @@
 // @generated from file ceramics/v1/product.proto (package ceramics.v1, syntax proto3)
 /* eslint-disable */
 
-import { ProductService } from './product_pb.js';
+import { ProductService } from "./product_pb.js";
 
 /**
  * @generated from rpc ceramics.v1.ProductService.CreateProduct

@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "types": ["vite/client", "vitest", "vitest/browser"]
+  },
+  "include": [
+    "browser-tests/**/*.ts",
+    "src/client/**/*.ts",
+    "src/client/**/*.tsx",
+    "src/shared/**/*.ts",
+    "src/test/browser/runtime/**/*.ts",
+    "src/test/browser/runtime/**/*.tsx",
+    "src/routeTree.gen.ts"
+  ]
+}

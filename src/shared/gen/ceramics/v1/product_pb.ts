@@ -2,23 +2,20 @@
 // @generated from file ceramics/v1/product.proto (package ceramics.v1, syntax proto3)
 /* eslint-disable */
 
-import type { GenEnum, GenFile, GenMessage, GenService } from '@bufbuild/protobuf/codegenv2';
-import { enumDesc, fileDesc, messageDesc, serviceDesc } from '@bufbuild/protobuf/codegenv2';
-import type { Message } from '@bufbuild/protobuf';
+import type { GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
+import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
+import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file ceramics/v1/product.proto.
  */
-export const file_ceramics_v1_product: GenFile =
-  /*@__PURE__*/
-  fileDesc(
-    'ChljZXJhbWljcy92MS9wcm9kdWN0LnByb3RvEgtjZXJhbWljcy52MSIjCgdQcm9kdWN0EgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkiJAoUQ3JlYXRlUHJvZHVjdFJlcXVlc3QSDAoEbmFtZRgBIAEoCSI+ChVDcmVhdGVQcm9kdWN0UmVzcG9uc2USJQoHcHJvZHVjdBgBIAEoCzIULmNlcmFtaWNzLnYxLlByb2R1Y3QiFQoTTGlzdFByb2R1Y3RzUmVxdWVzdCI+ChRMaXN0UHJvZHVjdHNSZXNwb25zZRImCghwcm9kdWN0cxgBIAMoCzIULmNlcmFtaWNzLnYxLlByb2R1Y3QiggEKFlByb2R1Y3RWYWxpZGF0aW9uRXJyb3ISMgoFZmllbGQYASABKA4yIy5jZXJhbWljcy52MS5Qcm9kdWN0VmFsaWRhdGlvbkZpZWxkEjQKBnJlYXNvbhgCIAEoDjIkLmNlcmFtaWNzLnYxLlByb2R1Y3RWYWxpZGF0aW9uUmVhc29uKmUKFlByb2R1Y3RWYWxpZGF0aW9uRmllbGQSKAokUFJPRFVDVF9WQUxJREFUSU9OX0ZJRUxEX1VOU1BFQ0lGSUVEEAASIQodUFJPRFVDVF9WQUxJREFUSU9OX0ZJRUxEX05BTUUQASqkAQoXUHJvZHVjdFZhbGlkYXRpb25SZWFzb24SKQolUFJPRFVDVF9WQUxJREFUSU9OX1JFQVNPTl9VTlNQRUNJRklFRBAAEisKJ1BST0RVQ1RfVkFMSURBVElPTl9SRUFTT05fTkFNRV9SRVFVSVJFRBABEjEKLVBST0RVQ1RfVkFMSURBVElPTl9SRUFTT05fTkFNRV9BTFJFQURZX0VYSVNUUxACMsEBCg5Qcm9kdWN0U2VydmljZRJYCg1DcmVhdGVQcm9kdWN0EiEuY2VyYW1pY3MudjEuQ3JlYXRlUHJvZHVjdFJlcXVlc3QaIi5jZXJhbWljcy52MS5DcmVhdGVQcm9kdWN0UmVzcG9uc2UiABJVCgxMaXN0UHJvZHVjdHMSIC5jZXJhbWljcy52MS5MaXN0UHJvZHVjdHNSZXF1ZXN0GiEuY2VyYW1pY3MudjEuTGlzdFByb2R1Y3RzUmVzcG9uc2UiAGIGcHJvdG8z',
-  );
+export const file_ceramics_v1_product: GenFile = /*@__PURE__*/
+  fileDesc("ChljZXJhbWljcy92MS9wcm9kdWN0LnByb3RvEgtjZXJhbWljcy52MSIjCgdQcm9kdWN0EgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkiJAoUQ3JlYXRlUHJvZHVjdFJlcXVlc3QSDAoEbmFtZRgBIAEoCSJdChVDcmVhdGVQcm9kdWN0UmVzcG9uc2USJwoHc3VjY2VzcxgBIAEoCzIULmNlcmFtaWNzLnYxLlByb2R1Y3RIABIRCgdmYWlsdXJlGAIgASgJSABCCAoGcmVzdWx0IhUKE0xpc3RQcm9kdWN0c1JlcXVlc3QiPgoUTGlzdFByb2R1Y3RzUmVzcG9uc2USJgoIcHJvZHVjdHMYASADKAsyFC5jZXJhbWljcy52MS5Qcm9kdWN0MsEBCg5Qcm9kdWN0U2VydmljZRJYCg1DcmVhdGVQcm9kdWN0EiEuY2VyYW1pY3MudjEuQ3JlYXRlUHJvZHVjdFJlcXVlc3QaIi5jZXJhbWljcy52MS5DcmVhdGVQcm9kdWN0UmVzcG9uc2UiABJVCgxMaXN0UHJvZHVjdHMSIC5jZXJhbWljcy52MS5MaXN0UHJvZHVjdHNSZXF1ZXN0GiEuY2VyYW1pY3MudjEuTGlzdFByb2R1Y3RzUmVzcG9uc2UiAGIGcHJvdG8z");
 
 /**
  * @generated from message ceramics.v1.Product
  */
-export type Product = Message<'ceramics.v1.Product'> & {
+export type Product = Message<"ceramics.v1.Product"> & {
   /**
    * @generated from field: string id = 1;
    */
@@ -34,14 +31,13 @@ export type Product = Message<'ceramics.v1.Product'> & {
  * Describes the message ceramics.v1.Product.
  * Use `create(ProductSchema)` to create a new message.
  */
-export const ProductSchema: GenMessage<Product> =
-  /*@__PURE__*/
+export const ProductSchema: GenMessage<Product> = /*@__PURE__*/
   messageDesc(file_ceramics_v1_product, 0);
 
 /**
  * @generated from message ceramics.v1.CreateProductRequest
  */
-export type CreateProductRequest = Message<'ceramics.v1.CreateProductRequest'> & {
+export type CreateProductRequest = Message<"ceramics.v1.CreateProductRequest"> & {
   /**
    * @generated from field: string name = 1;
    */
@@ -52,45 +48,55 @@ export type CreateProductRequest = Message<'ceramics.v1.CreateProductRequest'> &
  * Describes the message ceramics.v1.CreateProductRequest.
  * Use `create(CreateProductRequestSchema)` to create a new message.
  */
-export const CreateProductRequestSchema: GenMessage<CreateProductRequest> =
-  /*@__PURE__*/
+export const CreateProductRequestSchema: GenMessage<CreateProductRequest> = /*@__PURE__*/
   messageDesc(file_ceramics_v1_product, 1);
 
 /**
  * @generated from message ceramics.v1.CreateProductResponse
  */
-export type CreateProductResponse = Message<'ceramics.v1.CreateProductResponse'> & {
+export type CreateProductResponse = Message<"ceramics.v1.CreateProductResponse"> & {
   /**
-   * @generated from field: ceramics.v1.Product product = 1;
+   * @generated from oneof ceramics.v1.CreateProductResponse.result
    */
-  product?: Product | undefined;
+  result: {
+    /**
+     * @generated from field: ceramics.v1.Product success = 1;
+     */
+    value: Product;
+    case: "success";
+  } | {
+    /**
+     * @generated from field: string failure = 2;
+     */
+    value: string;
+    case: "failure";
+  } | { case: undefined; value?: undefined };
 };
 
 /**
  * Describes the message ceramics.v1.CreateProductResponse.
  * Use `create(CreateProductResponseSchema)` to create a new message.
  */
-export const CreateProductResponseSchema: GenMessage<CreateProductResponse> =
-  /*@__PURE__*/
+export const CreateProductResponseSchema: GenMessage<CreateProductResponse> = /*@__PURE__*/
   messageDesc(file_ceramics_v1_product, 2);
 
 /**
  * @generated from message ceramics.v1.ListProductsRequest
  */
-export type ListProductsRequest = Message<'ceramics.v1.ListProductsRequest'> & {};
+export type ListProductsRequest = Message<"ceramics.v1.ListProductsRequest"> & {
+};
 
 /**
  * Describes the message ceramics.v1.ListProductsRequest.
  * Use `create(ListProductsRequestSchema)` to create a new message.
  */
-export const ListProductsRequestSchema: GenMessage<ListProductsRequest> =
-  /*@__PURE__*/
+export const ListProductsRequestSchema: GenMessage<ListProductsRequest> = /*@__PURE__*/
   messageDesc(file_ceramics_v1_product, 3);
 
 /**
  * @generated from message ceramics.v1.ListProductsResponse
  */
-export type ListProductsResponse = Message<'ceramics.v1.ListProductsResponse'> & {
+export type ListProductsResponse = Message<"ceramics.v1.ListProductsResponse"> & {
   /**
    * @generated from field: repeated ceramics.v1.Product products = 1;
    */
@@ -101,81 +107,8 @@ export type ListProductsResponse = Message<'ceramics.v1.ListProductsResponse'> &
  * Describes the message ceramics.v1.ListProductsResponse.
  * Use `create(ListProductsResponseSchema)` to create a new message.
  */
-export const ListProductsResponseSchema: GenMessage<ListProductsResponse> =
-  /*@__PURE__*/
+export const ListProductsResponseSchema: GenMessage<ListProductsResponse> = /*@__PURE__*/
   messageDesc(file_ceramics_v1_product, 4);
-
-/**
- * @generated from message ceramics.v1.ProductValidationError
- */
-export type ProductValidationError = Message<'ceramics.v1.ProductValidationError'> & {
-  /**
-   * @generated from field: ceramics.v1.ProductValidationField field = 1;
-   */
-  field: ProductValidationField;
-
-  /**
-   * @generated from field: ceramics.v1.ProductValidationReason reason = 2;
-   */
-  reason: ProductValidationReason;
-};
-
-/**
- * Describes the message ceramics.v1.ProductValidationError.
- * Use `create(ProductValidationErrorSchema)` to create a new message.
- */
-export const ProductValidationErrorSchema: GenMessage<ProductValidationError> =
-  /*@__PURE__*/
-  messageDesc(file_ceramics_v1_product, 5);
-
-/**
- * @generated from enum ceramics.v1.ProductValidationField
- */
-export enum ProductValidationField {
-  /**
-   * @generated from enum value: PRODUCT_VALIDATION_FIELD_UNSPECIFIED = 0;
-   */
-  UNSPECIFIED = 0,
-
-  /**
-   * @generated from enum value: PRODUCT_VALIDATION_FIELD_NAME = 1;
-   */
-  NAME = 1,
-}
-
-/**
- * Describes the enum ceramics.v1.ProductValidationField.
- */
-export const ProductValidationFieldSchema: GenEnum<ProductValidationField> =
-  /*@__PURE__*/
-  enumDesc(file_ceramics_v1_product, 0);
-
-/**
- * @generated from enum ceramics.v1.ProductValidationReason
- */
-export enum ProductValidationReason {
-  /**
-   * @generated from enum value: PRODUCT_VALIDATION_REASON_UNSPECIFIED = 0;
-   */
-  UNSPECIFIED = 0,
-
-  /**
-   * @generated from enum value: PRODUCT_VALIDATION_REASON_NAME_REQUIRED = 1;
-   */
-  NAME_REQUIRED = 1,
-
-  /**
-   * @generated from enum value: PRODUCT_VALIDATION_REASON_NAME_ALREADY_EXISTS = 2;
-   */
-  NAME_ALREADY_EXISTS = 2,
-}
-
-/**
- * Describes the enum ceramics.v1.ProductValidationReason.
- */
-export const ProductValidationReasonSchema: GenEnum<ProductValidationReason> =
-  /*@__PURE__*/
-  enumDesc(file_ceramics_v1_product, 1);
 
 /**
  * @generated from service ceramics.v1.ProductService
@@ -185,16 +118,18 @@ export const ProductService: GenService<{
    * @generated from rpc ceramics.v1.ProductService.CreateProduct
    */
   createProduct: {
-    methodKind: 'unary';
+    methodKind: "unary";
     input: typeof CreateProductRequestSchema;
     output: typeof CreateProductResponseSchema;
-  };
+  },
   /**
    * @generated from rpc ceramics.v1.ProductService.ListProducts
    */
   listProducts: {
-    methodKind: 'unary';
+    methodKind: "unary";
     input: typeof ListProductsRequestSchema;
     output: typeof ListProductsResponseSchema;
-  };
-}> = /*@__PURE__*/ serviceDesc(file_ceramics_v1_product, 0);
+  },
+}> = /*@__PURE__*/
+  serviceDesc(file_ceramics_v1_product, 0);
+

@@ -7,5 +7,10 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["scripts/**/*.ts", "vite.config.ts", "vitest.config.ts"]
+  "include": [
+    "scripts/**/*.ts",
+    "src/test/browser/runner/**/*.ts",
+    "vite.config.ts",
+    "vitest.config.ts"
+  ]
 }

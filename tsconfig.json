@@ -5,17 +5,29 @@
     "exactOptionalPropertyTypes": true,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noImplicitReturns": true,
     "noPropertyAccessFromIndexSignature": true,
     "noUncheckedIndexedAccess": true,
     "noUncheckedSideEffectImports": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@artefacts/*": ["./artefacts/*"]
+    },
     "skipLibCheck": true,
     "strict": true,
     "target": "ES2023",
     "useUnknownInCatchVariables": true,
     "verbatimModuleSyntax": true
   },
-  "files": []
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.client.json" },
+    { "path": "./tsconfig.server.json" },
+    { "path": "./tsconfig.scripts.json" },
+    { "path": "./tsconfig.browser.json" }
+  ]
 }
