@@ -24,5 +24,5 @@
 
 ## Comments
 
-- 2026-11-08 — Acceptance audit completed. Implemented by `ae9b7a3` with review follow-ups `275e2dd` and `169daa4`; verified with `npm run check` (formatting, lint, type checking, generated-artifact verification, 26 tests, and client/server builds).
+- 2026-11-08 — Acceptance audit completed. Implemented by `ae9b7a3` with review follow-ups `275e2dd`, `169daa4`, and `786eea8`; verified with `npm run check` (formatting, lint, type checking, generated-artifact verification, 27 tests, and client/server builds).
 
