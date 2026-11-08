@@ -284,8 +284,15 @@ test.describe('Product catalog', () => {
     await products.openCreateDialog();
     await products.name().fill(product.name);
     await vi.advanceTimersByTimeAsync(5_000);
+    await products.cancel();
+    await products.open();
+    await products.openCreateDialog();
+    await expect.element(products.name()).toHaveValue(product.name);
     await products.submit();
 
+    await products.openCreateDialog();
+    await expect.element(products.name()).toHaveValue('');
+    await products.cancel();
     await products.open();
     await products.openCreateDialog();
     await expect.element(products.name()).toHaveValue('');

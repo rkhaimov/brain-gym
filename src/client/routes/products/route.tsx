@@ -202,11 +202,13 @@ function ProductsPage() {
         </div>
       </section>
 
-      <CreateProductDialog
-        onOpenChange={setCreateDialogOpen}
-        open={createDialogOpen}
-        returnFocusTo={createDialogTrigger}
-      />
+      {createDialogOpen ? (
+        <CreateProductDialog
+          onOpenChange={setCreateDialogOpen}
+          open
+          returnFocusTo={createDialogTrigger}
+        />
+      ) : null}
       {editedProduct === undefined ? null : (
         <EditProductDialog
           onOpenChange={(open) => {

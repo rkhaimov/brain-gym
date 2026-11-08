@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
 
 const DRAFT_STORAGE_PREFIX = 'ceramics:form-draft:';
-const DRAFT_WRITE_INTERVAL_MS = 5_000;
+const DRAFT_PERSISTENCE_INTERVAL_MS = 5_000;
 const storedDraftSchema = z.object({
   requestTimestampMs: z.number().int().nonnegative(),
   values: z.unknown(),
@@ -85,12 +85,6 @@ export function useDraftForm<T>(options: UseDraftFormOptions<T>) {
   const suppressSerializedValues = useRef<string | undefined>(undefined);
   const submit = formOptions.onSubmit;
 
-  function clearStoredAfterSubmit(): void {
-    pendingWrite.current = undefined;
-    removeStoredDraft(key);
-    suppressSerializedValues.current = JSON.stringify(defaultValues);
-  }
-
   const form = useForm<
     T,
     NoValidator<T>,
@@ -109,7 +103,10 @@ export function useDraftForm<T>(options: UseDraftFormOptions<T>) {
     defaultValues: initialValues,
     async onSubmit(context) {
       await submit?.(context);
-      clearStoredAfterSubmit();
+      pendingWrite.current = undefined;
+      removeStoredDraft(key);
+      lastSerializedValues.current = JSON.stringify(defaultValues);
+      suppressSerializedValues.current = undefined;
     },
   });
 
@@ -133,7 +130,7 @@ export function useDraftForm<T>(options: UseDraftFormOptions<T>) {
       }
       pendingWrite.current = { requestTimestampMs: Date.now(), values: parsed.data };
     });
-    const interval = window.setInterval(flush, DRAFT_WRITE_INTERVAL_MS);
+    const interval = window.setInterval(flush, DRAFT_PERSISTENCE_INTERVAL_MS);
     window.addEventListener('beforeunload', flush);
     window.addEventListener('pagehide', flush);
 
@@ -155,5 +152,12 @@ export function useDraftForm<T>(options: UseDraftFormOptions<T>) {
     form.reset(defaultValues);
   }
 
-  return { clearDraft, form };
+  async function handleSubmit(): Promise<boolean> {
+    await form.handleSubmit();
+    const submitted = form.state.isSubmitSuccessful;
+    if (submitted) clearDraft();
+    return submitted;
+  }
+
+  return { clearDraft, form, handleSubmit };
 }
