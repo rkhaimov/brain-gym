@@ -1,0 +1,51 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error"
+  },
+  "ignorePatterns": [
+    ".agents/**",
+    ".scratch/**",
+    "artefacts/**",
+    "dist/**",
+    "node_modules/**",
+    "src/routeTree.gen.ts",
+    "src/shared/gen/**",
+    "src/server/database/generated.ts"
+  ],
+  "options": {
+    "denyWarnings": true,
+    "reportUnusedDisableDirectives": "error",
+    "typeAware": true,
+    "typeCheck": true
+  },
+  "plugins": ["typescript", "react", "react-perf"],
+  "rules": {
+    "react/react-in-jsx-scope": "off",
+    "typescript/consistent-type-assertions": ["error", { "assertionStyle": "never" }],
+    "typescript/no-empty-object-type": "error",
+    "typescript/no-explicit-any": "error",
+    "typescript/no-non-null-assertion": "error",
+    "typescript/no-restricted-types": [
+      "error",
+      {
+        "types": {
+          "Function": "Use a named callable type.",
+          "Object": "Use a named structural type.",
+          "Record": "Use a named structural type or a purpose-specific Map.",
+          "object": "Use a named structural type."
+        }
+      }
+    ],
+    "typescript/no-unsafe-argument": "error",
+    "typescript/no-unsafe-assignment": "error",
+    "typescript/no-unsafe-call": "error",
+    "typescript/no-unsafe-function-type": "error",
+    "typescript/no-unsafe-member-access": "error",
+    "typescript/no-unsafe-return": "error",
+    "typescript/no-unsafe-type-assertion": "error",
+    "typescript/no-unnecessary-type-assertion": "error",
+    "typescript/no-wrapper-object-types": "error"
+  }
+}
