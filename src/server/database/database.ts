@@ -1,31 +1,178 @@
-import { mkdir } from 'node:fs/promises';
-import { dirname } from 'node:path';
+import { copyFile, mkdir, open, rename, rm } from 'node:fs/promises';
+import { basename, dirname, join } from 'node:path';
 
 import BetterSqlite3 from 'better-sqlite3';
 import { Kysely, SqliteDialect } from 'kysely';
-import { Migrator } from 'kysely/migration';
+import { DEFAULT_MIGRATION_TABLE, Migrator } from 'kysely/migration';
+import type { MigrationProvider } from 'kysely/migration';
 
+import type { BackupDestination, BackupKind } from './backup-destination.js';
 import type { DB } from './generated.js';
 import { migrationProvider } from './migrations.js';
+import type { EnvService } from '../env.js';
+import { productionEnv } from '../env.js';
 
 export interface ApplicationDatabase {
   readonly db: Kysely<DB>;
   close(): Promise<void>;
 }
 
-export async function openApplicationDatabase(databasePath: string): Promise<ApplicationDatabase> {
-  await mkdir(dirname(databasePath), { recursive: true });
-  const sqlite = new BetterSqlite3(databasePath);
-  const db = new Kysely<DB>({ dialect: new SqliteDialect({ database: sqlite }) });
-  const migrationResult = await new Migrator({ db, provider: migrationProvider }).migrateToLatest();
+export interface PrepareApplicationDatabaseOptions {
+  readonly backupDestination: BackupDestination;
+  readonly databasePath: string;
+  readonly env?: EnvService;
+  readonly migrations?: MigrationProvider;
+}
 
-  if (migrationResult.error !== undefined) {
-    await db.destroy();
-    throw migrationResult.error;
+function verifyPrimaryDatabase(database: BetterSqlite3.Database, databasePath: string): void {
+  const result = database.pragma('integrity_check');
+  if (
+    !Array.isArray(result) ||
+    result.length !== 1 ||
+    typeof result[0] !== 'object' ||
+    result[0] === null ||
+    Reflect.get(result[0], 'integrity_check') !== 'ok'
+  ) {
+    throw new Error(`SQLite integrity check failed for ${databasePath}`);
   }
+}
 
-  return {
-    db,
-    close: () => db.destroy(),
-  };
+function executedMigrationNames(database: BetterSqlite3.Database): Set<string> {
+  const table = database
+    .prepare<[string], { name: string }>(
+      "select name from sqlite_master where type = 'table' and name = ?",
+    )
+    .get(DEFAULT_MIGRATION_TABLE);
+  if (table === undefined) {
+    return new Set();
+  }
+  const rows = database
+    .prepare<[], { name: string }>(`select name from ${DEFAULT_MIGRATION_TABLE}`)
+    .all();
+  return new Set(rows.map((row) => row.name));
+}
+
+async function hasPendingMigrations(
+  database: BetterSqlite3.Database,
+  provider: MigrationProvider,
+): Promise<boolean> {
+  const availableNames = Object.keys(await provider.getMigrations());
+  const executedNames = executedMigrationNames(database);
+  return availableNames.some((name) => !executedNames.has(name));
+}
+
+async function publishDatabaseCopy(
+  database: BetterSqlite3.Database,
+  databasePath: string,
+  destination: BackupDestination,
+  env: EnvService,
+  kind: BackupKind,
+  keepCandidate = false,
+): Promise<string | undefined> {
+  const id = env.randomUUID();
+  const candidatePath = join(dirname(databasePath), `.${basename(databasePath)}.${id}.backup`);
+  let published = false;
+  try {
+    await database.backup(candidatePath);
+    await destination.publish({
+      candidatePath,
+      createdAt: env.now(),
+      id,
+      kind,
+      skipIfUnchanged: kind === 'routine',
+    });
+    published = true;
+    return keepCandidate ? candidatePath : undefined;
+  } finally {
+    if (!keepCandidate || !published) {
+      await rm(candidatePath, { force: true });
+    }
+  }
+}
+
+async function replaceDatabaseWithCopy(databasePath: string, copyPath: string): Promise<void> {
+  const replacementPath = `${databasePath}.restoring`;
+  try {
+    await copyFile(copyPath, replacementPath);
+    const replacement = await open(replacementPath, 'r+');
+    try {
+      await replacement.sync();
+    } finally {
+      await replacement.close();
+    }
+    await rename(replacementPath, databasePath);
+  } catch (error) {
+    await rm(replacementPath, { force: true });
+    throw error;
+  }
+}
+
+export async function prepareApplicationDatabase(
+  options: PrepareApplicationDatabaseOptions,
+): Promise<ApplicationDatabase> {
+  return await options.backupDestination.runExclusive(async () => {
+    const env = options.env ?? productionEnv;
+    const provider = options.migrations ?? migrationProvider;
+    await mkdir(dirname(options.databasePath), { recursive: true });
+    const sqlite = new BetterSqlite3(options.databasePath);
+    let kysely: Kysely<DB> | undefined;
+    let connectionOpen = true;
+    let preMigrationCopyPath: string | undefined;
+    try {
+      verifyPrimaryDatabase(sqlite, options.databasePath);
+      const migrationsPending = await hasPendingMigrations(sqlite, provider);
+      await publishDatabaseCopy(
+        sqlite,
+        options.databasePath,
+        options.backupDestination,
+        env,
+        'routine',
+      );
+      if (migrationsPending) {
+        preMigrationCopyPath = await publishDatabaseCopy(
+          sqlite,
+          options.databasePath,
+          options.backupDestination,
+          env,
+          'pre-migration',
+          true,
+        );
+      }
+
+      kysely = new Kysely<DB>({ dialect: new SqliteDialect({ database: sqlite }) });
+      const migrationResult = await new Migrator({ db: kysely, provider }).migrateToLatest();
+      if (migrationResult.error !== undefined) {
+        await kysely.destroy();
+        connectionOpen = false;
+        kysely = undefined;
+        if (preMigrationCopyPath !== undefined) {
+          await replaceDatabaseWithCopy(options.databasePath, preMigrationCopyPath);
+        }
+        throw migrationResult.error;
+      }
+
+      if (preMigrationCopyPath !== undefined) {
+        await rm(preMigrationCopyPath, { force: true });
+        preMigrationCopyPath = undefined;
+      }
+
+      const applicationDatabase = kysely;
+      return {
+        db: applicationDatabase,
+        close: () => applicationDatabase.destroy(),
+      };
+    } catch (error) {
+      if (connectionOpen) {
+        if (kysely === undefined) {
+          sqlite.close();
+        } else {
+          await kysely.destroy();
+        }
+      }
+      if (preMigrationCopyPath !== undefined) {
+        await rm(preMigrationCopyPath, { force: true });
+      }
+      throw error;
+    }
+  });
 }

@@ -4,7 +4,8 @@ import { join } from 'node:path';
 
 import { test as baseTest } from 'vitest';
 
-import { openApplicationDatabase } from '../../server/database/database.js';
+import { LocalFilesystemBackupDestination } from '../../server/database/backup-destination.js';
+import { prepareApplicationDatabase } from '../../server/database/database.js';
 import type { ApplicationDatabase } from '../../server/database/database.js';
 
 export interface TestDatabase {
@@ -20,8 +21,13 @@ export const test = baseTest.extend<ServerFixtures>({
   database: async ({ task: _task }, use) => {
     const temporaryDirectory = await mkdtemp(join(tmpdir(), 'ceramics-ledger-server-'));
     const databasePath = join(temporaryDirectory, 'test.sqlite');
-    let currentDatabase: ApplicationDatabase | undefined =
-      await openApplicationDatabase(databasePath);
+    const backupDestination = new LocalFilesystemBackupDestination(
+      join(temporaryDirectory, 'backups'),
+    );
+    let currentDatabase: ApplicationDatabase | undefined = await prepareApplicationDatabase({
+      backupDestination,
+      databasePath,
+    });
 
     function database(): ApplicationDatabase {
       if (currentDatabase === undefined) {
@@ -39,7 +45,7 @@ export const test = baseTest.extend<ServerFixtures>({
           const openDatabase = database();
           currentDatabase = undefined;
           await openDatabase.close();
-          currentDatabase = await openApplicationDatabase(databasePath);
+          currentDatabase = await prepareApplicationDatabase({ backupDestination, databasePath });
         },
       });
     } finally {

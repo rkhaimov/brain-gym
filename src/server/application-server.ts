@@ -1,15 +1,19 @@
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
+import { dirname, join } from 'node:path';
 
 import { connectNodeAdapter } from '@connectrpc/connect-node';
 
-import { openApplicationDatabase } from './database/database.js';
+import type { BackupDestination } from './database/backup-destination.js';
+import { LocalFilesystemBackupDestination } from './database/backup-destination.js';
+import { prepareApplicationDatabase } from './database/database.js';
 import type { EnvService } from './env.js';
 import { productionEnv } from './env.js';
 import { MutationQueue } from './mutation-queue.js';
 import { registerProductRoutes } from './product/product-service.js';
 
 export interface ApplicationServerOptions {
+  readonly backupDestination?: BackupDestination;
   readonly databasePath: string;
   readonly env?: EnvService;
   readonly host?: string;
@@ -64,12 +68,19 @@ export async function startApplicationServer(
   options: ApplicationServerOptions,
 ): Promise<RunningApplicationServer> {
   const host = options.host ?? '127.0.0.1';
-  const database = await openApplicationDatabase(options.databasePath);
+  const env = options.env ?? productionEnv;
+  const database = await prepareApplicationDatabase({
+    backupDestination:
+      options.backupDestination ??
+      new LocalFilesystemBackupDestination(join(dirname(options.databasePath), 'backups')),
+    databasePath: options.databasePath,
+    env,
+  });
   const requestHandler = connectNodeAdapter({
     routes: (router) => {
       registerProductRoutes(router, {
         database,
-        env: options.env ?? productionEnv,
+        env,
         mutationQueue: new MutationQueue(),
       });
     },
