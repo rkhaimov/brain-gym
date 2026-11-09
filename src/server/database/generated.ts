@@ -3,6 +3,14 @@
  * Please do not edit it manually.
  */
 
+export interface Outlets {
+  archived_at_ms: number | null;
+  code: string | null;
+  created_at_ms: number;
+  id: string;
+  name: string;
+}
+
 export interface Products {
   archived_at_ms: number | null;
   created_at_ms: number;
@@ -11,5 +19,6 @@ export interface Products {
 }
 
 export interface DB {
+  outlets: Outlets;
   products: Products;
 }

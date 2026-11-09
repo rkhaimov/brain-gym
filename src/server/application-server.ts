@@ -10,6 +10,7 @@ import { prepareApplicationDatabase } from './database/database.js';
 import type { EnvService } from './env.js';
 import { productionEnv } from './env.js';
 import { MutationQueue } from './mutation-queue.js';
+import { registerOutletRoutes } from './outlet/outlet-service.js';
 import { registerProductRoutes } from './product/product-service.js';
 
 export interface ApplicationServerOptions {
@@ -76,12 +77,18 @@ export async function startApplicationServer(
     databasePath: join(options.dataDirectory, 'ceramics-ledger.sqlite'),
     env,
   });
+  const mutationQueue = new MutationQueue();
   const requestHandler = connectNodeAdapter({
     routes: (router) => {
       registerProductRoutes(router, {
         database,
         env,
-        mutationQueue: new MutationQueue(),
+        mutationQueue,
+      });
+      registerOutletRoutes(router, {
+        database,
+        env,
+        mutationQueue,
       });
     },
   });

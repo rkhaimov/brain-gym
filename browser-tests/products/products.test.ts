@@ -18,312 +18,360 @@ import { screenshot } from '@/test/browser/runtime/screenshot.js';
 import { test } from '@/test/browser/runtime/test.js';
 
 test.describe('Product catalog', () => {
-  test('displays the catalog while it is loading', async ({ productService }) => {
-    const pendingCatalog = createDeferred<ListProductsResponse>();
-    productService.listProducts.handler.mockImplementation(() => pendingCatalog.promise);
+  test(
+    'displays the catalog while it is loading',
+    { tags: 'shared-catalog-table' },
+    async ({ productService }) => {
+      const pendingCatalog = createDeferred<ListProductsResponse>();
+      productService.listProducts.handler.mockImplementation(() => pendingCatalog.promise);
 
-    const products = createProductsPage();
-    await products.open();
+      const products = createProductsPage();
+      await products.open();
 
-    await expect.element(products.catalogLoading()).toBeVisible();
-    await expect.element(products.count(0)).not.toBeInTheDocument();
-    await products.screenshotLoadingPage('Loading catalog');
+      await expect.element(products.catalogLoading()).toBeVisible();
+      await expect.element(products.count(0)).not.toBeInTheDocument();
+      await products.screenshotLoadingPage('Loading catalog');
 
-    pendingCatalog.resolve(createListProductsResponseStub({ products: [] }));
-    await expect.element(products.emptyCatalogMessage()).toBeVisible();
-  });
+      pendingCatalog.resolve(createListProductsResponseStub({ products: [] }));
+      await expect.element(products.emptyCatalogMessage()).toBeVisible();
+    },
+  );
 
-  test('displays a catalog error and retries the request', async ({ productService }) => {
-    productService.listProducts.rejects(new ConnectError('Server unavailable', Code.Unavailable));
+  test(
+    'displays a catalog error and retries the request',
+    { tags: 'shared-catalog-table' },
+    async ({ productService }) => {
+      productService.listProducts.rejects(new ConnectError('Server unavailable', Code.Unavailable));
 
-    const products = createProductsPage();
-    await products.open();
+      const products = createProductsPage();
+      await products.open();
 
-    await expect.element(products.catalogError()).toBeVisible();
-    await products.screenshotPage('Catalog load error');
+      await expect.element(products.catalogError()).toBeVisible();
+      await products.screenshotPage('Catalog load error');
 
-    const callsBeforeRetry = productService.listProducts.handler.mock.calls.length;
-    productService.listProducts.resolves(createListProductsResponseStub({ products: [] }));
-    await products.retryCatalog();
-    await expect.element(products.emptyCatalogMessage()).toBeVisible();
-    expect(productService.listProducts.handler.mock.calls.length).toBeGreaterThan(callsBeforeRetry);
-  });
+      const callsBeforeRetry = productService.listProducts.handler.mock.calls.length;
+      productService.listProducts.resolves(createListProductsResponseStub({ products: [] }));
+      await products.retryCatalog();
+      await expect.element(products.emptyCatalogMessage()).toBeVisible();
+      expect(productService.listProducts.handler.mock.calls.length).toBeGreaterThan(
+        callsBeforeRetry,
+      );
+    },
+  );
 
-  test('displays the empty active and archived catalogs', async ({ productService }) => {
-    productService.listProducts.resolves(createListProductsResponseStub({ products: [] }));
-    const products = createProductsPage();
-    await products.open();
+  test(
+    'displays the empty active and archived catalogs',
+    { tags: 'shared-catalog-table' },
+    async ({ productService }) => {
+      productService.listProducts.resolves(createListProductsResponseStub({ products: [] }));
+      const products = createProductsPage();
+      await products.open();
 
-    await expect.element(products.navigation()).toHaveAttribute('aria-current', 'page');
-    await expect.element(products.header()).toHaveTextContent('Штучки');
-    await expect.element(products.count(0)).toBeVisible();
-    await expect.element(page.getByText('Quick Create', { exact: true })).not.toBeInTheDocument();
-    await expect.element(page.getByText('Inbox', { exact: true })).not.toBeInTheDocument();
-    await expect.element(page.getByRole('link', { name: 'GitHub' })).not.toBeInTheDocument();
-    await products.screenshotPage('Empty catalog');
+      await expect.element(products.navigation()).toHaveAttribute('aria-current', 'page');
+      await expect.element(products.header()).toHaveTextContent('Штучки');
+      await expect.element(products.count(0)).toBeVisible();
+      await expect.element(page.getByText('Quick Create', { exact: true })).not.toBeInTheDocument();
+      await expect.element(page.getByText('Inbox', { exact: true })).not.toBeInTheDocument();
+      await expect.element(page.getByRole('link', { name: 'GitHub' })).not.toBeInTheDocument();
+      await products.screenshotPage('Empty catalog');
 
-    await products.showArchived();
-    await expect.element(products.emptyArchiveMessage()).toBeVisible();
-    await expect.element(products.headerCreateButton()).not.toBeInTheDocument();
-    await products.screenshotPage('Empty archive');
-  });
+      await products.showArchived();
+      await expect.element(products.emptyArchiveMessage()).toBeVisible();
+      await expect.element(products.headerCreateButton()).not.toBeInTheDocument();
+      await products.screenshotPage('Empty archive');
+    },
+  );
 
-  test('opens the create dialog with focus and dismisses it accessibly', async ({
-    productService,
-  }) => {
-    productService.listProducts.resolves(createListProductsResponseStub({ products: [] }));
-    const products = createProductsPage();
-    await products.open();
+  test(
+    'opens the create dialog with focus and dismisses it accessibly',
+    { tags: 'shared-maintenance-form' },
+    async ({ productService }) => {
+      productService.listProducts.resolves(createListProductsResponseStub({ products: [] }));
+      const products = createProductsPage();
+      await products.open();
 
-    await products.openCreateDialog();
-    await expect.element(products.dialog()).toBeVisible();
-    await expect.element(products.name()).toHaveFocus();
-    await products.screenshotModalState('Create Product dialog');
+      await products.openCreateDialog();
+      await expect.element(products.dialog()).toBeVisible();
+      await expect.element(products.name()).toHaveFocus();
+      await products.screenshotModalState('Create Product dialog');
 
-    await userEvent.keyboard('{Escape}');
-    await expect.element(products.dialog()).not.toBeInTheDocument();
-    await expect.element(products.headerCreateButton()).toHaveFocus();
+      await userEvent.keyboard('{Escape}');
+      await expect.element(products.dialog()).not.toBeInTheDocument();
+      await expect.element(products.headerCreateButton()).toHaveFocus();
 
-    await products.openEmptyCreateDialog();
-    await products.cancel();
-    await expect.element(products.dialog()).not.toBeInTheDocument();
-    await expect.element(products.emptyCreateButton()).toHaveFocus();
-  });
+      await products.openEmptyCreateDialog();
+      await products.cancel();
+      await expect.element(products.dialog()).not.toBeInTheDocument();
+      await expect.element(products.emptyCreateButton()).toHaveFocus();
+    },
+  );
 
-  test('keeps the server duplicate message in the dialog', async ({ productService }) => {
-    productService.listProducts.resolves(createListProductsResponseStub({ products: [] }));
-    productService.createProduct.resolves(
-      createCreateProductResponseStub({
-        result: {
-          case: 'failure',
-          value: 'Штучка с таким названием уже существует',
-        },
-      }),
-    );
+  test(
+    'keeps the server duplicate message in the dialog',
+    { tags: 'shared-maintenance-form' },
+    async ({ productService }) => {
+      productService.listProducts.resolves(createListProductsResponseStub({ products: [] }));
+      productService.createProduct.resolves(
+        createCreateProductResponseStub({
+          result: {
+            case: 'failure',
+            value: 'Штучка с таким названием уже существует',
+          },
+        }),
+      );
 
-    const products = createProductsPage();
-    await products.open();
-    await products.openCreateDialog();
-    await products.name().fill('Кольцо');
-    await products.submit();
+      const products = createProductsPage();
+      await products.open();
+      await products.openCreateDialog();
+      await products.name().fill('Кольцо');
+      await products.submit();
 
-    await expect.element(products.dialog()).toBeVisible();
-    await expect.element(products.name()).toHaveAttribute('aria-invalid', 'true');
-    await expect
-      .element(products.nameError())
-      .toHaveTextContent('Штучка с таким названием уже существует');
-    await products.screenshotModalState('Duplicate name validation');
+      await expect.element(products.dialog()).toBeVisible();
+      await expect.element(products.name()).toHaveAttribute('aria-invalid', 'true');
+      await expect
+        .element(products.nameError())
+        .toHaveTextContent('Штучка с таким названием уже существует');
+      await products.screenshotModalState('Duplicate name validation');
 
-    await products.name().fill('Кулон');
-    await expect.element(products.nameError()).not.toBeInTheDocument();
-    await expect.element(products.name()).not.toHaveAttribute('aria-invalid');
-  });
+      await products.name().fill('Кулон');
+      await expect.element(products.nameError()).not.toBeInTheDocument();
+      await expect.element(products.name()).not.toHaveAttribute('aria-invalid');
+    },
+  );
 
-  test('validates an empty Product name before creation', async ({ productService }) => {
-    productService.listProducts.resolves(createListProductsResponseStub({ products: [] }));
+  test(
+    'validates an empty Product name before creation',
+    { tags: 'shared-maintenance-form' },
+    async ({ productService }) => {
+      productService.listProducts.resolves(createListProductsResponseStub({ products: [] }));
 
-    const products = createProductsPage();
-    await products.open();
-    await products.openCreateDialog();
-    await products.submit();
+      const products = createProductsPage();
+      await products.open();
+      await products.openCreateDialog();
+      await products.submit();
 
-    await expect.element(products.dialog()).toBeVisible();
-    await expect.element(products.name()).toHaveAttribute('aria-invalid', 'true');
-    await expect.element(products.nameError()).toHaveTextContent('Введите название штучки');
-    expect(productService.createProduct.handler).not.toHaveBeenCalled();
-  });
+      await expect.element(products.dialog()).toBeVisible();
+      await expect.element(products.name()).toHaveAttribute('aria-invalid', 'true');
+      await expect.element(products.nameError()).toHaveTextContent('Введите название штучки');
+      expect(productService.createProduct.handler).not.toHaveBeenCalled();
+    },
+  );
 
-  test('submits a whitespace-only Product name unchanged', async ({ productService }) => {
-    const product = createProductStub({ name: '   ' });
-    productService.listProducts.resolves(createListProductsResponseStub({ products: [] }));
-    productService.createProduct.resolves(
-      createCreateProductResponseStub({
-        result: { case: 'success', value: product },
-      }),
-    );
+  test(
+    'submits a whitespace-only Product name unchanged',
+    { tags: 'shared-maintenance-form' },
+    async ({ productService }) => {
+      const product = createProductStub({ name: '   ' });
+      productService.listProducts.resolves(createListProductsResponseStub({ products: [] }));
+      productService.createProduct.resolves(
+        createCreateProductResponseStub({
+          result: { case: 'success', value: product },
+        }),
+      );
 
-    const products = createProductsPage();
-    await products.open();
-    await products.openCreateDialog();
-    await products.name().fill(product.name);
-    await products.submit();
+      const products = createProductsPage();
+      await products.open();
+      await products.openCreateDialog();
+      await products.name().fill(product.name);
+      await products.submit();
 
-    await expect.element(products.dialog()).not.toBeInTheDocument();
-    await expect(productService.createProduct.getLastRequest()).resolves.toMatchObject({
-      name: product.name,
-    });
-  });
+      await expect.element(products.dialog()).not.toBeInTheDocument();
+      await expect(productService.createProduct.getLastRequest()).resolves.toMatchObject({
+        name: product.name,
+      });
+    },
+  );
 
-  test('prevents dismissal while creation is pending', async ({ productService }) => {
-    const product = createProductStub({ name: 'Кольцо' });
-    const response = createCreateProductResponseStub({
-      result: { case: 'success', value: product },
-    });
-    const pendingCreation = createDeferred<CreateProductResponse>();
-    productService.listProducts.resolves(createListProductsResponseStub({ products: [] }));
-    productService.createProduct.handler.mockImplementation(() => pendingCreation.promise);
-
-    const products = createProductsPage();
-    await products.open();
-    await products.openCreateDialog();
-    await products.name().fill(product.name);
-    await products.submit();
-
-    await expect.element(products.pendingSubmitButton()).toBeVisible();
-    await expect.element(products.cancelButton()).toBeDisabled();
-    await products.screenshotModalState('Pending Product creation');
-    await userEvent.keyboard('{Escape}');
-    await expect.element(products.dialog()).toBeVisible();
-
-    pendingCreation.resolve(response);
-    await expect.element(products.dialog()).not.toBeInTheDocument();
-  });
-
-  test('prevents dismissal while the Product catalog refresh is pending', async ({
-    productService,
-  }) => {
-    const product = createProductStub({ name: 'Кольцо' });
-    const pendingRefresh = createDeferred<ListProductsResponse>();
-    productService.createProduct.resolves(
-      createCreateProductResponseStub({
-        result: { case: 'success', value: product },
-      }),
-    );
-    productService.listProducts.handler
-      .mockResolvedValueOnce(createListProductsResponseStub({ products: [] }))
-      .mockImplementationOnce(() => pendingRefresh.promise);
-
-    const products = createProductsPage();
-    await products.open();
-    await products.openCreateDialog();
-    await products.name().fill(product.name);
-    await products.submit();
-
-    await expect.element(products.pendingSubmitButton()).toBeVisible();
-    await expect.element(products.cancelButton()).toBeDisabled();
-    await userEvent.keyboard('{Escape}');
-    await expect.element(products.dialog()).toBeVisible();
-
-    pendingRefresh.resolve(createListProductsResponseStub({ products: [product] }));
-    await expect.element(products.dialog()).not.toBeInTheDocument();
-    await expect.element(products.product(product.name)).toBeVisible();
-  });
-
-  test('creates a Product, closes the dialog, and displays it', async ({ productService }) => {
-    const product = createProductStub({ name: 'Кольцо' });
-    productService.createProduct.resolves(
-      createCreateProductResponseStub({
-        result: { case: 'success', value: product },
-      }),
-    );
-    productService.listProducts.handler.mockImplementation(async () =>
-      createListProductsResponseStub({
-        products: productService.createProduct.handler.mock.calls.length === 0 ? [] : [product],
-      }),
-    );
-
-    const products = createProductsPage();
-    await products.open();
-    await products.openCreateDialog();
-    await products.name().fill(product.name);
-    await products.submit();
-
-    await expect.element(products.dialog()).not.toBeInTheDocument();
-    await expect.element(products.headerCreateButton()).toHaveFocus();
-    await expect.element(products.product(product.name)).toBeVisible();
-    await expect.element(products.count(1)).toBeVisible();
-    await products.screenshotPage('Created Product');
-  });
-
-  test('renames a Product and moves it between active and archived filters', async ({
-    productService,
-  }) => {
-    let product = createProductStub({ archived: false, id: 'ring-id', name: 'Кольцо' });
-    productService.listProducts.handler.mockImplementation(async (request) =>
-      createListProductsResponseStub({
-        products: request.archived === product.archived ? [product] : [],
-      }),
-    );
-    productService.renameProduct.handler.mockImplementation(async (request) => {
-      product = createProductStub({ ...product, name: request.name });
-      return createRenameProductResponseStub({
+  test(
+    'prevents dismissal while creation is pending',
+    { tags: 'shared-maintenance-form' },
+    async ({ productService }) => {
+      const product = createProductStub({ name: 'Кольцо' });
+      const response = createCreateProductResponseStub({
         result: { case: 'success', value: product },
       });
-    });
-    productService.setProductArchived.handler.mockImplementation(async (request) => {
-      product = createProductStub({ ...product, archived: request.archived });
-      return createSetProductArchivedResponseStub({
-        result: { case: 'success', value: product },
+      const pendingCreation = createDeferred<CreateProductResponse>();
+      productService.listProducts.resolves(createListProductsResponseStub({ products: [] }));
+      productService.createProduct.handler.mockImplementation(() => pendingCreation.promise);
+
+      const products = createProductsPage();
+      await products.open();
+      await products.openCreateDialog();
+      await products.name().fill(product.name);
+      await products.submit();
+
+      await expect.element(products.pendingSubmitButton()).toBeVisible();
+      await expect.element(products.cancelButton()).toBeDisabled();
+      await products.screenshotModalState('Pending Product creation');
+      await userEvent.keyboard('{Escape}');
+      await expect.element(products.dialog()).toBeVisible();
+
+      pendingCreation.resolve(response);
+      await expect.element(products.dialog()).not.toBeInTheDocument();
+    },
+  );
+
+  test(
+    'prevents dismissal while the Product catalog refresh is pending',
+    { tags: 'shared-maintenance-form' },
+    async ({ productService }) => {
+      const product = createProductStub({ name: 'Кольцо' });
+      const pendingRefresh = createDeferred<ListProductsResponse>();
+      productService.createProduct.resolves(
+        createCreateProductResponseStub({
+          result: { case: 'success', value: product },
+        }),
+      );
+      productService.listProducts.handler
+        .mockResolvedValueOnce(createListProductsResponseStub({ products: [] }))
+        .mockImplementationOnce(() => pendingRefresh.promise);
+
+      const products = createProductsPage();
+      await products.open();
+      await products.openCreateDialog();
+      await products.name().fill(product.name);
+      await products.submit();
+
+      await expect.element(products.pendingSubmitButton()).toBeVisible();
+      await expect.element(products.cancelButton()).toBeDisabled();
+      await userEvent.keyboard('{Escape}');
+      await expect.element(products.dialog()).toBeVisible();
+
+      pendingRefresh.resolve(createListProductsResponseStub({ products: [product] }));
+      await expect.element(products.dialog()).not.toBeInTheDocument();
+      await expect.element(products.product(product.name)).toBeVisible();
+    },
+  );
+
+  test(
+    'creates a Product, closes the dialog, and displays it',
+    { tags: ['shared-catalog-table', 'shared-maintenance-form'] },
+    async ({ productService }) => {
+      const product = createProductStub({ name: 'Кольцо' });
+      productService.createProduct.resolves(
+        createCreateProductResponseStub({
+          result: { case: 'success', value: product },
+        }),
+      );
+      productService.listProducts.handler.mockImplementation(async () =>
+        createListProductsResponseStub({
+          products: productService.createProduct.handler.mock.calls.length === 0 ? [] : [product],
+        }),
+      );
+
+      const products = createProductsPage();
+      await products.open();
+      await products.openCreateDialog();
+      await products.name().fill(product.name);
+      await products.submit();
+
+      await expect.element(products.dialog()).not.toBeInTheDocument();
+      await expect.element(products.headerCreateButton()).toHaveFocus();
+      await expect.element(products.product(product.name)).toBeVisible();
+      await expect.element(products.count(1)).toBeVisible();
+      await products.screenshotPage('Created Product');
+    },
+  );
+
+  test(
+    'renames a Product and moves it between active and archived filters',
+    { tags: ['shared-catalog-table', 'shared-maintenance-form'] },
+    async ({ productService }) => {
+      let product = createProductStub({ archived: false, id: 'ring-id', name: 'Кольцо' });
+      productService.listProducts.handler.mockImplementation(async (request) =>
+        createListProductsResponseStub({
+          products: request.archived === product.archived ? [product] : [],
+        }),
+      );
+      productService.renameProduct.handler.mockImplementation(async (request) => {
+        product = createProductStub({ ...product, name: request.name });
+        return createRenameProductResponseStub({
+          result: { case: 'success', value: product },
+        });
       });
-    });
+      productService.setProductArchived.handler.mockImplementation(async (request) => {
+        product = createProductStub({ ...product, archived: request.archived });
+        return createSetProductArchivedResponseStub({
+          result: { case: 'success', value: product },
+        });
+      });
 
-    const products = createProductsPage();
-    await products.open();
-    await products.openRenameDialog('Кольцо');
-    await expect.element(products.editName()).toHaveValue('Кольцо');
-    await expect.element(products.editName()).toHaveFocus();
-    await products.screenshotModalState('Edit Product dialog');
-    await products.editName().fill('Кольцо с гранатом');
-    await products.saveRename();
+      const products = createProductsPage();
+      await products.open();
+      await products.openRenameDialog('Кольцо');
+      await expect.element(products.editName()).toHaveValue('Кольцо');
+      await expect.element(products.editName()).toHaveFocus();
+      await products.screenshotModalState('Edit Product dialog');
+      await products.editName().fill('Кольцо с гранатом');
+      await products.saveRename();
 
-    await expect.element(products.product('Кольцо с гранатом')).toBeVisible();
-    await expect(productService.renameProduct.getLastRequest()).resolves.toMatchObject({
-      id: 'ring-id',
-      name: 'Кольцо с гранатом',
-    });
+      await expect.element(products.product('Кольцо с гранатом')).toBeVisible();
+      await expect(productService.renameProduct.getLastRequest()).resolves.toMatchObject({
+        id: 'ring-id',
+        name: 'Кольцо с гранатом',
+      });
 
-    await products.archive('Кольцо с гранатом');
-    await expect.element(products.product('Кольцо с гранатом')).not.toBeInTheDocument();
-    await products.showArchived();
-    await expect.element(products.product('Кольцо с гранатом')).toBeVisible();
-    await expect.element(products.headerCreateButton()).not.toBeInTheDocument();
-    await products.screenshotPage('Archived Product');
+      await products.archive('Кольцо с гранатом');
+      await expect.element(products.product('Кольцо с гранатом')).not.toBeInTheDocument();
+      await products.showArchived();
+      await expect.element(products.product('Кольцо с гранатом')).toBeVisible();
+      await expect.element(products.headerCreateButton()).not.toBeInTheDocument();
+      await products.screenshotPage('Archived Product');
 
-    await products.restore('Кольцо с гранатом');
-    await expect.element(products.product('Кольцо с гранатом')).not.toBeInTheDocument();
-    await products.showActive();
-    await expect.element(products.product('Кольцо с гранатом')).toBeVisible();
-  });
+      await products.restore('Кольцо с гранатом');
+      await expect.element(products.product('Кольцо с гранатом')).not.toBeInTheDocument();
+      await products.showActive();
+      await expect.element(products.product('Кольцо с гранатом')).toBeVisible();
+    },
+  );
 
-  test('disables archive actions while an archive request is pending', async ({
-    productService,
-  }) => {
-    const product = createProductStub({ archived: false, id: 'ring-id', name: 'Кольцо' });
-    const pendingArchive = createDeferred<SetProductArchivedResponse>();
-    productService.listProducts.resolves(createListProductsResponseStub({ products: [product] }));
-    productService.setProductArchived.handler.mockImplementation(() => pendingArchive.promise);
+  test(
+    'disables archive actions while an archive request is pending',
+    { tags: 'shared-catalog-table' },
+    async ({ productService }) => {
+      const product = createProductStub({ archived: false, id: 'ring-id', name: 'Кольцо' });
+      const pendingArchive = createDeferred<SetProductArchivedResponse>();
+      productService.listProducts.resolves(createListProductsResponseStub({ products: [product] }));
+      productService.setProductArchived.handler.mockImplementation(() => pendingArchive.promise);
 
-    const products = createProductsPage();
-    await products.open();
-    await products.archive(product.name);
+      const products = createProductsPage();
+      await products.open();
+      await products.archive(product.name);
 
-    await expect.element(products.archiveButton(product.name)).toBeDisabled();
-    await products.screenshotPage('Pending Product archival');
+      await expect.element(products.archiveButton(product.name)).toBeDisabled();
+      await products.screenshotPage('Pending Product archival');
 
-    pendingArchive.resolve(
-      createSetProductArchivedResponseStub({
-        result: { case: 'success', value: createProductStub({ ...product, archived: true }) },
-      }),
-    );
-    await expect.element(products.archiveButton(product.name)).not.toBeDisabled();
-  });
+      pendingArchive.resolve(
+        createSetProductArchivedResponseStub({
+          result: { case: 'success', value: createProductStub({ ...product, archived: true }) },
+        }),
+      );
+      await expect.element(products.archiveButton(product.name)).not.toBeDisabled();
+    },
+  );
 
-  test('shows a generic message for a transport failure', async ({ productService }) => {
-    productService.listProducts.resolves(createListProductsResponseStub({ products: [] }));
-    productService.createProduct.rejects(new ConnectError('Server unavailable', Code.Unavailable));
+  test(
+    'shows a generic message for a transport failure',
+    { tags: 'shared-maintenance-form' },
+    async ({ productService }) => {
+      productService.listProducts.resolves(createListProductsResponseStub({ products: [] }));
+      productService.createProduct.rejects(
+        new ConnectError('Server unavailable', Code.Unavailable),
+      );
 
-    const products = createProductsPage();
-    await products.open();
-    await products.openCreateDialog();
-    await products.name().fill('Кольцо');
-    await products.submit();
+      const products = createProductsPage();
+      await products.open();
+      await products.openCreateDialog();
+      await products.name().fill('Кольцо');
+      await products.submit();
 
-    await expect.element(products.dialog()).toBeVisible();
-    await expect
-      .element(page.getByText('Не удалось сохранить штучку. Попробуйте ещё раз.'))
-      .toBeVisible();
-    await products.screenshotModalState('Product form error');
-  });
+      await expect.element(products.dialog()).toBeVisible();
+      await expect
+        .element(page.getByText('Не удалось сохранить штучку. Попробуйте ещё раз.'))
+        .toBeVisible();
+      await products.screenshotModalState('Product form error');
+    },
+  );
 
   test('shows a generic message for a malformed creation response', async ({ productService }) => {
     productService.listProducts.resolves(createListProductsResponseStub({ products: [] }));

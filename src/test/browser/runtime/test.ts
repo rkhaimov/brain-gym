@@ -1,10 +1,26 @@
+import { createRouterTransport } from '@connectrpc/connect';
 import { test as baseTest, vi } from 'vitest';
 
-import { createProductServiceMock } from '@/shared/gen/ceramics/v1/product_test.js';
-import type { ProductServiceSpies } from '@/shared/gen/ceramics/v1/product_test.js';
+import { OutletService } from '@/shared/gen/ceramics/v1/outlet_pb.js';
+import {
+  createOutletServiceMock,
+  type OutletServiceSpies,
+} from '@/shared/gen/ceramics/v1/outlet_test.js';
+import { ProductService } from '@/shared/gen/ceramics/v1/product_pb.js';
+import {
+  createProductServiceMock,
+  type ProductServiceSpies,
+} from '@/shared/gen/ceramics/v1/product_test.js';
 import { screencastFixture } from './screencast-fixture.js';
 
+interface ApplicationServiceSpies {
+  readonly outlet: OutletServiceSpies;
+  readonly product: ProductServiceSpies;
+}
+
 interface BrowserFixtures {
+  readonly applicationServices: ApplicationServiceSpies;
+  readonly outletService: OutletServiceSpies;
   readonly productService: ProductServiceSpies;
 }
 
@@ -28,14 +44,35 @@ async function loadTestApplication(): Promise<TestApplication> {
 
 export const test = baseTest
   .extend<BrowserFixtures>({
-    productService: [
+    applicationServices: [
       async ({ task: _task }, use) => {
-        const service = createProductServiceMock();
+        const outlet = createOutletServiceMock().spies;
+        const product = createProductServiceMock().spies;
+        const transport = createRouterTransport((router) => {
+          router.service(OutletService, {
+            createOutlet: outlet.createOutlet.handler,
+            listOutlets: outlet.listOutlets.handler,
+            setOutletArchived: outlet.setOutletArchived.handler,
+            updateOutlet: outlet.updateOutlet.handler,
+          });
+          router.service(ProductService, {
+            createProduct: product.createProduct.handler,
+            listProducts: product.listProducts.handler,
+            renameProduct: product.renameProduct.handler,
+            setProductArchived: product.setProductArchived.handler,
+          });
+        });
         const application = await loadTestApplication();
-        application.overrideTransport(service.transport);
-        await use(service.spies);
+        application.overrideTransport(transport);
+        await use({ outlet, product });
       },
       { auto: true },
     ],
+    outletService: async ({ applicationServices }, use) => {
+      await use(applicationServices.outlet);
+    },
+    productService: async ({ applicationServices }, use) => {
+      await use(applicationServices.product);
+    },
   })
   .extend('screencast', screencastFixture);

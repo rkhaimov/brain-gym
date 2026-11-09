@@ -142,7 +142,10 @@ function generateMessageFactory(
   });
   const oneofLines = message.descriptor.oneofDecl.flatMap((oneof, index) => {
     const selected = message.descriptor.field.find(
-      (field) => field.oneofIndex === index && !field.proto3Optional,
+      (field) =>
+        isFieldSet(field, FieldDescriptorProtoSchema.field.oneofIndex) &&
+        field.oneofIndex === index &&
+        !field.proto3Optional,
     );
     if (selected === undefined) {
       return [];
@@ -299,5 +302,8 @@ async function readStandardInput(): Promise<Uint8Array> {
 const request = fromBinary(CodeGeneratorRequestSchema, await readStandardInput());
 const filesToGenerate = new Set(request.fileToGenerate);
 const files = request.protoFile.filter((file) => filesToGenerate.has(file.name)).map(generateFile);
-const response = create(CodeGeneratorResponseSchema, { file: files });
+const response = create(CodeGeneratorResponseSchema, {
+  file: files,
+  supportedFeatures: 1n,
+});
 process.stdout.write(toBinary(CodeGeneratorResponseSchema, response));

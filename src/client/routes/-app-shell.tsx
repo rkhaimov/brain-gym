@@ -1,5 +1,6 @@
 import { Link, useLocation, useMatches } from '@tanstack/react-router';
-import type { CSSProperties, PropsWithChildren } from 'react';
+import { Store } from 'lucide-react';
+import type { ComponentType, CSSProperties, PropsWithChildren } from 'react';
 
 import logoUrl from '@/client/assets/ceramics-logo.png';
 import {
@@ -44,8 +45,38 @@ function CeramicProductIcon({ className }: Readonly<{ className?: string }>) {
   );
 }
 
+interface NavigationItem {
+  readonly headerIconClassName?: string;
+  readonly icon: ComponentType<{ className?: string }>;
+  readonly label: string;
+  readonly to: '/outlets' | '/products';
+}
+
+const navigationItems: readonly NavigationItem[] = [
+  {
+    headerIconClassName: 'size-5',
+    icon: CeramicProductIcon,
+    label: 'Штучки',
+    to: '/products',
+  },
+  { icon: Store, label: 'Торговые точки', to: '/outlets' },
+];
+
+function NavigationIcon({
+  header = false,
+  item,
+}: Readonly<{ header?: boolean; item: NavigationItem }>) {
+  const Icon = item.icon;
+  return header && item.headerIconClassName !== undefined ? (
+    <Icon className={item.headerIconClassName} />
+  ) : (
+    <Icon />
+  );
+}
+
 export function AppShell({ children }: PropsWithChildren) {
   const location = useLocation();
+  const currentNavigationItem = navigationItems.find((item) => item.to === location.pathname);
   const pageTitle = useMatches({
     select: (matches) =>
       matches.findLast((match) => match.staticData.pageTitle !== undefined)?.staticData.pageTitle ??
@@ -75,18 +106,20 @@ export function AppShell({ children }: PropsWithChildren) {
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={location.pathname === '/products'}
-                    tooltip="Штучки"
-                  >
-                    <Link to="/products">
-                      <CeramicProductIcon />
-                      <span>Штучки</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                {navigationItems.map((item) => (
+                  <SidebarMenuItem key={item.to}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={location.pathname === item.to}
+                      tooltip={item.label}
+                    >
+                      <Link to={item.to}>
+                        <NavigationIcon item={item} />
+                        <span>{item.label}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -96,7 +129,9 @@ export function AppShell({ children }: PropsWithChildren) {
       <SidebarInset>
         <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
           <div className="flex w-full items-center gap-2 px-6">
-            <CeramicProductIcon className="size-5" />
+            {currentNavigationItem === undefined ? null : (
+              <NavigationIcon header item={currentNavigationItem} />
+            )}
             <h1 className="text-base font-bold">{pageTitle}</h1>
           </div>
         </header>

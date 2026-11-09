@@ -1,29 +1,12 @@
-import { useForm } from '@tanstack/react-form';
-import type { FormEvent, RefObject } from 'react';
-import { z } from 'zod';
+import type { RefObject } from 'react';
 
-import { Alert, AlertDescription } from '@/client/components/ui/alert.js';
-import { Button } from '@/client/components/ui/button.js';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/client/components/ui/dialog.js';
-import { Field, FieldError, FieldLabel } from '@/client/components/ui/field.js';
-import { Input } from '@/client/components/ui/input.js';
+import { MaintenanceFormDialog } from '@/client/components/maintenance/maintenance-form-dialog.js';
 import type {
   CreateProductResponse,
   RenameProductResponse,
 } from '@/shared/gen/ceramics/v1/product_pb.js';
 
 import { useRefreshProductCatalog } from './-product-catalog-query.js';
-
-const fieldErrorsSchema = z.array(z.object({ message: z.string() }));
-const submissionErrorSchema = z.string().optional();
 
 interface ProductFormDialogProps {
   readonly defaultName: string;
@@ -45,140 +28,31 @@ export function ProductFormDialog({
   title,
 }: ProductFormDialogProps) {
   const refreshProductCatalog = useRefreshProductCatalog();
-  const form = useForm({
-    defaultValues: { name: defaultName },
-    async onSubmit({ formApi, value }) {
-      function rejectUnexpected(error: unknown): never {
-        console.error('Unexpected Product form failure', error);
-        formApi.setErrorMap({
-          onSubmit: {
-            fields: {},
-            form: 'Не удалось сохранить штучку. Попробуйте ещё раз.',
-          },
-        });
-        throw error;
-      }
-
-      let response;
-      try {
-        response = await submit(value.name);
-      } catch (error) {
-        rejectUnexpected(error);
-      }
-
-      switch (response.result.case) {
-        case 'failure':
-          formApi.setErrorMap({
-            onSubmit: { fields: { name: [{ message: response.result.value }] } },
-          });
-          throw new Error(response.result.value);
-        case 'success':
-          try {
-            await refreshProductCatalog();
-          } catch (error) {
-            rejectUnexpected(error);
-          }
-          return;
-        default:
-          rejectUnexpected(new Error('Product mutation response is missing a result'));
-      }
-    },
-  });
-
-  function changeOpen(nextOpen: boolean): void {
-    if (!nextOpen && form.state.isSubmitting) return;
-    onOpenChange(nextOpen);
-  }
-
-  function submitForm(event: FormEvent<HTMLFormElement>): void {
-    event.preventDefault();
-    event.stopPropagation();
-    form
-      .handleSubmit()
-      .then(() => {
-        if (form.state.isSubmitSuccessful) onOpenChange(false);
-      })
-      .catch(() => undefined);
-  }
 
   return (
-    <form.Subscribe selector={(state) => state.isSubmitting}>
-      {(isSubmitting) => (
-        <Dialog onOpenChange={changeOpen} open={open}>
-          <DialogContent
-            onCloseAutoFocus={(event) => {
-              event.preventDefault();
-              returnFocusTo.current?.focus();
-            }}
-            onEscapeKeyDown={(event) => {
-              if (isSubmitting) event.preventDefault();
-            }}
-            onPointerDownOutside={(event) => {
-              if (isSubmitting) event.preventDefault();
-            }}
-          >
-            <DialogHeader>
-              <DialogTitle>{title}</DialogTitle>
-              <DialogDescription>Название сохраняется точно как введено</DialogDescription>
-            </DialogHeader>
-
-            <form className="grid gap-4" noValidate onSubmit={submitForm}>
-              <form.Field
-                name="name"
-                validators={{ onSubmit: z.string().min(1, 'Введите название штучки') }}
-              >
-                {(field) => {
-                  const fieldErrors = fieldErrorsSchema.parse(field.state.meta.errors);
-                  const fieldError = fieldErrors[0];
-                  return (
-                    <Field data-invalid={fieldError !== undefined}>
-                      <FieldLabel htmlFor="product-name">Название</FieldLabel>
-                      <Input
-                        aria-describedby={
-                          fieldError === undefined ? undefined : 'product-name-error'
-                        }
-                        aria-invalid={fieldError === undefined ? undefined : true}
-                        autoComplete="off"
-                        autoFocus
-                        disabled={isSubmitting}
-                        id="product-name"
-                        name={field.name}
-                        onBlur={field.handleBlur}
-                        onChange={(event) => field.handleChange(event.target.value)}
-                        placeholder={defaultName.length === 0 ? 'Например, Кольцо' : undefined}
-                        value={field.state.value}
-                      />
-                      <FieldError errors={fieldErrors} id="product-name-error" />
-                    </Field>
-                  );
-                }}
-              </form.Field>
-
-              <form.Subscribe selector={(state) => state.errorMap.onSubmit}>
-                {(submissionError) => {
-                  const error = submissionErrorSchema.parse(submissionError);
-                  return error === undefined ? null : (
-                    <Alert variant="destructive">
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                  );
-                }}
-              </form.Subscribe>
-
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button disabled={isSubmitting} type="button" variant="outline">
-                    Отмена
-                  </Button>
-                </DialogClose>
-                <Button disabled={isSubmitting} type="submit">
-                  {isSubmitting ? 'Сохраняем…' : submitLabel}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      )}
-    </form.Subscribe>
+    <MaintenanceFormDialog
+      defaultValues={{ code: '', name: defaultName }}
+      description="Название сохраняется точно как введено"
+      namePlaceholder={defaultName.length === 0 ? 'Например, Кольцо' : undefined}
+      onOpenChange={onOpenChange}
+      open={open}
+      refresh={refreshProductCatalog}
+      requiredNameMessage="Введите название штучки"
+      returnFocusTo={returnFocusTo}
+      submit={async ({ name }) => {
+        const response = await submit(name);
+        switch (response.result.case) {
+          case 'failure':
+            return { case: 'failure', field: 'name', message: response.result.value };
+          case 'success':
+            return { case: 'success' };
+          default:
+            throw new Error('Product mutation response is missing a result');
+        }
+      }}
+      submitLabel={submitLabel}
+      title={title}
+      unexpectedErrorMessage="Не удалось сохранить штучку. Попробуйте ещё раз."
+    />
   );
 }

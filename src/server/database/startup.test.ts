@@ -410,7 +410,7 @@ describe('prepareApplicationDatabase', () => {
       async getMigrations() {
         return {
           ...(await migrationProvider.getMigrations()),
-          '003_add_restored_marker': {
+          '004_add_restored_marker': {
             async up(migrationDatabase) {
               await migrationDatabase.schema
                 .createTable('restored_migration_marker')

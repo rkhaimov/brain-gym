@@ -19,3 +19,7 @@ UI implementation and visual review use the application identity, logo, color, a
 ### Client module locality
 
 Application-owned UI lives beside its consuming route: keep small private modules in the route file and larger private modules as siblings in its route folder. Promote a module to `src/client/components` only when it serves multiple route pages. Keep generated shadcn primitives in `src/client/components/ui`.
+
+### Shared UI test ownership
+
+When changing a shared client module or adding another route that adopts one, follow `docs/agents/shared-ui-tests.md`.

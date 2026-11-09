@@ -68,7 +68,17 @@ export function createBrowserProject(): TestProjectInlineConfiguration {
       retry: process.env['CI'] === undefined ? 0 : 1,
       setupFiles: ['./src/test/browser/runtime/setup.ts'],
       strictTags: true,
-      tags: [{ name: 'flaky', skip: process.env['SKIP_FLAKY_TESTS'] !== 'false' }],
+      tags: [
+        { name: 'flaky', skip: process.env['SKIP_FLAKY_TESTS'] !== 'false' },
+        {
+          description: 'Owns behavior encapsulated by the shared maintenance catalog',
+          name: 'shared-catalog-table',
+        },
+        {
+          description: 'Owns behavior encapsulated by the shared maintenance form',
+          name: 'shared-maintenance-form',
+        },
+      ],
     },
   };
 }
