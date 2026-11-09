@@ -31,7 +31,7 @@ Phase one provides:
 - fixed-format Excel Report file import into an editable, all-or-nothing form;
 - persistent and historically effective Product mappings;
 - Sales report history, historical Stock balances, current Stock balances, totals, comparisons, and rankings;
-- local durable storage, startup backups, migrations, and draft recovery.
+- local durable storage, startup backups, and migrations.
 
 ### Architecture summary
 
@@ -40,9 +40,7 @@ flowchart LR
     subgraph Browser["Browser — full CSR"]
         UI["Russian React UI<br/>Router · Forms · shadcn/ui"]
         Query["TanStack Query<br/>generated Connect client"]
-        Drafts[("Browser-local<br/>form drafts")]
         UI --> Query
-        UI <--> Drafts
     end
 
     Contract["Protobuf contract<br/>shared types and generated seams"]
@@ -185,11 +183,8 @@ flowchart LR
 90. As the creator, I can use every phase-one feature without an internet connection.
 91. As the creator, every save confirmed by the application survives normal shutdown, restart, and application updates.
 92. As the creator, a crash during a change leaves either the complete committed change or no change; I retry a change whose success was not confirmed.
-93. As the creator, unfinished form values are restored after refresh or application restart so that accidental navigation or a server crash does not force me to re-enter them.
-94. As the creator, I can explicitly clear a restored form draft, and a draft is cleared automatically only after its save is confirmed.
-95. As the creator, imported editable values can be restored as a draft, while the original Excel binary does not need to be retained in browser storage.
-96. As the creator, I receive a usable Russian interface with keyboard-operable forms, labelled controls, readable contrast, visible validation messages, and browser zoom support.
-97. As the creator, my application data, diagnostics, and usage information are never sent to external services.
+93. As the creator, I receive a usable Russian interface with keyboard-operable forms, labelled controls, readable contrast, visible validation messages, and browser zoom support.
+94. As the creator, my application data, diagnostics, and usage information are never sent to external services.
 
 ## Implementation Decisions
 
@@ -213,11 +208,6 @@ flowchart LR
 - Use a network-first query strategy. The query cache is not a persistent source of truth, mutations are not optimistic, and successful mutations invalidate affected queries.
 - Configure TanStack Query to issue localhost requests even when the browser reports that the computer is offline.
 - Provide the network transport once at the application root so tests can replace it without including a service-worker mocking dependency in the production application.
-- Every create and edit form uses one shared Form facility for browser-local draft storage. Each form supplies only its stable key and structural schema.
-- Draft values are structurally validated when read from untyped synchronous browser storage.
-- Persist changed drafts approximately every five seconds and during page close. Include a request timestamp and reject a stale write that would replace a newer draft.
-- Restore drafts after refresh or application restart. Clear a draft only after confirmed save or an explicit Clear action.
-- Synchronous browser storage is accepted until measurement demonstrates an INP problem.
 
 ### Network contract and shared types
 
@@ -349,7 +339,7 @@ flowchart LR
 ### Scenario allocation
 
 - Keep the critical full-system browser workflow deliberately small. It covers creating Products and Outlets, importing and correcting a Report file, performing initial Product mapping, and viewing analytics and current Stock.
-- Cover manual Sales report creation, historical remapping, report archive/restore, and draft restore/clear in the appropriate server or client integration projects rather than duplicating them in the critical full-system workflow.
+- Cover manual Sales report creation, historical remapping, and report archive/restore in the appropriate server or client integration projects rather than duplicating them in the critical full-system workflow.
 - Use fixed Chromium screenshot tests for stable visual states and compare them with the client-approved design drafts.
 - Regenerate Protobuf, Connect Query, generated test artifacts, and Kysely database types in CI; fail when generation produces an uncommitted difference.
 - Publish coverage reports to expose untested modules, but do not set an arbitrary global coverage percentage. The agreed behavior and critical scenarios determine sufficiency.

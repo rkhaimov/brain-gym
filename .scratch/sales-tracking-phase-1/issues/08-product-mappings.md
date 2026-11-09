@@ -2,7 +2,7 @@
 
 **What to build:** Let the creator associate each Outlet's exact listing names with canonical Products and correct those associations later. Mapping changes reclassify all history immediately while Unmapped listings remain valid and visible.
 
-**Blocked by:** 04: Complete the Product catalog and form drafts; 07: Correct Sales reports and calculate current Stock.
+**Blocked by:** 04: Complete the Product catalog; 07: Correct Sales reports and calculate current Stock.
 
 **Status:** ready-for-agent
 

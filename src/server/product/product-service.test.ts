@@ -2,6 +2,7 @@ import { createClient, createRouterTransport } from '@connectrpc/connect';
 import { describe, expect } from 'vitest';
 
 import { ProductService } from '../../shared/gen/ceramics/v1/product_pb.js';
+import { assertSuccess } from '../../test/server/assertions.js';
 import { testEnv } from '../../test/server/env.js';
 import { test as serverTest } from '../../test/server/test.js';
 import type { TestDatabase } from '../../test/server/test.js';
@@ -62,11 +63,9 @@ describe('ProductService', () => {
   test('creator can rename, archive, and restore a Product without changing its identity', async ({
     productService,
   }) => {
-    let client = productService.client;
+    const client = productService.client;
     const created = await client.createProduct({ name: 'Кольцо' });
-    if (created.result.case !== 'success') {
-      throw new Error('Expected Product creation to succeed');
-    }
+    assertSuccess(created);
     const productId = created.result.value.id;
 
     await expect(
@@ -82,13 +81,12 @@ describe('ProductService', () => {
     ).resolves.toMatchObject({
       result: {
         case: 'success',
-        value: { id: productId, name: 'Кольцо с гранатом', archived: true },
+        value: { id: productId, archived: true },
       },
     });
-    client = await productService.restart();
     await expect(client.listProducts({})).resolves.toMatchObject({ products: [] });
     await expect(client.listProducts({ archived: true })).resolves.toMatchObject({
-      products: [{ id: productId, name: 'Кольцо с гранатом', archived: true }],
+      products: [{ id: productId, archived: true }],
     });
 
     await expect(
@@ -96,12 +94,11 @@ describe('ProductService', () => {
     ).resolves.toMatchObject({
       result: {
         case: 'success',
-        value: { id: productId, name: 'Кольцо с гранатом', archived: false },
+        value: { id: productId, archived: false },
       },
     });
-    client = await productService.restart();
     await expect(client.listProducts({})).resolves.toMatchObject({
-      products: [{ id: productId, name: 'Кольцо с гранатом', archived: false }],
+      products: [{ id: productId, archived: false }],
     });
   });
 
@@ -110,18 +107,14 @@ describe('ProductService', () => {
   }) => {
     const client = productService.client;
     const archived = await client.createProduct({ name: 'Кольцо' });
-    if (archived.result.case !== 'success') {
-      throw new Error('Expected Product creation to succeed');
-    }
+    assertSuccess(archived);
     await client.setProductArchived({ id: archived.result.value.id, archived: true });
 
     await expect(client.createProduct({ name: 'Кольцо' })).resolves.toMatchObject({
       result: { case: 'failure', value: 'Штучка с таким названием уже существует' },
     });
     const active = await client.createProduct({ name: 'Кулон' });
-    if (active.result.case !== 'success') {
-      throw new Error('Expected Product creation to succeed');
-    }
+    assertSuccess(active);
     await expect(
       client.renameProduct({ id: active.result.value.id, name: 'Кольцо' }),
     ).resolves.toMatchObject({

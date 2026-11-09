@@ -7,7 +7,7 @@
 **Status:** ready-for-agent
 
 - [ ] One documented terminal command starts the production server, waits until startup backup and migration work succeeds, and opens the application in the default supported Chromium browser.
-- [ ] Normal terminal shutdown preserves every confirmed change; unconfirmed browser drafts remain recoverable according to the Form contract.
+- [ ] Normal terminal shutdown preserves every confirmed change.
 - [ ] The server binds only to the local computer and exposes no LAN or internet listener.
 - [ ] The production application requires no authentication, external service, or internet connection after it is built.
 - [ ] The application emits no external telemetry, usage analytics, diagnostics, or business data.

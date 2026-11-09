@@ -21,7 +21,6 @@
 - [ ] A report with no sales rows and no Stock balance rows is valid and means zero sales and empty Outlet inventory.
 - [ ] Newly encountered Outlet listings may remain Unmapped without preventing save.
 - [ ] The entire Sales report is saved atomically through the FIFO mutation queue and one SQLite transaction.
-- [ ] The manual Sales report form uses shared draft restoration and clears its draft only after confirmed save or explicit Clear.
 - [ ] Server integration tests cover valid reports and the complete validation matrix using real temporary SQLite databases.
 - [ ] Prebuilt-client integration tests cover form behavior and visible validation; this flow is not added to the critical full-system suite.
 

@@ -19,7 +19,6 @@
 - [ ] Confirming the import saves every included outlet-local Sales report in one transaction; failure or cancellation saves none.
 - [ ] After confirmation, every resulting Sales report can be viewed, edited, archived, or restored independently.
 - [ ] An existing report for the same Outlet and Reporting period does not prevent another report from being imported.
-- [ ] The import form draft stores parsed editable values but never stores the original Excel binary.
 - [ ] Synthetic committed workbook fixtures cover a valid file and individual failures for cell types, duplicate Outlet codes, duplicate listings, unknown Outlets, and invalid periods.
 - [ ] Parser and handler integration tests use real Outlets and a real temporary SQLite database.
 - [ ] Prebuilt-client tests cover rejection, grouped review, correction, mapping, cancellation, and atomic confirmation.

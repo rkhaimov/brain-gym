@@ -1,3 +1,4 @@
+import { useForm } from '@tanstack/react-form';
 import type { FormEvent, RefObject } from 'react';
 import { z } from 'zod';
 
@@ -14,7 +15,6 @@ import {
 } from '@/client/components/ui/dialog.js';
 import { Field, FieldError, FieldLabel } from '@/client/components/ui/field.js';
 import { Input } from '@/client/components/ui/input.js';
-import { useDraftForm } from '@/client/lib/form.js';
 import type {
   CreateProductResponse,
   RenameProductResponse,
@@ -24,11 +24,9 @@ import { useRefreshProductCatalog } from './-product-catalog-query.js';
 
 const fieldErrorsSchema = z.array(z.object({ message: z.string() }));
 const submissionErrorSchema = z.string().optional();
-const productDraftSchema = z.object({ name: z.string() });
 
 interface ProductFormDialogProps {
   readonly defaultName: string;
-  readonly draftKey: string;
   readonly onOpenChange: (open: boolean) => void;
   readonly open: boolean;
   readonly returnFocusTo: RefObject<HTMLButtonElement | null>;
@@ -39,7 +37,6 @@ interface ProductFormDialogProps {
 
 export function ProductFormDialog({
   defaultName,
-  draftKey,
   onOpenChange,
   open,
   returnFocusTo,
@@ -48,9 +45,8 @@ export function ProductFormDialog({
   title,
 }: ProductFormDialogProps) {
   const refreshProductCatalog = useRefreshProductCatalog();
-  const { clearDraft, form, handleSubmit } = useDraftForm({
+  const form = useForm({
     defaultValues: { name: defaultName },
-    draftKey,
     async onSubmit({ formApi, value }) {
       function rejectUnexpected(error: unknown): never {
         console.error('Unexpected Product form failure', error);
@@ -87,7 +83,6 @@ export function ProductFormDialog({
           rejectUnexpected(new Error('Product mutation response is missing a result'));
       }
     },
-    schema: productDraftSchema,
   });
 
   function changeOpen(nextOpen: boolean): void {
@@ -98,9 +93,10 @@ export function ProductFormDialog({
   function submitForm(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
     event.stopPropagation();
-    handleSubmit()
-      .then((submitted) => {
-        if (submitted) onOpenChange(false);
+    form
+      .handleSubmit()
+      .then(() => {
+        if (form.state.isSubmitSuccessful) onOpenChange(false);
       })
       .catch(() => undefined);
   }
@@ -136,23 +132,23 @@ export function ProductFormDialog({
                   const fieldError = fieldErrors[0];
                   return (
                     <Field data-invalid={fieldError !== undefined}>
-                      <FieldLabel htmlFor={`${draftKey}-${field.name}`}>Название</FieldLabel>
+                      <FieldLabel htmlFor="product-name">Название</FieldLabel>
                       <Input
                         aria-describedby={
-                          fieldError === undefined ? undefined : `${draftKey}-${field.name}-error`
+                          fieldError === undefined ? undefined : 'product-name-error'
                         }
                         aria-invalid={fieldError === undefined ? undefined : true}
                         autoComplete="off"
                         autoFocus
                         disabled={isSubmitting}
-                        id={`${draftKey}-${field.name}`}
+                        id="product-name"
                         name={field.name}
                         onBlur={field.handleBlur}
                         onChange={(event) => field.handleChange(event.target.value)}
                         placeholder={defaultName.length === 0 ? 'Например, Кольцо' : undefined}
                         value={field.state.value}
                       />
-                      <FieldError errors={fieldErrors} id={`${draftKey}-${field.name}-error`} />
+                      <FieldError errors={fieldErrors} id="product-name-error" />
                     </Field>
                   );
                 }}
@@ -170,9 +166,6 @@ export function ProductFormDialog({
               </form.Subscribe>
 
               <DialogFooter>
-                <Button disabled={isSubmitting} onClick={clearDraft} type="button" variant="ghost">
-                  Очистить
-                </Button>
                 <DialogClose asChild>
                   <Button disabled={isSubmitting} type="button" variant="outline">
                     Отмена

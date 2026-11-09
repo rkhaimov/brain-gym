@@ -1,8 +1,11 @@
 import { create } from '@bufbuild/protobuf';
+import type { Message } from '@bufbuild/protobuf';
 import type { ConnectRouter, ServiceImpl } from '@connectrpc/connect';
 
 import { ProductService, ProductSchema } from '../../shared/gen/ceramics/v1/product_pb.js';
+import type { Product } from '../../shared/gen/ceramics/v1/product_pb.js';
 import type { ApplicationDatabase } from '../database/database.js';
+import type { Products } from '../database/generated.js';
 import type { EnvService } from '../env.js';
 import type { MutationQueue } from '../mutation-queue.js';
 
@@ -22,17 +25,13 @@ export interface ProductRouteDependencies {
   readonly mutationQueue: MutationQueue;
 }
 
-interface DomainProduct {
-  readonly archived: boolean;
-  readonly id: ProductId;
-  readonly name: string;
-}
+type DomainProduct = Readonly<
+  Omit<Product, keyof Message | 'id'> & {
+    id: ProductId;
+  }
+>;
 
-interface PersistedProduct {
-  readonly archived_at_ms: number | null;
-  readonly id: string;
-  readonly name: string;
-}
+type PersistedProduct = Pick<Products, 'archived_at_ms' | 'id' | 'name'>;
 
 function productFromDatabase(row: PersistedProduct): DomainProduct {
   const id = row.id;

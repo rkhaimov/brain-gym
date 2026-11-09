@@ -17,7 +17,6 @@ export function CreateProductDialog(props: CreateProductDialogProps) {
     <ProductFormDialog
       {...props}
       defaultName=""
-      draftKey="product:create"
       submit={(name) => mutation.mutateAsync({ name })}
       submitLabel="Создать"
       title="Новая штучка"

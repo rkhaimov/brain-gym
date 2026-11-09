@@ -18,7 +18,6 @@ export function EditProductDialog({ product, ...props }: EditProductDialogProps)
     <ProductFormDialog
       {...props}
       defaultName={product.name}
-      draftKey={`product:edit:${product.id}`}
       open
       submit={(name) => mutation.mutateAsync({ id: product.id, name })}
       submitLabel="Сохранить"

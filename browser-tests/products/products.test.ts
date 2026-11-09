@@ -1,5 +1,5 @@
 import { Code, ConnectError } from '@connectrpc/connect';
-import { expect, vi } from 'vitest';
+import { expect } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 
 import {
@@ -15,8 +15,6 @@ import type {
 } from '@/shared/gen/ceramics/v1/product_pb.js';
 import { screenshot } from '@/test/browser/runtime/screenshot.js';
 import { test } from '@/test/browser/runtime/test.js';
-
-const CREATE_DRAFT_STORAGE_KEY = 'ceramics:form-draft:product:create';
 
 test.describe('Product catalog', () => {
   test('displays the empty catalog', async ({ productService }) => {
@@ -242,111 +240,6 @@ test.describe('Product catalog', () => {
     await expect.element(products.product('Кольцо с гранатом')).toBeVisible();
   });
 
-  test('restores create and edit drafts after dismissal and application restart', async ({
-    productService,
-  }) => {
-    const product = createProductStub({ archived: false, id: 'ring-id', name: 'Кольцо' });
-    productService.listProducts.resolves(createListProductsResponseStub({ products: [product] }));
-
-    const products = createProductsPage();
-    await products.open();
-    await products.openCreateDialog();
-    await products.name().fill('Новый кулон');
-    await vi.advanceTimersByTimeAsync(5_000);
-    await products.cancel();
-
-    await products.open();
-    await products.openCreateDialog();
-    await expect.element(products.name()).toHaveValue('Новый кулон');
-    await products.cancel();
-
-    await products.openRenameDialog('Кольцо');
-    await products.renameName().fill('Кольцо с гранатом');
-    window.dispatchEvent(new Event('pagehide'));
-    await products.open();
-    await products.openRenameDialog('Кольцо');
-    await expect.element(products.renameName()).toHaveValue('Кольцо с гранатом');
-  });
-
-  test('clears a create draft after a confirmed save', async ({ productService }) => {
-    const product = createProductStub({ archived: false, name: 'Кольцо' });
-    productService.createProduct.resolves(
-      createCreateProductResponseStub({ result: { case: 'success', value: product } }),
-    );
-    productService.listProducts.handler.mockImplementation(async () =>
-      createListProductsResponseStub({
-        products: productService.createProduct.handler.mock.calls.length === 0 ? [] : [product],
-      }),
-    );
-
-    const products = createProductsPage();
-    await products.open();
-    await products.openCreateDialog();
-    await products.name().fill(product.name);
-    await vi.advanceTimersByTimeAsync(5_000);
-    await products.cancel();
-    await products.open();
-    await products.openCreateDialog();
-    await expect.element(products.name()).toHaveValue(product.name);
-    await products.submit();
-
-    await products.openCreateDialog();
-    await expect.element(products.name()).toHaveValue('');
-    await products.cancel();
-    await products.open();
-    await products.openCreateDialog();
-    await expect.element(products.name()).toHaveValue('');
-  });
-
-  test('clears a draft only through the explicit Clear action', async ({ productService }) => {
-    productService.listProducts.resolves(createListProductsResponseStub({ products: [] }));
-    const products = createProductsPage();
-    await products.open();
-    await products.openCreateDialog();
-    await products.name().fill('Кулон');
-    await vi.advanceTimersByTimeAsync(5_000);
-
-    await products.clearCreateDraft();
-    await expect.element(products.name()).toHaveValue('');
-    await products.cancel();
-    await products.open();
-    await products.openCreateDialog();
-    await expect.element(products.name()).toHaveValue('');
-  });
-
-  test('ignores an invalid draft and prevents an older write from replacing a newer one', async ({
-    productService,
-  }) => {
-    productService.listProducts.resolves(createListProductsResponseStub({ products: [] }));
-    localStorage.setItem(CREATE_DRAFT_STORAGE_KEY, '{invalid');
-    const products = createProductsPage();
-    await products.open();
-    await products.openCreateDialog();
-    await expect.element(products.name()).toHaveValue('');
-
-    await products.name().fill('Черновик после ошибки');
-    await vi.advanceTimersByTimeAsync(5_000);
-    await products.cancel();
-    await products.open();
-    await products.openCreateDialog();
-    await expect.element(products.name()).toHaveValue('Черновик после ошибки');
-    await products.clearCreateDraft();
-
-    await products.name().fill('Старый черновик');
-    localStorage.setItem(
-      CREATE_DRAFT_STORAGE_KEY,
-      JSON.stringify({
-        requestTimestampMs: Date.now() + 10_000,
-        values: { name: 'Более новый черновик' },
-      }),
-    );
-    await vi.advanceTimersByTimeAsync(5_000);
-    await products.cancel();
-    await products.open();
-    await products.openCreateDialog();
-    await expect.element(products.name()).toHaveValue('Более новый черновик');
-  });
-
   test('shows a generic message for a transport failure', async ({ productService }) => {
     productService.listProducts.resolves(createListProductsResponseStub({ products: [] }));
     productService.createProduct.rejects(new ConnectError('Server unavailable', Code.Unavailable));
@@ -395,7 +288,6 @@ function createProductsPage() {
         .click(),
     cancel: () => dialog().getByRole('button', { name: 'Отмена' }).click(),
     cancelButton: () => dialog().getByRole('button', { name: 'Отмена' }),
-    clearCreateDraft: () => dialog().getByRole('button', { name: 'Очистить' }).click(),
     count: (count: number) => page.getByLabelText(`Количество штучек: ${count}`),
     dialog,
     emptyCreateButton,
@@ -407,10 +299,6 @@ function createProductsPage() {
     open: () => window.openApplicationRoute('/products'),
     openCreateDialog: () => headerCreateButton().click(),
     openEmptyCreateDialog: () => emptyCreateButton().click(),
-    openRenameDialog: (name: string) =>
-      catalog()
-        .getByRole('button', { name: `Переименовать ${name}` })
-        .click(),
     pendingSubmitButton: () => dialog().getByRole('button', { name: 'Сохраняем…' }),
     product: (name: string) => catalog().getByText(name, { exact: true }),
     rename: async (currentName: string, nextName: string) => {
@@ -421,10 +309,6 @@ function createProductsPage() {
       await renameDialog.getByRole('textbox', { name: 'Название' }).fill(nextName);
       await renameDialog.getByRole('button', { name: 'Сохранить' }).click();
     },
-    renameName: () =>
-      page
-        .getByRole('dialog', { name: 'Переименовать штучку' })
-        .getByRole('textbox', { name: 'Название' }),
     restore: (name: string) =>
       catalog()
         .getByRole('button', { name: `Восстановить ${name}` })
