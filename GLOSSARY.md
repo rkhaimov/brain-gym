@@ -23,5 +23,6 @@ English terms are canonical in documentation and conversation. Russian terms are
 | Stock balance | Остаток                  | Stock state, current number, inventory state | The number of units recorded under an outlet listing on a particular date. |
 | Units sold | Продано, шт.             | Sales count, sold number, popularity | The number of product units sold during a selected period. |
 | Outlet price | Цена в точке             | Product price, unit cost, actual cost | The listed price of one unit under an outlet listing in a sales report. It may differ between reports and may be corrected by editing a report. |
-| Outlet share | Комиссия точки           | Outlet commission, outlet fee, margin | The portion of the listed value of sold units not accrued as earnings, including the outlet's commission, discounts, and other price adjustments. |
+| Sales value | Сумма продаж            | Total price, selling price, revenue | The aggregate listed amount for all units in one sale before subtracting the outlet share. |
+| Outlet share | Комиссия точки           | Outlet commission, outlet fee, margin | The portion of a sale's sales value not accrued as earnings, including the outlet's commission, discounts, and other price adjustments. |
 | Earnings | Заработано               | Revenue, profit, income, payout, amount received | The amount accrued to the creator from a sale after the outlet share; it does not imply that the money has been transferred. |

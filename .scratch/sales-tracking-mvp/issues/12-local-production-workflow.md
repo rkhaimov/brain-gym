@@ -22,4 +22,5 @@
 - [ ] The maximum expected Report file meets its five-second parse-and-open target in the production build.
 - [ ] A documented production-build check confirms LCP at most 2.5 seconds, INP at most 200 milliseconds, and CLS at most 0.1 under the seeded local workload.
 - [ ] A manual rebuild and migration preserves existing application data, and the documented recovery procedure successfully restores and migrates an older backup.
+- [ ] Before completing this ticket, remove the temporary unpublished-schema rule from `AGENTS.md` and establish the release migration baseline.
 - [ ] Coverage reports are published without enforcing an arbitrary global percentage, and every agreed critical scenario is represented at its designated test seam.

@@ -1,5 +1,6 @@
 import { create } from '@bufbuild/protobuf';
 import type { ConnectRouter, ServiceImpl } from '@connectrpc/connect';
+import type { Selectable } from 'kysely';
 
 import {
   SalesEntrySchema,
@@ -9,14 +10,16 @@ import {
   SalesReportService,
   StockBalanceEntrySchema,
 } from '../../shared/gen/ceramics/v1/sales_report_pb.js';
-import type {
-  CreateSalesReportRequest,
-  SalesReport,
-} from '../../shared/gen/ceramics/v1/sales_report_pb.js';
-import { validateSalesReport } from '../../shared/sales-report-validation.js';
+import type { SalesReport } from '../../shared/gen/ceramics/v1/sales_report_pb.js';
+import { normalizeSalesReport, validateSalesReport } from '../../shared/sales-report-validation.js';
 import type { SalesReportValidationIssue } from '../../shared/sales-report-validation.js';
 import type { ApplicationDatabase } from '../database/database.js';
-import type { SalesReportListings } from '../database/generated.js';
+import type {
+  OutletListings,
+  SalesReports,
+  SalesReportSales,
+  SalesReportStockBalances,
+} from '../database/generated.js';
 import type { EnvService } from '../env.js';
 import type { MutationQueue } from '../mutation-queue.js';
 
@@ -29,79 +32,76 @@ export interface SalesReportRouteDependencies {
   readonly mutationQueue: MutationQueue;
 }
 
-type NormalizedListing = Readonly<
+type Report = Readonly<
   Pick<
-    SalesReportListings,
-    | 'earnings_kopecks'
-    | 'listing_name'
-    | 'outlet_price_kopecks'
-    | 'sales_position'
-    | 'stock_balance'
-    | 'stock_position'
-    | 'units_sold'
+    Selectable<SalesReports>,
+    | 'archived_at_ms'
+    | 'created_at_ms'
+    | 'id'
+    | 'outlet_id'
+    | 'period_end_date'
+    | 'period_start_date'
+    | 'updated_at_ms'
   >
 >;
 
-function normalizeListings(request: CreateSalesReportRequest): NormalizedListing[] {
-  const listings = new Map<string, NormalizedListing>();
-  request.sales.forEach((sale, salesPosition) => {
-    const stock = request.stockBalances.find(
-      (candidate) => candidate.listingName === sale.listingName,
-    );
-    listings.set(sale.listingName, {
-      earnings_kopecks: sale.earningsKopecks,
-      listing_name: sale.listingName,
-      outlet_price_kopecks: stock?.outletPriceKopecks ?? sale.outletPriceKopecks ?? 0,
-      sales_position: salesPosition,
-      stock_balance: stock?.stockBalance ?? null,
-      stock_position: stock === undefined ? null : request.stockBalances.indexOf(stock),
-      units_sold: sale.unitsSold,
-    });
-  });
-  request.stockBalances.forEach((stock, stockPosition) => {
-    if (listings.has(stock.listingName)) return;
-    listings.set(stock.listingName, {
-      earnings_kopecks: null,
-      listing_name: stock.listingName,
-      outlet_price_kopecks: stock.outletPriceKopecks,
-      sales_position: null,
-      stock_balance: stock.stockBalance,
-      stock_position: stockPosition,
-      units_sold: null,
-    });
-  });
-  return [...listings.values()];
+type ListingIdentity = Readonly<Pick<Selectable<OutletListings>, 'created_at_ms' | 'id' | 'name'>>;
+
+type StoredSale = Readonly<
+  Pick<
+    Selectable<SalesReportSales>,
+    'earnings_kopecks' | 'outlet_listing_id' | 'outlet_share_kopecks' | 'units_sold'
+  > &
+    Pick<Selectable<OutletListings>, 'created_at_ms' | 'name'>
+>;
+
+type StoredStockBalance = Readonly<
+  Pick<
+    Selectable<SalesReportStockBalances>,
+    'outlet_listing_id' | 'outlet_price_kopecks' | 'stock_balance'
+  > &
+    Pick<Selectable<OutletListings>, 'created_at_ms' | 'name'>
+>;
+
+function compareListings(
+  left: Readonly<Pick<Selectable<OutletListings>, 'created_at_ms' | 'name'>>,
+  right: Readonly<Pick<Selectable<OutletListings>, 'created_at_ms' | 'name'>>,
+): number {
+  return (
+    left.created_at_ms - right.created_at_ms ||
+    (left.name < right.name ? -1 : left.name > right.name ? 1 : 0)
+  );
 }
 
 function reportToProtobuf(
-  report: Readonly<Pick<SalesReport, 'id' | 'outletId' | 'periodEndDate' | 'periodStartDate'>>,
-  listings: readonly NormalizedListing[],
+  report: Report,
+  sales: readonly StoredSale[],
+  stockBalances: readonly StoredStockBalance[],
 ): SalesReport {
-  const sales = listings
-    .filter((listing) => listing.sales_position !== null)
-    .toSorted((left, right) => (left.sales_position ?? 0) - (right.sales_position ?? 0))
-    .map((listing) =>
+  return create(SalesReportSchema, {
+    archived: report.archived_at_ms !== null,
+    createdAtMs: report.created_at_ms,
+    id: report.id,
+    outletId: report.outlet_id,
+    periodEndDate: report.period_end_date,
+    periodStartDate: report.period_start_date,
+    sales: sales.toSorted(compareListings).map((sale) =>
       create(SalesEntrySchema, {
-        earningsKopecks: listing.earnings_kopecks ?? 0,
-        listingName: listing.listing_name,
-        outletPriceKopecks: listing.outlet_price_kopecks,
-        outletShareKopecks:
-          (listing.units_sold ?? 0) * listing.outlet_price_kopecks -
-          (listing.earnings_kopecks ?? 0),
-        unitsSold: listing.units_sold ?? 0,
+        earningsKopecks: sale.earnings_kopecks,
+        listingName: sale.name,
+        outletShareKopecks: sale.outlet_share_kopecks,
+        unitsSold: sale.units_sold,
       }),
-    );
-  const stockBalances = listings
-    .filter((listing) => listing.stock_position !== null)
-    .toSorted((left, right) => (left.stock_position ?? 0) - (right.stock_position ?? 0))
-    .map((listing) =>
+    ),
+    stockBalances: stockBalances.toSorted(compareListings).map((stock) =>
       create(StockBalanceEntrySchema, {
-        listingName: listing.listing_name,
-        outletPriceKopecks: listing.outlet_price_kopecks,
-        stockBalance: listing.stock_balance ?? 0,
+        listingName: stock.name,
+        outletPriceKopecks: stock.outlet_price_kopecks,
+        stockBalance: stock.stock_balance,
       }),
-    );
-  return create(SalesReportSchema, { ...report, sales, stockBalances });
+    ),
+    updatedAtMs: report.updated_at_ms,
+  });
 }
 
 function reportFailure(issue: SalesReportValidationIssue) {
@@ -124,7 +124,8 @@ function createSalesReportService(
   const { database, env, mutationQueue } = dependencies;
 
   return {
-    async createSalesReport(request) {
+    async createSalesReport(rawRequest) {
+      const request = normalizeSalesReport(rawRequest);
       const validationFailure = validateSalesReport(request)[0];
       if (validationFailure !== undefined) return reportFailure(validationFailure);
 
@@ -143,37 +144,105 @@ function createSalesReportService(
             });
           }
 
-          const id = env.randomUUID();
-          const listings = normalizeListings(request);
-          await transaction
-            .insertInto('sales_reports')
-            .values({
-              created_at_ms: env.now().getTime(),
-              id,
-              outlet_id: request.outletId,
-              period_end_date: request.periodEndDate,
-              period_start_date: request.periodStartDate,
-            })
-            .executeTakeFirstOrThrow();
-          if (listings.length > 0) {
+          const listings = new Map<string, ListingIdentity>();
+          const listingNames = new Set([
+            ...request.sales.map((sale) => sale.listingName),
+            ...request.stockBalances.map((stock) => stock.listingName),
+          ]);
+          for (const listingName of listingNames) {
+            let outletListing = await transaction
+              .selectFrom('outlet_listings')
+              .select(['created_at_ms', 'id', 'name'])
+              .where('outlet_id', '=', request.outletId)
+              .where('name', '=', listingName)
+              .executeTakeFirst();
+            if (outletListing === undefined) {
+              outletListing = {
+                created_at_ms: env.now().getTime(),
+                id: env.randomUUID(),
+                name: listingName,
+              };
+              await transaction
+                .insertInto('outlet_listings')
+                .values({
+                  created_at_ms: outletListing.created_at_ms,
+                  id: outletListing.id,
+                  name: outletListing.name,
+                  outlet_id: request.outletId,
+                })
+                .executeTakeFirstOrThrow();
+            }
+            listings.set(listingName, outletListing);
+          }
+
+          const timestamp = env.now().getTime();
+          const report = {
+            archived_at_ms: null,
+            created_at_ms: timestamp,
+            id: env.randomUUID(),
+            outlet_id: request.outletId,
+            period_end_date: request.periodEndDate,
+            period_start_date: request.periodStartDate,
+            updated_at_ms: timestamp,
+          } satisfies Selectable<SalesReports>;
+          await transaction.insertInto('sales_reports').values(report).executeTakeFirstOrThrow();
+
+          const sales = request.sales.map((sale): StoredSale => {
+            const listing = listings.get(sale.listingName);
+            if (listing === undefined) throw new Error('Resolved Sales listing is missing');
+            return {
+              created_at_ms: listing.created_at_ms,
+              earnings_kopecks: sale.earningsKopecks,
+              name: listing.name,
+              outlet_listing_id: listing.id,
+              outlet_share_kopecks: sale.salesValueKopecks - sale.earningsKopecks,
+              units_sold: sale.unitsSold,
+            };
+          });
+          if (sales.length > 0) {
             await transaction
-              .insertInto('sales_report_listings')
-              .values(listings.map((listing) => ({ ...listing, report_id: id })))
+              .insertInto('sales_report_sales')
+              .values(
+                sales.map((sale) => ({
+                  earnings_kopecks: sale.earnings_kopecks,
+                  outlet_listing_id: sale.outlet_listing_id,
+                  outlet_share_kopecks: sale.outlet_share_kopecks,
+                  report_id: report.id,
+                  units_sold: sale.units_sold,
+                })),
+              )
+              .execute();
+          }
+
+          const stockBalances = request.stockBalances.map((stock): StoredStockBalance => {
+            const listing = listings.get(stock.listingName);
+            if (listing === undefined) throw new Error('Resolved Stock-balance listing is missing');
+            return {
+              created_at_ms: listing.created_at_ms,
+              name: listing.name,
+              outlet_listing_id: listing.id,
+              outlet_price_kopecks: stock.outletPriceKopecks,
+              stock_balance: stock.stockBalance,
+            };
+          });
+          if (stockBalances.length > 0) {
+            await transaction
+              .insertInto('sales_report_stock_balances')
+              .values(
+                stockBalances.map((stock) => ({
+                  outlet_listing_id: stock.outlet_listing_id,
+                  outlet_price_kopecks: stock.outlet_price_kopecks,
+                  report_id: report.id,
+                  stock_balance: stock.stock_balance,
+                })),
+              )
               .execute();
           }
 
           return {
             result: {
               case: 'success' as const,
-              value: reportToProtobuf(
-                {
-                  id,
-                  outletId: request.outletId,
-                  periodEndDate: request.periodEndDate,
-                  periodStartDate: request.periodStartDate,
-                },
-                listings,
-              ),
+              value: reportToProtobuf(report, sales, stockBalances),
             },
           };
         }),
@@ -183,7 +252,7 @@ function createSalesReportService(
     async getSalesReport(request) {
       const report = await database.db
         .selectFrom('sales_reports')
-        .select(['id', 'outlet_id', 'period_end_date', 'period_start_date'])
+        .selectAll()
         .where('id', '=', request.id)
         .executeTakeFirst();
       if (report === undefined) {
@@ -192,16 +261,28 @@ function createSalesReportService(
           message: REPORT_NOT_FOUND_MESSAGE,
         });
       }
-      const listings = await database.db
-        .selectFrom('sales_report_listings')
+      const sales = await database.db
+        .selectFrom('sales_report_sales')
+        .innerJoin('outlet_listings', 'outlet_listings.id', 'outlet_listing_id')
         .select([
-          'earnings_kopecks',
-          'listing_name',
-          'outlet_price_kopecks',
-          'sales_position',
-          'stock_balance',
-          'stock_position',
-          'units_sold',
+          'outlet_listings.created_at_ms',
+          'sales_report_sales.earnings_kopecks',
+          'outlet_listings.name',
+          'sales_report_sales.outlet_listing_id',
+          'sales_report_sales.outlet_share_kopecks',
+          'sales_report_sales.units_sold',
+        ])
+        .where('report_id', '=', report.id)
+        .execute();
+      const stockBalances = await database.db
+        .selectFrom('sales_report_stock_balances')
+        .innerJoin('outlet_listings', 'outlet_listings.id', 'outlet_listing_id')
+        .select([
+          'outlet_listings.created_at_ms',
+          'outlet_listings.name',
+          'sales_report_stock_balances.outlet_listing_id',
+          'sales_report_stock_balances.outlet_price_kopecks',
+          'sales_report_stock_balances.stock_balance',
         ])
         .where('report_id', '=', report.id)
         .execute();
@@ -209,16 +290,51 @@ function createSalesReportService(
       return {
         result: {
           case: 'success' as const,
-          value: reportToProtobuf(
-            {
-              id: report.id,
-              outletId: report.outlet_id,
-              periodEndDate: report.period_end_date,
-              periodStartDate: report.period_start_date,
-            },
-            listings,
-          ),
+          value: reportToProtobuf(report, sales, stockBalances),
         },
+      };
+    },
+
+    async listSalesReports(request) {
+      const reports = await database.db
+        .selectFrom('sales_reports')
+        .selectAll()
+        .where('outlet_id', '=', request.outletId)
+        .where('archived_at_ms', request.archived ? 'is not' : 'is', null)
+        .orderBy('period_end_date', 'desc')
+        .orderBy('updated_at_ms', 'desc')
+        .execute();
+      if (reports.length === 0) return { reports: [] };
+
+      const reportIds = reports.map((report) => report.id);
+      const sales = await database.db
+        .selectFrom('sales_report_sales')
+        .select(['outlet_listing_id', 'report_id'])
+        .where('report_id', 'in', reportIds)
+        .execute();
+      const stockBalances = await database.db
+        .selectFrom('sales_report_stock_balances')
+        .select(['outlet_listing_id', 'report_id'])
+        .where('report_id', 'in', reportIds)
+        .execute();
+      const listingIdsByReport = new Map<string, Set<string>>();
+      for (const row of [...sales, ...stockBalances]) {
+        const listingIds = listingIdsByReport.get(row.report_id) ?? new Set<string>();
+        listingIds.add(row.outlet_listing_id);
+        listingIdsByReport.set(row.report_id, listingIds);
+      }
+
+      return {
+        reports: reports.map((report) => ({
+          archived: report.archived_at_ms !== null,
+          createdAtMs: report.created_at_ms,
+          id: report.id,
+          listingCount: listingIdsByReport.get(report.id)?.size ?? 0,
+          outletId: report.outlet_id,
+          periodEndDate: report.period_end_date,
+          periodStartDate: report.period_start_date,
+          updatedAtMs: report.updated_at_ms,
+        })),
       };
     },
   };

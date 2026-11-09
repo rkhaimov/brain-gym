@@ -26,36 +26,7 @@ export async function screenshot(
     return;
   }
 
-  const restorePersistentNavigation = hidePersistentNavigation(locator);
-  try {
-    await expect.element(locator).toMatchScreenshot(name, options);
-  } finally {
-    restorePersistentNavigation();
-  }
-}
-
-function hidePersistentNavigation(locator: Locator): () => void {
-  const navigationElements = [
-    ...new Set(
-      locator
-        .elements()
-        .map((root) => root.ownerDocument)
-        .flatMap((document) => [
-          ...document.querySelectorAll<HTMLElement>('[data-slot="sidebar-container"]'),
-        ]),
-    ),
-  ];
-  const previousVisibility = navigationElements.map((element) => element.style.visibility);
-
-  navigationElements.forEach((element) => {
-    element.style.visibility = 'hidden';
-  });
-
-  return () => {
-    navigationElements.forEach((element, index) => {
-      element.style.visibility = previousVisibility[index] ?? '';
-    });
-  };
+  await expect.element(locator).toMatchScreenshot(name, options);
 }
 
 async function waitForTransientUIHidden(locator: Locator, timeout: number): Promise<void> {

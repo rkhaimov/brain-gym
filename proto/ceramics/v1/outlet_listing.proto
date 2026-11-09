@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package ceramics.v1;
+
+message OutletListing {
+  string id = 1;
+  string outlet_id = 2;
+  string name = 3;
+  double last_outlet_price_kopecks = 4;
+  double latest_units_sold = 5;
+  double current_stock_balance = 6;
+}
+
+message ListOutletListingsRequest {
+  string outlet_id = 1;
+}
+
+message ListOutletListingsResponse {
+  repeated OutletListing listings = 1;
+}
+
+service OutletListingService {
+  rpc ListOutletListings(ListOutletListingsRequest) returns (ListOutletListingsResponse) {}
+}

@@ -70,7 +70,7 @@ test.describe('Outlet maintenance', () => {
     await outlets.name().fill(outlet.name);
 
     await expect.element(outlets.code()).toHaveValue('');
-    await outlets.screenshotPage('Create Outlet form');
+    await outlets.screenshotDialog('Create Outlet form');
     await outlets.create();
 
     const request = await outletService.createOutlet.getLastRequest();
@@ -110,7 +110,7 @@ test.describe('Outlet maintenance', () => {
     await expect.element(outlets.editCode()).toHaveValue('');
     await outlets.editName().fill(updatedOutlet.name);
     await outlets.editCode().fill(outletCode);
-    await outlets.screenshotPage('Edit Outlet form');
+    await outlets.screenshotDialog('Edit Outlet form');
     await outlets.save();
 
     await expect(outletService.updateOutlet.getLastRequest()).resolves.toMatchObject({
@@ -237,7 +237,7 @@ test.describe('Outlet maintenance', () => {
     await expect
       .element(page.getByText('Торговая точка с таким кодом уже существует'))
       .toBeVisible();
-    await outlets.screenshotPage('Outlet code collision');
+    await outlets.screenshotDialog('Outlet code collision');
   });
 });
 
@@ -271,7 +271,8 @@ function createOutletsPage() {
         .getByRole('button', { name: `Восстановить ${name}` })
         .click(),
     save: () => editDialog().getByRole('button', { name: 'Сохранить' }).click(),
-    screenshotPage: (name: string) => screenshot(page.elementLocator(document.body), name),
+    screenshotDialog: (name: string) => screenshot(page.getByRole('dialog'), name),
+    screenshotPage: (name: string) => screenshot(catalog(), name),
     showActive: () => page.getByRole('button', { name: 'Активные' }).click(),
     showArchived: () => page.getByRole('button', { name: 'Архив' }).click(),
   };

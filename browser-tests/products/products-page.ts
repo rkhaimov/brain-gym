@@ -45,10 +45,10 @@ export function createProductsPage() {
       catalog()
         .getByRole('button', { name: `Восстановить ${name}` })
         .click(),
-    screenshotModalState: (name: string) => screenshot(page.elementLocator(document.body), name),
+    screenshotModalState: (name: string) => screenshot(page.getByRole('dialog'), name),
     screenshotLoadingPage: (name: string) =>
-      screenshot(page.elementLocator(document.body), name, { noTransientUIProtection: true }),
-    screenshotPage: (name: string) => screenshot(page.elementLocator(document.body), name),
+      screenshot(catalog(), name, { noTransientUIProtection: true }),
+    screenshotPage: (name: string) => screenshot(catalog(), name),
     saveRename: () => editDialog().getByRole('button', { name: 'Сохранить' }).click(),
     submit: () => dialog().getByRole('button', { name: 'Создать' }).click(),
     showActive: () => page.getByRole('button', { name: 'Активные' }).click(),

@@ -12,12 +12,15 @@ import {
   CreateSalesReportResponseSchema,
   GetSalesReportRequestSchema,
   GetSalesReportResponseSchema,
+  ListSalesReportsRequestSchema,
+  ListSalesReportsResponseSchema,
   SalesEntrySchema,
   SalesReportMutationFailureField,
   SalesReportMutationFailureSchema,
   SalesReportSchema,
   SalesReportSection,
   SalesReportService,
+  SalesReportSummarySchema,
   StockBalanceEntrySchema,
 } from './sales_report_pb.js';
 import type {
@@ -26,9 +29,12 @@ import type {
   CreateSalesReportResponse,
   GetSalesReportRequest,
   GetSalesReportResponse,
+  ListSalesReportsRequest,
+  ListSalesReportsResponse,
   SalesEntry,
   SalesReport,
   SalesReportMutationFailure,
+  SalesReportSummary,
   StockBalanceEntry,
 } from './sales_report_pb.js';
 
@@ -41,7 +47,6 @@ export function createSalesEntryStub(
     listingName: 'test-listingName',
     unitsSold: 1,
     earningsKopecks: 1,
-    outletPriceKopecks: 1,
     outletShareKopecks: 1,
     ...overrides,
   });
@@ -56,7 +61,7 @@ export function createCreateSalesEntryInputStub(
     listingName: 'test-listingName',
     unitsSold: 1,
     earningsKopecks: 1,
-    outletPriceKopecks: 1,
+    salesValueKopecks: 1,
     ...overrides,
   });
 }
@@ -86,6 +91,9 @@ export function createSalesReportStub(
     periodEndDate: 'test-periodEndDate',
     sales: [createSalesEntryStub()],
     stockBalances: [createStockBalanceEntryStub()],
+    createdAtMs: 1,
+    updatedAtMs: 1,
+    archived: true,
     ...overrides,
   });
 }
@@ -148,6 +156,47 @@ export function createGetSalesReportResponseStub(
 ): GetSalesReportResponse {
   return create(GetSalesReportResponseSchema, {
     result: { case: 'success', value: createSalesReportStub() },
+    ...overrides,
+  });
+}
+
+export type SalesReportSummaryStubOverrides = MessageInitShape<typeof SalesReportSummarySchema>;
+
+export function createSalesReportSummaryStub(
+  overrides: SalesReportSummaryStubOverrides = {},
+): SalesReportSummary {
+  return create(SalesReportSummarySchema, {
+    id: 'test-id',
+    outletId: 'test-outletId',
+    periodStartDate: 'test-periodStartDate',
+    periodEndDate: 'test-periodEndDate',
+    createdAtMs: 1,
+    updatedAtMs: 1,
+    archived: true,
+    listingCount: 1,
+    ...overrides,
+  });
+}
+
+export type ListSalesReportsRequestStubOverrides = MessageInitShape<typeof ListSalesReportsRequestSchema>;
+
+export function createListSalesReportsRequestStub(
+  overrides: ListSalesReportsRequestStubOverrides = {},
+): ListSalesReportsRequest {
+  return create(ListSalesReportsRequestSchema, {
+    outletId: 'test-outletId',
+    archived: true,
+    ...overrides,
+  });
+}
+
+export type ListSalesReportsResponseStubOverrides = MessageInitShape<typeof ListSalesReportsResponseSchema>;
+
+export function createListSalesReportsResponseStub(
+  overrides: ListSalesReportsResponseStubOverrides = {},
+): ListSalesReportsResponse {
+  return create(ListSalesReportsResponseSchema, {
+    reports: [createSalesReportSummaryStub()],
     ...overrides,
   });
 }
@@ -226,9 +275,47 @@ function createGetSalesReportRpcSpy(): GetSalesReportRpcSpy {
   };
 }
 
+export interface ListSalesReportsRpcSpy {
+  readonly handler: Mock<(request: ListSalesReportsRequest) => Promise<ListSalesReportsResponse>>;
+  getLastRequest(): Promise<ListSalesReportsRequest>;
+  rejects(error: ConnectError): void;
+  resolves(value: ListSalesReportsResponse): void;
+}
+
+function createListSalesReportsRpcSpy(): ListSalesReportsRpcSpy {
+  const handler = vi.fn<(request: ListSalesReportsRequest) => Promise<ListSalesReportsResponse>>(
+    async () => createListSalesReportsResponseStub(),
+  );
+
+  return {
+    handler,
+    async getLastRequest() {
+      let request: ListSalesReportsRequest | undefined;
+      await vi.waitFor(() => {
+        const call = handler.mock.calls.at(-1);
+        if (call === undefined) {
+          throw new Error('listSalesReports has not received a request');
+        }
+        request = call[0];
+      });
+      if (request === undefined) {
+        throw new Error('listSalesReports request was not captured');
+      }
+      return request;
+    },
+    rejects(error) {
+      handler.mockRejectedValue(error);
+    },
+    resolves(value) {
+      handler.mockResolvedValue(value);
+    },
+  };
+}
+
 export interface SalesReportServiceSpies {
   readonly createSalesReport: CreateSalesReportRpcSpy;
   readonly getSalesReport: GetSalesReportRpcSpy;
+  readonly listSalesReports: ListSalesReportsRpcSpy;
 }
 
 export interface SalesReportServiceMock {
@@ -240,11 +327,13 @@ export function createSalesReportServiceMock(): SalesReportServiceMock {
   const spies: SalesReportServiceSpies = {
     createSalesReport: createCreateSalesReportRpcSpy(),
     getSalesReport: createGetSalesReportRpcSpy(),
+    listSalesReports: createListSalesReportsRpcSpy(),
   };
   const transport = createRouterTransport((router) => {
     router.service(SalesReportService, {
       createSalesReport: spies.createSalesReport.handler,
       getSalesReport: spies.getSalesReport.handler,
+      listSalesReports: spies.listSalesReports.handler,
     });
   });
   return { spies, transport };

@@ -6,15 +6,14 @@ message SalesEntry {
   string listing_name = 1;
   double units_sold = 2;
   double earnings_kopecks = 3;
-  double outlet_price_kopecks = 4;
-  double outlet_share_kopecks = 5;
+  double outlet_share_kopecks = 4;
 }
 
 message CreateSalesEntryInput {
   string listing_name = 1;
   double units_sold = 2;
   double earnings_kopecks = 3;
-  optional double outlet_price_kopecks = 4;
+  double sales_value_kopecks = 4;
 }
 
 message StockBalanceEntry {
@@ -30,6 +29,9 @@ message SalesReport {
   string period_end_date = 4;
   repeated SalesEntry sales = 5;
   repeated StockBalanceEntry stock_balances = 6;
+  double created_at_ms = 7;
+  double updated_at_ms = 8;
+  bool archived = 9;
 }
 
 message CreateSalesReportRequest {
@@ -56,6 +58,7 @@ enum SalesReportMutationFailureField {
   SALES_REPORT_MUTATION_FAILURE_FIELD_EARNINGS = 6;
   SALES_REPORT_MUTATION_FAILURE_FIELD_STOCK_BALANCE = 7;
   SALES_REPORT_MUTATION_FAILURE_FIELD_OUTLET_PRICE = 8;
+  SALES_REPORT_MUTATION_FAILURE_FIELD_SALES_VALUE = 9;
 }
 
 message SalesReportMutationFailure {
@@ -83,7 +86,28 @@ message GetSalesReportResponse {
   }
 }
 
+message SalesReportSummary {
+  string id = 1;
+  string outlet_id = 2;
+  string period_start_date = 3;
+  string period_end_date = 4;
+  double created_at_ms = 5;
+  double updated_at_ms = 6;
+  bool archived = 7;
+  uint32 listing_count = 8;
+}
+
+message ListSalesReportsRequest {
+  string outlet_id = 1;
+  bool archived = 2;
+}
+
+message ListSalesReportsResponse {
+  repeated SalesReportSummary reports = 1;
+}
+
 service SalesReportService {
   rpc CreateSalesReport(CreateSalesReportRequest) returns (CreateSalesReportResponse) {}
   rpc GetSalesReport(GetSalesReportRequest) returns (GetSalesReportResponse) {}
+  rpc ListSalesReports(ListSalesReportsRequest) returns (ListSalesReportsResponse) {}
 }

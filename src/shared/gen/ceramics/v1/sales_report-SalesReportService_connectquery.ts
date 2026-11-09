@@ -13,3 +13,8 @@ export const createSalesReport = SalesReportService.method.createSalesReport;
  * @generated from rpc ceramics.v1.SalesReportService.GetSalesReport
  */
 export const getSalesReport = SalesReportService.method.getSalesReport;
+
+/**
+ * @generated from rpc ceramics.v1.SalesReportService.ListSalesReports
+ */
+export const listSalesReports = SalesReportService.method.listSalesReports;

@@ -4,6 +4,10 @@
 
 Issues are tracked as local Markdown files under `.scratch/`. See `docs/agents/issue-tracker.md`.
 
+### Unpublished database schema
+
+Until ticket 12, change schema by editing existing table-creation code and deleting the development database before recreation; do not add migrations or backfills.
+
 ### Triage labels
 
 Triage uses the default five-label vocabulary. See `docs/agents/triage-labels.md`.

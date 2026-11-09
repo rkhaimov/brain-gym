@@ -48,7 +48,15 @@ export interface MaintenanceCatalogState<Entity extends MaintenanceEntity> {
   refetch(): Promise<unknown>;
 }
 
+interface MaintenanceCatalogActiveAction<Entity extends MaintenanceEntity> {
+  readonly icon: ReactNode;
+  readonly label: (entity: Entity) => string;
+  readonly text: string;
+  readonly onAction: (event: MouseEvent<HTMLButtonElement>, entity: Entity) => void;
+}
+
 interface MaintenanceCatalogProps<Entity extends MaintenanceEntity> {
+  readonly activeEntityAction?: MaintenanceCatalogActiveAction<Entity> | undefined;
   readonly archivePending: boolean;
   readonly catalog: MaintenanceCatalogState<Entity>;
   readonly copy: MaintenanceCatalogCopy;
@@ -67,6 +75,7 @@ interface MaintenanceCatalogProps<Entity extends MaintenanceEntity> {
 }
 
 function MaintenanceCatalogImplementation<Entity extends MaintenanceEntity>({
+  activeEntityAction,
   archivePending,
   catalog,
   copy,
@@ -81,7 +90,7 @@ function MaintenanceCatalogImplementation<Entity extends MaintenanceEntity>({
   const columnCount = detailColumn === undefined ? 2 : 3;
 
   return (
-    <div className="flex flex-col gap-6 py-6">
+    <section aria-label={copy.regionLabel} className="flex flex-col gap-6 py-6">
       <div className="flex items-center justify-between px-6">
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">
@@ -116,7 +125,7 @@ function MaintenanceCatalogImplementation<Entity extends MaintenanceEntity>({
         )}
       </div>
 
-      <section aria-label={copy.regionLabel} className="flex flex-col gap-4 px-6">
+      <div className="flex flex-col gap-4 px-6">
         <div className="overflow-hidden rounded-lg border">
           <Table aria-label={copy.tableLabel}>
             <TableHeader className="sticky top-0 z-10 bg-muted">
@@ -183,6 +192,17 @@ function MaintenanceCatalogImplementation<Entity extends MaintenanceEntity>({
                     )}
                     <TableCell>
                       <div className="flex justify-end gap-1">
+                        {showArchived || activeEntityAction === undefined ? null : (
+                          <Button
+                            aria-label={activeEntityAction.label(entity)}
+                            onClick={(event) => activeEntityAction.onAction(event, entity)}
+                            size="sm"
+                            variant="ghost"
+                          >
+                            {activeEntityAction.icon}
+                            {activeEntityAction.text}
+                          </Button>
+                        )}
                         <Button
                           aria-label={copy.editAction(entity.name)}
                           onClick={(event) => onEdit(event, entity)}
@@ -214,8 +234,8 @@ function MaintenanceCatalogImplementation<Entity extends MaintenanceEntity>({
             </TableBody>
           </Table>
         </div>
-      </section>
-    </div>
+      </div>
+    </section>
   );
 }
 

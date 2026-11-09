@@ -1,4 +1,7 @@
+import { create } from '@bufbuild/protobuf';
+
 import {
+  CreateSalesReportRequestSchema,
   SalesReportMutationFailureField,
   SalesReportSection,
 } from './gen/ceramics/v1/sales_report_pb.js';
@@ -11,6 +14,24 @@ export type SalesReportValidationIssue = Readonly<
   Pick<SalesReportMutationFailure, 'field' | 'message'> &
     Partial<Pick<SalesReportMutationFailure, 'rowIndex' | 'section'>>
 >;
+
+export function normalizeSalesReport(
+  request: CreateSalesReportRequest,
+): CreateSalesReportRequest {
+  return create(CreateSalesReportRequestSchema, {
+    outletId: request.outletId,
+    periodEndDate: request.periodEndDate,
+    periodStartDate: request.periodStartDate,
+    sales: request.sales.map((sale) => ({
+      ...sale,
+      listingName: sale.listingName.trim(),
+    })),
+    stockBalances: request.stockBalances.map((stock) => ({
+      ...stock,
+      listingName: stock.listingName.trim(),
+    })),
+  });
+}
 
 export function validReportingDate(value: string): boolean {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
@@ -82,13 +103,21 @@ export function validateSalesReport(
         ...location,
       });
     }
+    if (!validWholeNumber(sale.salesValueKopecks)) {
+      issues.push({
+        field: SalesReportMutationFailureField.SALES_VALUE,
+        message: 'Введите целую неотрицательную сумму в копейках',
+        ...location,
+      });
+    }
     if (
-      sale.outletPriceKopecks !== undefined &&
-      !validWholeNumber(sale.outletPriceKopecks)
+      validWholeNumber(sale.earningsKopecks) &&
+      validWholeNumber(sale.salesValueKopecks) &&
+      sale.earningsKopecks > sale.salesValueKopecks
     ) {
       issues.push({
-        field: SalesReportMutationFailureField.OUTLET_PRICE,
-        message: 'Введите целую неотрицательную сумму в копейках',
+        field: SalesReportMutationFailureField.EARNINGS,
+        message: 'Заработано не может превышать сумму продаж',
         ...location,
       });
     }
@@ -128,49 +157,5 @@ export function validateSalesReport(
     }
   });
 
-  request.sales.forEach((sale, rowIndex) => {
-    const location = { rowIndex, section: SalesReportSection.SALES };
-    const stock = request.stockBalances.find(
-      (candidate) => candidate.listingName === sale.listingName,
-    );
-    if (stock === undefined && sale.outletPriceKopecks === undefined) {
-      issues.push({
-        field: SalesReportMutationFailureField.OUTLET_PRICE,
-        message: 'Укажите цену в точке для позиции из продаж',
-        ...location,
-      });
-      return;
-    }
-    if (
-      stock !== undefined &&
-      sale.outletPriceKopecks !== undefined &&
-      sale.outletPriceKopecks !== stock.outletPriceKopecks
-    ) {
-      issues.push({
-        field: SalesReportMutationFailureField.OUTLET_PRICE,
-        message: 'Для позиции должна использоваться одна цена в точке',
-        ...location,
-      });
-      return;
-    }
-    const outletPrice = stock?.outletPriceKopecks ?? sale.outletPriceKopecks;
-    if (outletPrice === undefined || !validWholeNumber(sale.unitsSold)) return;
-    const listedValue = sale.unitsSold * outletPrice;
-    if (!Number.isSafeInteger(listedValue)) {
-      issues.push({
-        field: SalesReportMutationFailureField.OUTLET_PRICE,
-        message: 'Количество по цене точки превышает допустимую сумму',
-        ...location,
-      });
-      return;
-    }
-    if (validWholeNumber(sale.earningsKopecks) && sale.earningsKopecks > listedValue) {
-      issues.push({
-        field: SalesReportMutationFailureField.EARNINGS,
-        message: 'Заработано не может превышать проданное по цене точки',
-        ...location,
-      });
-    }
-  });
   return issues;
 }

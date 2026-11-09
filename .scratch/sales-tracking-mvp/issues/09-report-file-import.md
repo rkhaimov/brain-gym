@@ -15,7 +15,7 @@
 - [ ] An archived Outlet identified by code is dropped by default and can be restored to include its report.
 - [ ] Every active Outlet report remains included; the creator cannot selectively drop an active Outlet from an otherwise valid import.
 - [ ] A valid file opens one fully editable form grouped by Outlet and uses the same fields, calculations, and validation as manual Sales report creation.
-- [ ] The creator can correct parsed periods, listing names, quantities, prices, Earnings, and Product mappings before save.
+- [ ] The creator can correct parsed periods, listing names, quantities, Sales values, Stock Outlet prices, Earnings, and Product mappings before save.
 - [ ] Confirming the import saves every included outlet-local Sales report in one transaction; failure or cancellation saves none.
 - [ ] After confirmation, every resulting Sales report can be viewed, edited, archived, or restored independently.
 - [ ] An existing report for the same Outlet and Reporting period does not prevent another report from being imported.

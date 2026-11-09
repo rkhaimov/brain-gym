@@ -12,7 +12,8 @@ import { Route as rootRouteImport } from './client/routes/__root'
 import { Route as IndexRouteImport } from './client/routes/index'
 import { Route as OutletsRouteRouteImport } from './client/routes/outlets/route'
 import { Route as ProductsRouteRouteImport } from './client/routes/products/route'
-import { Route as ReportsNewRouteRouteImport } from './client/routes/reports/new/route'
+import { Route as OutletsIndexRouteImport } from './client/routes/outlets/index'
+import { Route as OutletsOutletIdRouteRouteImport } from './client/routes/outlets/$outletId/route'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -29,44 +30,56 @@ const ProductsRouteRoute = ProductsRouteRouteImport.update({
   path: '/products',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ReportsNewRouteRoute = ReportsNewRouteRouteImport.update({
-  id: '/reports/new',
-  path: '/reports/new',
-  getParentRoute: () => rootRouteImport,
+const OutletsIndexRoute = OutletsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => OutletsRouteRoute,
+} as any)
+const OutletsOutletIdRouteRoute = OutletsOutletIdRouteRouteImport.update({
+  id: '/$outletId',
+  path: '/$outletId',
+  getParentRoute: () => OutletsRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/outlets': typeof OutletsRouteRoute
+  '/outlets': typeof OutletsRouteRouteWithChildren
   '/products': typeof ProductsRouteRoute
-  '/reports/new': typeof ReportsNewRouteRoute
+  '/outlets/$outletId': typeof OutletsOutletIdRouteRoute
+  '/outlets/': typeof OutletsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/outlets': typeof OutletsRouteRoute
   '/products': typeof ProductsRouteRoute
-  '/reports/new': typeof ReportsNewRouteRoute
+  '/outlets/$outletId': typeof OutletsOutletIdRouteRoute
+  '/outlets': typeof OutletsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/outlets': typeof OutletsRouteRoute
+  '/outlets': typeof OutletsRouteRouteWithChildren
   '/products': typeof ProductsRouteRoute
-  '/reports/new': typeof ReportsNewRouteRoute
+  '/outlets/$outletId': typeof OutletsOutletIdRouteRoute
+  '/outlets/': typeof OutletsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/outlets' | '/products' | '/reports/new'
+  fullPaths: '/' | '/outlets' | '/products' | '/outlets/$outletId' | '/outlets/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/outlets' | '/products' | '/reports/new'
-  id: '__root__' | '/' | '/outlets' | '/products' | '/reports/new'
+  to: '/' | '/products' | '/outlets/$outletId' | '/outlets'
+  id:
+    | '__root__'
+    | '/'
+    | '/outlets'
+    | '/products'
+    | '/outlets/$outletId'
+    | '/outlets/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  OutletsRouteRoute: typeof OutletsRouteRoute
+  OutletsRouteRoute: typeof OutletsRouteRouteWithChildren
   ProductsRouteRoute: typeof ProductsRouteRoute
-  ReportsNewRouteRoute: typeof ReportsNewRouteRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -92,21 +105,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductsRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/reports/new': {
-      id: '/reports/new'
-      path: '/reports/new'
-      fullPath: '/reports/new'
-      preLoaderRoute: typeof ReportsNewRouteRouteImport
-      parentRoute: typeof rootRouteImport
+    '/outlets/': {
+      id: '/outlets/'
+      path: '/'
+      fullPath: '/outlets/'
+      preLoaderRoute: typeof OutletsIndexRouteImport
+      parentRoute: typeof OutletsRouteRoute
+    }
+    '/outlets/$outletId': {
+      id: '/outlets/$outletId'
+      path: '/$outletId'
+      fullPath: '/outlets/$outletId'
+      preLoaderRoute: typeof OutletsOutletIdRouteRouteImport
+      parentRoute: typeof OutletsRouteRoute
     }
   }
 }
 
+interface OutletsRouteRouteChildren {
+  OutletsOutletIdRouteRoute: typeof OutletsOutletIdRouteRoute
+  OutletsIndexRoute: typeof OutletsIndexRoute
+}
+
+const OutletsRouteRouteChildren: OutletsRouteRouteChildren = {
+  OutletsOutletIdRouteRoute: OutletsOutletIdRouteRoute,
+  OutletsIndexRoute: OutletsIndexRoute,
+}
+
+const OutletsRouteRouteWithChildren = OutletsRouteRoute._addFileChildren(
+  OutletsRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  OutletsRouteRoute: OutletsRouteRoute,
+  OutletsRouteRoute: OutletsRouteRouteWithChildren,
   ProductsRouteRoute: ProductsRouteRoute,
-  ReportsNewRouteRoute: ReportsNewRouteRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

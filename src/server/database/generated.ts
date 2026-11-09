@@ -3,6 +3,20 @@
  * Please do not edit it manually.
  */
 
+import type { ColumnType } from 'kysely';
+
+export type Generated<T> =
+  T extends ColumnType<infer S, infer I, infer U>
+    ? ColumnType<S, I | undefined, U>
+    : ColumnType<T, T | undefined, T>;
+
+export interface OutletListings {
+  created_at_ms: number;
+  id: string;
+  name: string;
+  outlet_id: string;
+}
+
 export interface Outlets {
   archived_at_ms: number | null;
   code: string | null;
@@ -18,28 +32,36 @@ export interface Products {
   name: string;
 }
 
-export interface SalesReportListings {
-  earnings_kopecks: number | null;
-  listing_name: string;
-  outlet_price_kopecks: number;
-  report_id: string;
-  sales_position: number | null;
-  stock_balance: number | null;
-  stock_position: number | null;
-  units_sold: number | null;
-}
-
 export interface SalesReports {
+  archived_at_ms: number | null;
   created_at_ms: number;
   id: string;
   outlet_id: string;
   period_end_date: string;
   period_start_date: string;
+  updated_at_ms: number;
+}
+
+export interface SalesReportSales {
+  earnings_kopecks: Generated<number>;
+  outlet_listing_id: string;
+  outlet_share_kopecks: Generated<number>;
+  report_id: string;
+  units_sold: Generated<number>;
+}
+
+export interface SalesReportStockBalances {
+  outlet_listing_id: string;
+  outlet_price_kopecks: Generated<number>;
+  report_id: string;
+  stock_balance: Generated<number>;
 }
 
 export interface DB {
+  outlet_listings: OutletListings;
   outlets: Outlets;
   products: Products;
-  sales_report_listings: SalesReportListings;
+  sales_report_sales: SalesReportSales;
+  sales_report_stock_balances: SalesReportStockBalances;
   sales_reports: SalesReports;
 }

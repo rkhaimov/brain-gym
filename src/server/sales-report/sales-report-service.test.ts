@@ -1,4 +1,5 @@
 import { createClient, createRouterTransport } from '@connectrpc/connect';
+import { sql } from 'kysely';
 import { describe, expect } from 'vitest';
 
 import { OutletService } from '../../shared/gen/ceramics/v1/outlet_pb.js';
@@ -70,7 +71,7 @@ describe('SalesReportService', () => {
     });
   });
 
-  test('creator can save exact listings with shared prices and derived Outlet shares', async ({
+  test('creator can save exact Sales and Stock memberships with derived Outlet shares', async ({
     clients,
   }) => {
     const outletResponse = await clients.outlets.createOutlet({ name: 'Гончарная лавка' });
@@ -81,11 +82,16 @@ describe('SalesReportService', () => {
       periodEndDate: '2026-11-30',
       periodStartDate: '2026-11-01',
       sales: [
-        { earningsKopecks: 7000, listingName: 'Кольцо', unitsSold: 2 },
+        {
+          earningsKopecks: 6000,
+          listingName: 'Кольцо',
+          salesValueKopecks: 7000,
+          unitsSold: 2,
+        },
         {
           earningsKopecks: 2000,
           listingName: ' Серьги! ',
-          outletPriceKopecks: 3000,
+          salesValueKopecks: 3000,
           unitsSold: 1,
         },
       ],
@@ -96,32 +102,145 @@ describe('SalesReportService', () => {
     });
 
     assertSuccess(created);
-    expect(created.result.value).toMatchObject({
-      sales: [
-        {
-          earningsKopecks: 7000,
+    expect(created.result.value.sales).toHaveLength(2);
+    expect(created.result.value.sales).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          earningsKopecks: 6000,
           listingName: 'Кольцо',
-          outletPriceKopecks: 3500,
-          outletShareKopecks: 0,
+          outletShareKopecks: 1000,
           unitsSold: 2,
-        },
-        {
+        }),
+        expect.objectContaining({
           earningsKopecks: 2000,
-          listingName: ' Серьги! ',
-          outletPriceKopecks: 3000,
+          listingName: 'Серьги!',
           outletShareKopecks: 1000,
           unitsSold: 1,
-        },
-      ],
-      stockBalances: [
-        { listingName: 'Кольцо', outletPriceKopecks: 3500, stockBalance: 5 },
-        { listingName: 'Кулон', outletPriceKopecks: 4000, stockBalance: 3 },
-      ],
-    });
+        }),
+      ]),
+    );
+    expect(created.result.value.stockBalances).toHaveLength(2);
+    expect(created.result.value.stockBalances).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ listingName: 'Кольцо', stockBalance: 5 }),
+        expect.objectContaining({ listingName: 'Кулон', stockBalance: 3 }),
+      ]),
+    );
 
     const persisted = await clients.reports.getSalesReport({ id: created.result.value.id });
     assertSuccess(persisted);
     expect(persisted.result.value).toEqual(created.result.value);
+  });
+
+  test('creator can list an Outlet report history', async ({ clients }) => {
+    const outlet = await clients.outlets.createOutlet({ name: 'Гончарная лавка' });
+    assertSuccess(outlet);
+    const created = await clients.reports.createSalesReport({
+      outletId: outlet.result.value.id,
+      periodEndDate: '2026-11-30',
+      periodStartDate: '2026-11-01',
+      sales: [
+        { earningsKopecks: 1, listingName: 'Кольцо', salesValueKopecks: 2, unitsSold: 1 },
+        { earningsKopecks: 1, listingName: 'Серьги', salesValueKopecks: 1, unitsSold: 1 },
+      ],
+      stockBalances: [
+        { listingName: 'Кольцо', outletPriceKopecks: 1, stockBalance: 2 },
+        { listingName: 'Кулон', outletPriceKopecks: 1, stockBalance: 2 },
+      ],
+    });
+    assertSuccess(created);
+    await expect(
+      clients.reports.listSalesReports({ outletId: outlet.result.value.id }),
+    ).resolves.toMatchObject({
+      reports: [
+        {
+          id: created.result.value.id,
+          listingCount: 3,
+          periodEndDate: '2026-11-30',
+          periodStartDate: '2026-11-01',
+        },
+      ],
+    });
+  });
+
+  test('stores section rows through immutable Outlet listing IDs without Sales value or Sales unit price', async ({
+    clients,
+    database,
+  }) => {
+    const outlet = await clients.outlets.createOutlet({ name: 'Гончарная лавка' });
+    assertSuccess(outlet);
+    const report = await clients.reports.createSalesReport({
+      outletId: outlet.result.value.id,
+      periodEndDate: '2026-11-30',
+      periodStartDate: '2026-11-01',
+      sales: [
+        {
+          earningsKopecks: 2000,
+          listingName: 'Продажа без остатка',
+          salesValueKopecks: 3000,
+          unitsSold: 1,
+        },
+      ],
+      stockBalances: [
+        { listingName: 'Остаток без продаж', outletPriceKopecks: 4000, stockBalance: 3 },
+      ],
+    });
+    assertSuccess(report);
+
+    const sales = await database.value.db
+      .selectFrom('sales_report_sales')
+      .innerJoin('outlet_listings', 'outlet_listings.id', 'outlet_listing_id')
+      .select([
+        'earnings_kopecks',
+        'outlet_listings.name',
+        'outlet_listing_id',
+        'outlet_share_kopecks',
+        'units_sold',
+      ])
+      .where('report_id', '=', report.result.value.id)
+      .execute();
+    expect(sales.map(({ outlet_listing_id: _outletListingId, ...sale }) => sale)).toEqual([
+      {
+        earnings_kopecks: 2000,
+        name: 'Продажа без остатка',
+        outlet_share_kopecks: 1000,
+        units_sold: 1,
+      },
+    ]);
+    const stockBalances = await database.value.db
+      .selectFrom('sales_report_stock_balances')
+      .innerJoin('outlet_listings', 'outlet_listings.id', 'outlet_listing_id')
+      .select([
+        'outlet_listings.name',
+        'outlet_listing_id',
+        'outlet_price_kopecks',
+        'stock_balance',
+      ])
+      .where('report_id', '=', report.result.value.id)
+      .execute();
+    expect(stockBalances.map(({ outlet_listing_id: _outletListingId, ...stock }) => stock)).toEqual(
+      [
+        {
+          name: 'Остаток без продаж',
+          outlet_price_kopecks: 4000,
+          stock_balance: 3,
+        },
+      ],
+    );
+    expect([...sales, ...stockBalances].every((row) => row.outlet_listing_id.length > 0)).toBe(
+      true,
+    );
+
+    const columns = await sql<{ name: string }>`pragma table_info('sales_report_sales')`.execute(
+      database.value.db,
+    );
+    expect(columns.rows.map((column) => column.name)).toEqual([
+      'report_id',
+      'outlet_listing_id',
+      'units_sold',
+      'earnings_kopecks',
+      'outlet_share_kopecks',
+    ]);
   });
 
   test('creator receives precise Outlet and Reporting period failures', async ({ clients }) => {
@@ -184,7 +303,7 @@ describe('SalesReportService', () => {
     });
   });
 
-  test('creator receives exact listing and shared-price failures', async ({ clients }) => {
+  test('creator receives exact listing failures for each report section', async ({ clients }) => {
     const outletResponse = await clients.outlets.createOutlet({ name: 'Гончарная лавка' });
     assertSuccess(outletResponse);
     const base = {
@@ -224,8 +343,8 @@ describe('SalesReportService', () => {
         request: {
           ...base,
           sales: [
-            { earningsKopecks: 0, listingName: 'Кольцо', outletPriceKopecks: 1, unitsSold: 0 },
-            { earningsKopecks: 0, listingName: 'Кольцо', outletPriceKopecks: 1, unitsSold: 0 },
+            { earningsKopecks: 0, listingName: 'Кольцо', salesValueKopecks: 0, unitsSold: 0 },
+            { earningsKopecks: 0, listingName: 'Кольцо', salesValueKopecks: 0, unitsSold: 0 },
           ],
         },
       },
@@ -241,30 +360,6 @@ describe('SalesReportService', () => {
             { listingName: 'Кольцо', outletPriceKopecks: 1, stockBalance: 0 },
             { listingName: 'Кольцо', outletPriceKopecks: 1, stockBalance: 0 },
           ],
-        },
-      },
-      {
-        expected: {
-          field: SalesReportMutationFailureField.OUTLET_PRICE,
-          message: 'Укажите цену в точке для позиции из продаж',
-          rowIndex: 0,
-          section: SalesReportSection.SALES,
-        },
-        request: { ...base, sales: [{ earningsKopecks: 0, listingName: 'Кольцо', unitsSold: 0 }] },
-      },
-      {
-        expected: {
-          field: SalesReportMutationFailureField.OUTLET_PRICE,
-          message: 'Для позиции должна использоваться одна цена в точке',
-          rowIndex: 0,
-          section: SalesReportSection.SALES,
-        },
-        request: {
-          ...base,
-          sales: [
-            { earningsKopecks: 0, listingName: 'Кольцо', outletPriceKopecks: 2, unitsSold: 0 },
-          ],
-          stockBalances: [{ listingName: 'Кольцо', outletPriceKopecks: 1, stockBalance: 0 }],
         },
       },
     ];
@@ -291,7 +386,7 @@ describe('SalesReportService', () => {
         clients.reports.createSalesReport({
           ...base,
           sales: [
-            { earningsKopecks: 0, listingName: 'Кольцо', outletPriceKopecks: 1, unitsSold: value },
+            { earningsKopecks: 0, listingName: 'Кольцо', salesValueKopecks: 1, unitsSold: value },
           ],
         }),
       ).resolves.toMatchObject({
@@ -323,7 +418,7 @@ describe('SalesReportService', () => {
         clients.reports.createSalesReport({
           ...base,
           sales: [
-            { earningsKopecks: value, listingName: 'Кольцо', outletPriceKopecks: 1, unitsSold: 1 },
+            { earningsKopecks: value, listingName: 'Кольцо', salesValueKopecks: 1, unitsSold: 1 },
           ],
         }),
       ).resolves.toMatchObject({
@@ -336,13 +431,13 @@ describe('SalesReportService', () => {
         clients.reports.createSalesReport({
           ...base,
           sales: [
-            { earningsKopecks: 0, listingName: 'Кольцо', outletPriceKopecks: value, unitsSold: 0 },
+            { earningsKopecks: 0, listingName: 'Кольцо', salesValueKopecks: value, unitsSold: 0 },
           ],
         }),
       ).resolves.toMatchObject({
         result: {
           case: 'failure',
-          value: { field: SalesReportMutationFailureField.OUTLET_PRICE },
+          value: { field: SalesReportMutationFailureField.SALES_VALUE },
         },
       });
       await expect(
@@ -361,35 +456,14 @@ describe('SalesReportService', () => {
     await expect(
       clients.reports.createSalesReport({
         ...base,
-        sales: [{ earningsKopecks: 2, listingName: 'Кольцо', outletPriceKopecks: 1, unitsSold: 1 }],
+        sales: [{ earningsKopecks: 2, listingName: 'Кольцо', salesValueKopecks: 1, unitsSold: 1 }],
       }),
     ).resolves.toMatchObject({
       result: {
         case: 'failure',
         value: {
           field: SalesReportMutationFailureField.EARNINGS,
-          message: 'Заработано не может превышать проданное по цене точки',
-        },
-      },
-    });
-    await expect(
-      clients.reports.createSalesReport({
-        ...base,
-        sales: [
-          {
-            earningsKopecks: 0,
-            listingName: 'Кольцо',
-            outletPriceKopecks: 2,
-            unitsSold: Number.MAX_SAFE_INTEGER,
-          },
-        ],
-      }),
-    ).resolves.toMatchObject({
-      result: {
-        case: 'failure',
-        value: {
-          field: SalesReportMutationFailureField.OUTLET_PRICE,
-          message: 'Количество по цене точки превышает допустимую сумму',
+          message: 'Заработано не может превышать сумму продаж',
         },
       },
     });
@@ -420,20 +494,33 @@ describe('SalesReportService', () => {
     ).toBe(3);
   });
 
-  test('listing uniqueness is exact and the same name may appear once in each section', async ({
+  test('listing names are trimmed, remain case-sensitive, and may appear once per section', async ({
     clients,
   }) => {
     const outletResponse = await clients.outlets.createOutlet({ name: 'Гончарная лавка' });
     assertSuccess(outletResponse);
 
-    const response = await clients.reports.createSalesReport({
+    const duplicate = await clients.reports.createSalesReport({
       outletId: outletResponse.result.value.id,
       periodEndDate: '2026-11-30',
       periodStartDate: '2026-11-01',
       sales: [
-        { earningsKopecks: 0, listingName: 'Кольцо', unitsSold: 0 },
-        { earningsKopecks: 0, listingName: 'кольцо', outletPriceKopecks: 1, unitsSold: 0 },
-        { earningsKopecks: 0, listingName: ' Кольцо ', outletPriceKopecks: 1, unitsSold: 0 },
+        { earningsKopecks: 0, listingName: 'Кольцо', salesValueKopecks: 1, unitsSold: 0 },
+        { earningsKopecks: 0, listingName: ' Кольцо ', salesValueKopecks: 1, unitsSold: 0 },
+      ],
+    });
+    expect(duplicate.result).toMatchObject({
+      case: 'failure',
+      value: { field: SalesReportMutationFailureField.LISTING_NAME, rowIndex: 1 },
+    });
+
+    const response = await clients.reports.createSalesReport({
+      outletId: outletResponse.result.value.id,
+      periodEndDate: '2026-12-31',
+      periodStartDate: '2026-12-01',
+      sales: [
+        { earningsKopecks: 0, listingName: ' Кольцо ', salesValueKopecks: 0, unitsSold: 0 },
+        { earningsKopecks: 0, listingName: 'кольцо', salesValueKopecks: 1, unitsSold: 0 },
       ],
       stockBalances: [{ listingName: 'Кольцо', outletPriceKopecks: 1, stockBalance: 0 }],
     });
@@ -442,7 +529,6 @@ describe('SalesReportService', () => {
     expect(response.result.value.sales.map((sale) => sale.listingName)).toEqual([
       'Кольцо',
       'кольцо',
-      ' Кольцо ',
     ]);
   });
 });

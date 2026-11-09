@@ -10,6 +10,7 @@ import { prepareApplicationDatabase } from './database/database.js';
 import type { EnvService } from './env.js';
 import { productionEnv } from './env.js';
 import { MutationQueue } from './mutation-queue.js';
+import { registerOutletListingRoutes } from './outlet-listing/outlet-listing-service.js';
 import { registerOutletRoutes } from './outlet/outlet-service.js';
 import { registerProductRoutes } from './product/product-service.js';
 import { registerSalesReportRoutes } from './sales-report/sales-report-service.js';
@@ -91,6 +92,7 @@ export async function startApplicationServer(
         env,
         mutationQueue,
       });
+      registerOutletListingRoutes(router, { database });
       registerSalesReportRoutes(router, {
         database,
         env,
