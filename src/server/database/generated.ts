@@ -18,7 +18,28 @@ export interface Products {
   name: string;
 }
 
+export interface SalesReportListings {
+  earnings_kopecks: number | null;
+  listing_name: string;
+  outlet_price_kopecks: number;
+  report_id: string;
+  sales_position: number | null;
+  stock_balance: number | null;
+  stock_position: number | null;
+  units_sold: number | null;
+}
+
+export interface SalesReports {
+  created_at_ms: number;
+  id: string;
+  outlet_id: string;
+  period_end_date: string;
+  period_start_date: string;
+}
+
 export interface DB {
   outlets: Outlets;
   products: Products;
+  sales_report_listings: SalesReportListings;
+  sales_reports: SalesReports;
 }

@@ -1,5 +1,5 @@
 import { Link, useLocation, useMatches } from '@tanstack/react-router';
-import { Store } from 'lucide-react';
+import { FileText, Store } from 'lucide-react';
 import type { ComponentType, CSSProperties, PropsWithChildren } from 'react';
 
 import logoUrl from '@/client/assets/ceramics-logo.png';
@@ -49,7 +49,7 @@ interface NavigationItem {
   readonly headerIconClassName?: string;
   readonly icon: ComponentType<{ className?: string }>;
   readonly label: string;
-  readonly to: '/outlets' | '/products';
+  readonly to: '/outlets' | '/products' | '/reports/new';
 }
 
 const navigationItems: readonly NavigationItem[] = [
@@ -60,6 +60,7 @@ const navigationItems: readonly NavigationItem[] = [
     to: '/products',
   },
   { icon: Store, label: 'Торговые точки', to: '/outlets' },
+  { icon: FileText, label: 'Отчёты', to: '/reports/new' },
 ];
 
 function NavigationIcon({

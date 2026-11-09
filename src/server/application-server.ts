@@ -12,6 +12,7 @@ import { productionEnv } from './env.js';
 import { MutationQueue } from './mutation-queue.js';
 import { registerOutletRoutes } from './outlet/outlet-service.js';
 import { registerProductRoutes } from './product/product-service.js';
+import { registerSalesReportRoutes } from './sales-report/sales-report-service.js';
 
 export interface ApplicationServerOptions {
   readonly backupDestination?: BackupDestination;
@@ -86,6 +87,11 @@ export async function startApplicationServer(
         mutationQueue,
       });
       registerOutletRoutes(router, {
+        database,
+        env,
+        mutationQueue,
+      });
+      registerSalesReportRoutes(router, {
         database,
         env,
         mutationQueue,

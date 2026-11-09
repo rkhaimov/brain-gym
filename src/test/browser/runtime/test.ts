@@ -11,17 +11,24 @@ import {
   createProductServiceMock,
   type ProductServiceSpies,
 } from '@/shared/gen/ceramics/v1/product_test.js';
+import { SalesReportService } from '@/shared/gen/ceramics/v1/sales_report_pb.js';
+import {
+  createSalesReportServiceMock,
+  type SalesReportServiceSpies,
+} from '@/shared/gen/ceramics/v1/sales_report_test.js';
 import { screencastFixture } from './screencast-fixture.js';
 
 interface ApplicationServiceSpies {
   readonly outlet: OutletServiceSpies;
   readonly product: ProductServiceSpies;
+  readonly salesReport: SalesReportServiceSpies;
 }
 
 interface BrowserFixtures {
   readonly applicationServices: ApplicationServiceSpies;
   readonly outletService: OutletServiceSpies;
   readonly productService: ProductServiceSpies;
+  readonly salesReportService: SalesReportServiceSpies;
 }
 
 type TestApplication = typeof import('./app-bundle.js');
@@ -48,6 +55,7 @@ export const test = baseTest
       async ({ task: _task }, use) => {
         const outlet = createOutletServiceMock().spies;
         const product = createProductServiceMock().spies;
+        const salesReport = createSalesReportServiceMock().spies;
         const transport = createRouterTransport((router) => {
           router.service(OutletService, {
             createOutlet: outlet.createOutlet.handler,
@@ -61,10 +69,14 @@ export const test = baseTest
             renameProduct: product.renameProduct.handler,
             setProductArchived: product.setProductArchived.handler,
           });
+          router.service(SalesReportService, {
+            createSalesReport: salesReport.createSalesReport.handler,
+            getSalesReport: salesReport.getSalesReport.handler,
+          });
         });
         const application = await loadTestApplication();
         application.overrideTransport(transport);
-        await use({ outlet, product });
+        await use({ outlet, product, salesReport });
       },
       { auto: true },
     ],
@@ -73,6 +85,9 @@ export const test = baseTest
     },
     productService: async ({ applicationServices }, use) => {
       await use(applicationServices.product);
+    },
+    salesReportService: async ({ applicationServices }, use) => {
+      await use(applicationServices.salesReport);
     },
   })
   .extend('screencast', screencastFixture);
