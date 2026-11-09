@@ -16,6 +16,8 @@ import {
 import { Field, FieldError, FieldLabel } from '@/client/components/ui/field.js';
 import { Input } from '@/client/components/ui/input.js';
 
+import { maintenanceFormContract } from './maintenance-test-tags.js';
+
 const fieldErrorsSchema = z.array(z.object({ message: z.string() }));
 const submissionErrorSchema = z.string().optional();
 
@@ -53,7 +55,7 @@ interface MaintenanceFormDialogProps {
   readonly unexpectedErrorMessage: string;
 }
 
-export function MaintenanceFormDialog({
+function MaintenanceFormDialogImplementation({
   codeField,
   defaultValues,
   description,
@@ -232,3 +234,7 @@ export function MaintenanceFormDialog({
     </form.Subscribe>
   );
 }
+
+export const MaintenanceFormDialog = Object.assign(MaintenanceFormDialogImplementation, {
+  testTag: maintenanceFormContract.testTag,
+});

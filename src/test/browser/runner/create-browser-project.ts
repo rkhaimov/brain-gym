@@ -3,6 +3,11 @@ import { resolve } from 'node:path';
 import { playwright } from '@vitest/browser-playwright';
 import type { TestProjectInlineConfiguration } from 'vitest/config';
 
+import {
+  maintenanceCatalogContract,
+  maintenanceFormContract,
+} from '../../../client/components/maintenance/maintenance-test-tags.js';
+
 import { browserCommands } from './commands.js';
 import { createNeutralizeTestStylesPlugin } from './neutralize-test-styles.js';
 import { createTestApplicationStaticPlugin } from './static-plugin.js';
@@ -72,11 +77,11 @@ export function createBrowserProject(): TestProjectInlineConfiguration {
         { name: 'flaky', skip: process.env['SKIP_FLAKY_TESTS'] !== 'false' },
         {
           description: 'Owns behavior encapsulated by the shared maintenance catalog',
-          name: 'shared-catalog-table',
+          name: maintenanceCatalogContract.testTag,
         },
         {
           description: 'Owns behavior encapsulated by the shared maintenance form',
-          name: 'shared-maintenance-form',
+          name: maintenanceFormContract.testTag,
         },
       ],
     },

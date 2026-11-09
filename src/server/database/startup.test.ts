@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { afterEach, describe, expect, test } from 'vitest';
 import BetterSqlite3 from 'better-sqlite3';
-import type { MigrationProvider } from 'kysely/migration';
+import type { Migration, MigrationProvider } from 'kysely/migration';
 
 import type { EnvService } from '../env.js';
 import { testEnv } from '../../test/server/env.js';
@@ -30,6 +30,22 @@ async function startupTestContext() {
     backupDirectory,
     databasePath,
     directory,
+  };
+}
+
+function appendTestMigration(
+  provider: MigrationProvider,
+  suffix: string,
+  migration: Migration,
+): MigrationProvider {
+  return {
+    async getMigrations() {
+      const migrations = await provider.getMigrations();
+      const latestName = Object.keys(migrations).sort().at(-1);
+      const name =
+        latestName === undefined ? `001_test_${suffix}` : `${latestName}__test_${suffix}`;
+      return { ...migrations, [name]: migration };
+    },
   };
 }
 
@@ -383,10 +399,21 @@ describe('prepareApplicationDatabase', () => {
   test('restores a complete older backup and applies pending migrations before use', async () => {
     const { backupDestination, backupDirectory, databasePath, directory } =
       await startupTestContext();
+    const currentMigrations: MigrationProvider = {
+      async getMigrations() {
+        return {
+          ...(await migrationProvider.getMigrations()),
+          '999_future_production_migration': {
+            async up() {},
+          },
+        };
+      },
+    };
     const database = await prepareApplicationDatabase({
       backupDestination,
       databasePath,
       env: testEnv,
+      migrations: currentMigrations,
     });
     await database.db
       .insertInto('products')
@@ -397,6 +424,7 @@ describe('prepareApplicationDatabase', () => {
       backupDestination,
       databasePath,
       env: testEnv,
+      migrations: currentMigrations,
     });
     await backedUpDatabase.close();
     const routineNames = await backupNames(backupDirectory, 'routine');
@@ -406,21 +434,14 @@ describe('prepareApplicationDatabase', () => {
     }
     const restoredDatabasePath = join(directory, 'restored.sqlite');
     await copyFile(join(backupDirectory, latestRoutineName), restoredDatabasePath);
-    const newerMigrations: MigrationProvider = {
-      async getMigrations() {
-        return {
-          ...(await migrationProvider.getMigrations()),
-          '004_add_restored_marker': {
-            async up(migrationDatabase) {
-              await migrationDatabase.schema
-                .createTable('restored_migration_marker')
-                .addColumn('id', 'text')
-                .execute();
-            },
-          },
-        };
+    const newerMigrations = appendTestMigration(currentMigrations, 'add_restored_marker', {
+      async up(migrationDatabase) {
+        await migrationDatabase.schema
+          .createTable('restored_migration_marker')
+          .addColumn('id', 'text')
+          .execute();
       },
-    };
+    });
 
     const restoredDatabase = await prepareApplicationDatabase({
       backupDestination: new LocalFilesystemBackupDestination(join(directory, 'restored-backups')),

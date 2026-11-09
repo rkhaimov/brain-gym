@@ -14,6 +14,8 @@ import {
   TableRow,
 } from '@/client/components/ui/table.js';
 
+import { maintenanceCatalogContract } from './maintenance-test-tags.js';
+
 export interface MaintenanceEntity {
   readonly archived: boolean;
   readonly id: string;
@@ -64,7 +66,7 @@ interface MaintenanceCatalogProps<Entity extends MaintenanceEntity> {
   readonly showArchived: boolean;
 }
 
-export function MaintenanceCatalog<Entity extends MaintenanceEntity>({
+function MaintenanceCatalogImplementation<Entity extends MaintenanceEntity>({
   archivePending,
   catalog,
   copy,
@@ -216,3 +218,7 @@ export function MaintenanceCatalog<Entity extends MaintenanceEntity>({
     </div>
   );
 }
+
+export const MaintenanceCatalog = Object.assign(MaintenanceCatalogImplementation, {
+  testTag: maintenanceCatalogContract.testTag,
+});
