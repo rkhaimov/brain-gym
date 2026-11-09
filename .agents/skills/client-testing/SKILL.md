@@ -15,7 +15,7 @@ this seam.
 Install the pinned browser once with `npm run browser:install`.
 
 - Focused browser suite: `npm run test:browser -- <test-file>`
-- Update reviewed screenshots: `npm run test:browser -- -u <test-file>`
+- Update reviewed screenshots: `npm run test:browser -- <test-file> -u`
 - Full verification: `npm run check`
 
 ## Shape and location
@@ -58,6 +58,8 @@ test.describe('Product catalog', () => {
 Use generated `create<Model>Stub(overrides)` factories and RPC helpers. Override only values that cause the scenario,
 connect entities, or replace generic visual data. Arrange shared valid state in `beforeEach`; keep one-case spy changes
 inside that case. Verify through UI when possible. Use `getLastRequest()` only for behavior the UI cannot distinguish.
+Keep one domain transition per case. When a response changes after a mutation, prefer deriving the pre/post response
+from the RPC spy's call history over maintaining mutable fake-server state.
 
 Page objects are stateless factory functions. Expose repeated creator actions and semantic locators; keep assertions in
 the scenario. Prefer role, name, and label locators over CSS or incidental structure.
@@ -71,6 +73,10 @@ only outside screencast mode.
 After a new baseline is created, inspect the image before accepting it, then rerun without update mode to prove a real
 comparison pass.
 
+For a route that introduces materially distinct surfaces, give each surface one representative baseline. A maintenance
+route usually needs a populated list, create form, and edit form after edits. Shared generic behavior keeps one tagged
+owner; an adopter may repeat a critical domain flow when it proves adapter-specific fields, requests, or lifecycle.
+
 ## Stability and recordings
 
 For a reported flaky browser test, read [Flakiness](references/flakiness.md) before changing code. For a requested test
@@ -80,4 +86,6 @@ video is produced.
 ## Completion
 
 Remove redundant stub overrides, waits, helpers, assertions, and overlapping screenshots. Rerun the focused suite; a
-removed item stays removed when the suite remains green. Finish with `npm run check`.
+removed item stays removed when the suite remains green. Before finishing, review every case for one clear domain
+transition, every introduced surface for representative visual ownership, and every repeated shared flow for a
+domain-specific assertion. Finish with `npm run check`.
