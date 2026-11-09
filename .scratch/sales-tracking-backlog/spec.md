@@ -1,10 +1,10 @@
-# Sales Tracking — Phase Two: Form value drafts
+# Sales Tracking — Backlog: Form value drafts
 
 Status: needs-triage
 
 ## Deferred scope
 
-Phase two protects unfinished browser form values from accidental navigation, refresh, server failure, and application restart. Draft recovery applies consistently to create and edit forms without making browser storage authoritative for confirmed application data.
+This backlog item protects unfinished browser form values from accidental navigation, refresh, server failure, and application restart. Draft recovery applies consistently to create and edit forms without making browser storage authoritative for confirmed application data.
 
 ## User stories
 

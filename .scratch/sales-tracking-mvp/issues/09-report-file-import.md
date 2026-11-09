@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-- [ ] The parser accepts only the fixed phase-one workbook structure containing one Reporting period and one or more Outlet reports.
+- [ ] The parser accepts only the fixed MVP workbook structure containing one Reporting period and one or more Outlet reports.
 - [ ] The complete file is parsed and validated before any editable form opens or application data changes.
 - [ ] A parsing or validation failure rejects the whole file and reports one actionable problem at a time with its cell or location and expected value kind.
 - [ ] Each Outlet code may identify at most one Outlet report in the file.

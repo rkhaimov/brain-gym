@@ -1,9 +1,9 @@
 ---
-name: test-writer
-description: Use for full-application Chromium tests, visual Product tests, flaky browser-test diagnosis, or test screencasts in Ceramics.
+name: client-testing
+description: Client browser testing through the full Ceramics application. Use for Chromium tests, visual Product tests, flaky browser-test diagnosis, or test screencasts.
 ---
 
-# Full-application browser tests
+# Client browser testing
 
 Write Vitest browser tests only through the prebuilt Ceramics application seam. Open a route with
 `window.openApplicationRoute()`, inject the generated Connect transport through the automatic test fixture, and
@@ -33,7 +33,8 @@ browser-tests/
 ```
 
 Use `src/test/browser/runtime/test.ts` instead of importing `test` from Vitest. Every case receives fresh generated
-service spies and an injected transport; unregistered RPCs fail instead of reaching the network.
+service spies and an injected transport; these client-boundary fixtures replace the server, and unregistered RPCs fail
+instead of reaching the network.
 
 ## Test structure
 

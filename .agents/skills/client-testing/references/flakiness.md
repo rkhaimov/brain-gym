@@ -8,7 +8,7 @@ command. A failure that cannot be reproduced is not evidence for a speculative s
 Use the project flaky checker:
 
 ```shell
-node .agents/skills/test-writer/scripts/flaky-check.mjs 10 --project browser <test-file>
+node .agents/skills/client-testing/scripts/flaky-check.mjs 10 --project browser <test-file>
 ```
 
 The script reuses the prebuilt application bundle and prints failing-run output. Stop early when the target failure is

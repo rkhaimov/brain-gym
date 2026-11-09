@@ -143,6 +143,6 @@ This layer is application policy with integration tests, not a competing databas
 
 ## Decision
 
-Keep the current implementation and dependency set. Do not add Umzug, Knex, a backup wrapper, or Litestream to satisfy the phase-one startup-backup requirements.
+Keep the current implementation and dependency set. Do not add Umzug, Knex, a backup wrapper, or Litestream to satisfy the MVP startup-backup requirements.
 
 If off-device protection becomes a requirement, evaluate Litestream as a separate operational layer or add a new `BackupDestination` implementation. In either case, retain the local verified pre-migration copy and require a Windows restore drill before treating the new destination as recovery-ready.

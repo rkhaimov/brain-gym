@@ -6,7 +6,7 @@
 
 **Status:** completed
 
-- [x] Backup destinations are represented by a replaceable asynchronous interface, with a local-filesystem destination supplied in phase one.
+- [x] Backup destinations are represented by a replaceable asynchronous interface, with a local-filesystem destination supplied in the MVP.
 - [x] Startup backup publication and rotation are protected from concurrent execution and complete before the server accepts ordinary requests.
 - [x] Startup verifies the primary SQLite database before creating or rotating any backup.
 - [x] When data changed since the latest routine backup, startup creates at most one routine backup for that application run.

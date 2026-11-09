@@ -12,12 +12,44 @@ import {
 import type {
   CreateProductResponse,
   ListProductsResponse,
+  SetProductArchivedResponse,
 } from '@/shared/gen/ceramics/v1/product_pb.js';
 import { screenshot } from '@/test/browser/runtime/screenshot.js';
 import { test } from '@/test/browser/runtime/test.js';
 
 test.describe('Product catalog', () => {
-  test('displays the empty catalog', async ({ productService }) => {
+  test('displays the catalog while it is loading', async ({ productService }) => {
+    const pendingCatalog = createDeferred<ListProductsResponse>();
+    productService.listProducts.handler.mockImplementation(() => pendingCatalog.promise);
+
+    const products = createProductsPage();
+    await products.open();
+
+    await expect.element(products.catalogLoading()).toBeVisible();
+    await expect.element(products.count(0)).not.toBeInTheDocument();
+    await products.screenshotLoadingPage('Loading catalog');
+
+    pendingCatalog.resolve(createListProductsResponseStub({ products: [] }));
+    await expect.element(products.emptyCatalogMessage()).toBeVisible();
+  });
+
+  test('displays a catalog error and retries the request', async ({ productService }) => {
+    productService.listProducts.rejects(new ConnectError('Server unavailable', Code.Unavailable));
+
+    const products = createProductsPage();
+    await products.open();
+
+    await expect.element(products.catalogError()).toBeVisible();
+    await products.screenshotPage('Catalog load error');
+
+    const callsBeforeRetry = productService.listProducts.handler.mock.calls.length;
+    productService.listProducts.resolves(createListProductsResponseStub({ products: [] }));
+    await products.retryCatalog();
+    await expect.element(products.emptyCatalogMessage()).toBeVisible();
+    expect(productService.listProducts.handler.mock.calls.length).toBeGreaterThan(callsBeforeRetry);
+  });
+
+  test('displays the empty active and archived catalogs', async ({ productService }) => {
     productService.listProducts.resolves(createListProductsResponseStub({ products: [] }));
     const products = createProductsPage();
     await products.open();
@@ -29,6 +61,11 @@ test.describe('Product catalog', () => {
     await expect.element(page.getByText('Inbox', { exact: true })).not.toBeInTheDocument();
     await expect.element(page.getByRole('link', { name: 'GitHub' })).not.toBeInTheDocument();
     await products.screenshotPage('Empty catalog');
+
+    await products.showArchived();
+    await expect.element(products.emptyArchiveMessage()).toBeVisible();
+    await expect.element(products.headerCreateButton()).not.toBeInTheDocument();
+    await products.screenshotPage('Empty archive');
   });
 
   test('opens the create dialog with focus and dismisses it accessibly', async ({
@@ -134,6 +171,7 @@ test.describe('Product catalog', () => {
 
     await expect.element(products.pendingSubmitButton()).toBeVisible();
     await expect.element(products.cancelButton()).toBeDisabled();
+    await products.screenshotModalState('Pending Product creation');
     await userEvent.keyboard('{Escape}');
     await expect.element(products.dialog()).toBeVisible();
 
@@ -221,7 +259,12 @@ test.describe('Product catalog', () => {
 
     const products = createProductsPage();
     await products.open();
-    await products.rename('Кольцо', 'Кольцо с гранатом');
+    await products.openRenameDialog('Кольцо');
+    await expect.element(products.editName()).toHaveValue('Кольцо');
+    await expect.element(products.editName()).toHaveFocus();
+    await products.screenshotModalState('Edit Product dialog');
+    await products.editName().fill('Кольцо с гранатом');
+    await products.saveRename();
 
     await expect.element(products.product('Кольцо с гранатом')).toBeVisible();
     await expect(productService.renameProduct.getLastRequest()).resolves.toMatchObject({
@@ -233,11 +276,36 @@ test.describe('Product catalog', () => {
     await expect.element(products.product('Кольцо с гранатом')).not.toBeInTheDocument();
     await products.showArchived();
     await expect.element(products.product('Кольцо с гранатом')).toBeVisible();
+    await expect.element(products.headerCreateButton()).not.toBeInTheDocument();
+    await products.screenshotPage('Archived Product');
 
     await products.restore('Кольцо с гранатом');
     await expect.element(products.product('Кольцо с гранатом')).not.toBeInTheDocument();
     await products.showActive();
     await expect.element(products.product('Кольцо с гранатом')).toBeVisible();
+  });
+
+  test('disables archive actions while an archive request is pending', async ({
+    productService,
+  }) => {
+    const product = createProductStub({ archived: false, id: 'ring-id', name: 'Кольцо' });
+    const pendingArchive = createDeferred<SetProductArchivedResponse>();
+    productService.listProducts.resolves(createListProductsResponseStub({ products: [product] }));
+    productService.setProductArchived.handler.mockImplementation(() => pendingArchive.promise);
+
+    const products = createProductsPage();
+    await products.open();
+    await products.archive(product.name);
+
+    await expect.element(products.archiveButton(product.name)).toBeDisabled();
+    await products.screenshotPage('Pending Product archival');
+
+    pendingArchive.resolve(
+      createSetProductArchivedResponseStub({
+        result: { case: 'success', value: createProductStub({ ...product, archived: true }) },
+      }),
+    );
+    await expect.element(products.archiveButton(product.name)).not.toBeDisabled();
   });
 
   test('shows a generic message for a transport failure', async ({ productService }) => {
@@ -254,6 +322,7 @@ test.describe('Product catalog', () => {
     await expect
       .element(page.getByText('Не удалось сохранить штучку. Попробуйте ещё раз.'))
       .toBeVisible();
+    await products.screenshotModalState('Product form error');
   });
 
   test('shows a generic message for a malformed creation response', async ({ productService }) => {
@@ -278,6 +347,7 @@ test.describe('Product catalog', () => {
 function createProductsPage() {
   const catalog = () => page.getByRole('region', { name: 'Все штучки' });
   const dialog = () => page.getByRole('dialog', { name: 'Новая штучка' });
+  const editDialog = () => page.getByRole('dialog', { name: 'Переименовать штучку' });
   const emptyCreateButton = () => page.getByRole('button', { name: 'Создать первую штучку' });
   const headerCreateButton = () => page.getByRole('button', { name: 'Создать штучку' });
 
@@ -286,10 +356,17 @@ function createProductsPage() {
       catalog()
         .getByRole('button', { name: `Архивировать ${name}` })
         .click(),
+    archiveButton: (name: string) =>
+      catalog().getByRole('button', { name: `Архивировать ${name}` }),
     cancel: () => dialog().getByRole('button', { name: 'Отмена' }).click(),
     cancelButton: () => dialog().getByRole('button', { name: 'Отмена' }),
+    catalogError: () => page.getByRole('alert'),
+    catalogLoading: () => page.getByText('Загружаем каталог…', { exact: true }),
     count: (count: number) => page.getByLabelText(`Количество штучек: ${count}`),
     dialog,
+    editName: () => editDialog().getByRole('textbox', { name: 'Название' }),
+    emptyArchiveMessage: () => page.getByText('Архив пока пуст', { exact: true }),
+    emptyCatalogMessage: () => page.getByText('Каталог пока пуст', { exact: true }),
     emptyCreateButton,
     header: () => page.getByRole('heading', { level: 1, name: 'Штучки' }),
     headerCreateButton,
@@ -299,22 +376,22 @@ function createProductsPage() {
     open: () => window.openApplicationRoute('/products'),
     openCreateDialog: () => headerCreateButton().click(),
     openEmptyCreateDialog: () => emptyCreateButton().click(),
+    openRenameDialog: (name: string) =>
+      catalog()
+        .getByRole('button', { name: `Переименовать ${name}` })
+        .click(),
     pendingSubmitButton: () => dialog().getByRole('button', { name: 'Сохраняем…' }),
     product: (name: string) => catalog().getByText(name, { exact: true }),
-    rename: async (currentName: string, nextName: string) => {
-      await catalog()
-        .getByRole('button', { name: `Переименовать ${currentName}` })
-        .click();
-      const renameDialog = page.getByRole('dialog', { name: 'Переименовать штучку' });
-      await renameDialog.getByRole('textbox', { name: 'Название' }).fill(nextName);
-      await renameDialog.getByRole('button', { name: 'Сохранить' }).click();
-    },
+    retryCatalog: () => page.getByRole('button', { name: 'Попробовать снова' }).click(),
     restore: (name: string) =>
       catalog()
         .getByRole('button', { name: `Восстановить ${name}` })
         .click(),
     screenshotModalState: (name: string) => screenshot(page.elementLocator(document.body), name),
+    screenshotLoadingPage: (name: string) =>
+      screenshot(page.elementLocator(document.body), name, { noTransientUIProtection: true }),
     screenshotPage: (name: string) => screenshot(page.elementLocator(document.body), name),
+    saveRename: () => editDialog().getByRole('button', { name: 'Сохранить' }).click(),
     submit: () => dialog().getByRole('button', { name: 'Создать' }).click(),
     showActive: () => page.getByRole('button', { name: 'Активные' }).click(),
     showArchived: () => page.getByRole('button', { name: 'Архив' }).click(),

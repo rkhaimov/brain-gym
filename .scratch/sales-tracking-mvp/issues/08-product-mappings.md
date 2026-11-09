@@ -17,7 +17,7 @@
 - [ ] Unmapped listings are globally grouped by exact listing-name equality with no case, whitespace, punctuation, or spelling normalization.
 - [ ] An Unmapped listing remains distinct from an identically named Product until the creator explicitly maps it.
 - [ ] When an exact-name Unmapped group contains listings from several Outlets, each Outlet listing requires its own explicit mapping.
-- [ ] No fuzzy, name-derived, or remembered Product suggestion appears in phase one.
+- [ ] No fuzzy, name-derived, or remembered Product suggestion appears in the MVP.
 - [ ] Server integration tests prove persistent and retroactive mapping, remapping, unmapping, archived-Product behavior, and exact-name grouping.
 - [ ] Prebuilt-client integration tests cover filters, inline Product creation, mapping changes, and the visibly distinguished Unmapped state.
 

@@ -17,5 +17,5 @@
 ## Comments
 
 - 2026-11-09 — Acceptance audit completed. Implemented by `80ac4a7`, `3d09f2c`, and `bd831c7`; verified with focused real-SQLite and prebuilt Chromium suites, reviewed visual baselines and five client-test screencasts, and a final `npm run check` (formatting, lint, type checking, generated-artifact verification, 38 tests, and client/server builds).
-- 2026-11-09 — Form value drafts and the explicit Clear action moved to phase two. Phase-one Product maintenance remains completed; draft implementation and draft-specific browser tests were removed.
-- 2026-11-09 — Revised phase-one scope verified with `npm run check` (formatting, lint, type checking, generated-artifact verification, 34 tests, and client/server builds).
+- 2026-11-09 — Form value drafts and the explicit Clear action moved to the backlog. MVP Product maintenance remains completed; draft implementation and draft-specific browser tests were removed.
+- 2026-11-09 — Revised MVP scope verified with `npm run check` (formatting, lint, type checking, generated-artifact verification, 34 tests, and client/server builds).

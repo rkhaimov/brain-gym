@@ -1,6 +1,6 @@
 # 02: Establish deterministic browser testing
 
-**What to build:** Turn the first Product flow into the reusable browser-testing foundation for the rest of phase one. Tests exercise the prebuilt application, receive generated typed data and RPC controls, and start from a deterministic isolated state.
+**What to build:** Turn the first Product flow into the reusable browser-testing foundation for the rest of the MVP. Tests exercise the prebuilt application, receive generated typed data and RPC controls, and start from a deterministic isolated state.
 
 **Blocked by:** 01: Create and list the first Product end to end.
 

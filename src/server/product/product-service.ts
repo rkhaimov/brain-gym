@@ -15,10 +15,6 @@ const PRODUCT_NOT_FOUND_MESSAGE = 'Штучка не найдена';
 
 type ProductId = string & { readonly __productId: true };
 
-function assertProductId(value: string): asserts value is ProductId {
-  void value;
-}
-
 export interface ProductRouteDependencies {
   readonly database: ApplicationDatabase;
   readonly env: EnvService;
@@ -34,9 +30,7 @@ type DomainProduct = Readonly<
 type PersistedProduct = Pick<Products, 'archived_at_ms' | 'id' | 'name'>;
 
 function productFromDatabase(row: PersistedProduct): DomainProduct {
-  const id = row.id;
-  assertProductId(id);
-  return { archived: row.archived_at_ms !== null, id, name: row.name };
+  return { archived: row.archived_at_ms !== null, id: createProductId(row.id), name: row.name };
 }
 
 function productToProtobuf(product: DomainProduct) {
@@ -78,8 +72,7 @@ function createProductService(
               return productFailure(NAME_ALREADY_EXISTS_MESSAGE);
             }
 
-            const id = env.randomUUID();
-            assertProductId(id);
+            const id = createProductId(env.randomUUID());
             const product: DomainProduct = { archived: false, id, name: request.name };
             await transaction
               .insertInto('products')
@@ -171,4 +164,10 @@ export function registerProductRoutes(
   dependencies: ProductRouteDependencies,
 ): void {
   router.service(ProductService, createProductService(dependencies));
+}
+
+function createProductId(value: string): ProductId {
+  // Product service is the owner of product id construction
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion typescript/consistent-type-assertions
+  return value as ProductId;
 }

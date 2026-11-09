@@ -1,4 +1,4 @@
-# Sales Tracking — Phase One
+# Sales Tracking — MVP
 
 Status: ready-for-agent
 
@@ -24,7 +24,7 @@ The creator maintains a Product catalog and a list of Outlets. Each Outlet may h
 
 Outlet listings retain the exact names supplied by each Outlet. Persistent Product mappings associate those Outlet listings with canonical Products. Unmapped listings remain valid and visible in analytics until the creator maps them.
 
-Phase one provides:
+The MVP provides:
 
 - Product and Outlet maintenance;
 - manual Sales report entry and correction;
@@ -124,7 +124,7 @@ flowchart LR
 
 ### Importing a Report file
 
-43. As the creator, I can import the one fixed Excel workbook structure supported by phase one.
+43. As the creator, I can import the one fixed Excel workbook structure supported by the MVP.
 44. As the creator, I can import one Report file containing a single Reporting period and data for multiple Outlets.
 45. As the creator, I receive a clear rejection when the workbook structure or a value cannot be parsed, including the relevant cell or location and the expected kind of value.
 46. As the creator, I see one parsing or validation problem at a time so that I can correct the source file and retry.
@@ -155,7 +155,7 @@ flowchart LR
 68. As the creator, Unmapped listings from all Outlets are grouped by exact listing-name equality, without normalizing case, whitespace, punctuation, or spelling.
 69. As the creator, an Unmapped listing is not implicitly treated as an existing Product even when its exact name equals that Product's name; I must map it explicitly.
 70. As the creator, when an exact-name Unmapped group comes from several Outlets, I map each Outlet listing explicitly; mapping one does not silently map the others.
-71. As the creator, phase one does not offer fuzzy, spelling-based, or remembered Product suggestions.
+71. As the creator, the MVP does not offer fuzzy, spelling-based, or remembered Product suggestions.
 
 ### Reviewing history, stock, and analytics
 
@@ -180,7 +180,7 @@ flowchart LR
 ### Local use, safety, and usability
 
 89. As the creator, I can start the application with one terminal command; it waits for the local server to become ready and then opens in my default supported browser.
-90. As the creator, I can use every phase-one feature without an internet connection.
+90. As the creator, I can use every MVP feature without an internet connection.
 91. As the creator, every save confirmed by the application survives normal shutdown, restart, and application updates.
 92. As the creator, a crash during a change leaves either the complete committed change or no change; I retry a change whose success was not confirmed.
 93. As the creator, I receive a usable Russian interface with keyboard-operable forms, labelled controls, readable contrast, visible validation messages, and browser zoom support.
@@ -217,7 +217,7 @@ flowchart LR
 - The Protobuf contract is a network representation. Internal domain entities and database rows remain separate representations.
 - Use branded TypeScript identifiers in shared and server code where additional identity safety is valuable. Convert explicitly at Protobuf and database boundaries rather than wrapping every identifier in a Protobuf message.
 - Generated source is never edited manually.
-- Phase-one RPCs are unary and use Connect's JSON wire format.
+- MVP RPCs are unary and use Connect's JSON wire format.
 
 ### Persistence, calculations, and concurrency
 
@@ -227,7 +227,7 @@ flowchart LR
 - Store all monetary values as whole integer kopecks. Validate JavaScript safe integers at runtime and use SQLite's signed 64-bit integer storage. Do not use floating-point monetary arithmetic.
 - Serialize every write-inducing operation through one process-wide FIFO mutex. Execute its complete read-modify-write sequence within both the mutex and one SQLite transaction.
 - Allow read-only operations to execute concurrently with one another. The database transaction remains the final consistency boundary.
-- Phase one accepts last-write-wins behavior for concurrent edits; it does not add revision conflicts or client-side merge UI.
+- The MVP accepts last-write-wins behavior for concurrent edits; it does not add revision conflicts or client-side merge UI.
 - Return mutation success only after the durable database transaction commits. An interrupted transaction commits completely or rolls back completely.
 - Do not automatically replay an interrupted business operation. The creator retries when no successful result was confirmed.
 - The expected scale is fewer than 50 Outlets, about one report per Outlet per month, and about ten listings per report. Compute analytics from SQLite data without specialized precomputation unless measurements show a need.
@@ -247,7 +247,7 @@ flowchart LR
 
 ### Durability, backup, migration, and recovery
 
-- Use a replaceable asynchronous backup-destination interface. Phase one implements a local-filesystem destination; later destinations may copy backups elsewhere.
+- Use a replaceable asynchronous backup-destination interface. The MVP implements a local-filesystem destination; later destinations may copy backups elsewhere.
 - The startup sequence completes backup and migration work before the server listens or opens the browser. Await asynchronous backup operations and protect publication/rotation with locks.
 - Verify the primary database before creating or rotating backups. Refuse normal startup and preserve all existing backups if verification fails.
 - When the primary data has changed since the latest routine backup, create at most one routine backup during that application start.
@@ -275,7 +275,7 @@ flowchart LR
 - Tests assert externally observable user or domain behavior through the highest practical seam. They do not assert internal call order or private implementation details unless that behavior is itself the contract.
 - The primary server seam is the generated Connect handler surface backed by a real isolated SQLite database. Server tests are mostly integration tests through handlers.
 - The primary client seam is the complete prebuilt client application with an injected generated Connect transport. Browser tests are mostly integration and screenshot tests.
-- The full-system seam is the prebuilt client application connected to a real Node.js server and isolated SQLite database, still orchestrated by Vitest. Ticket 12 introduces this seam for the critical phase-one workflow; earlier client browser tests use the injected generated transport.
+- The full-system seam is the prebuilt client application connected to a real Node.js server and isolated SQLite database, still orchestrated by Vitest. Ticket 12 introduces this seam for the critical MVP workflow; earlier client browser tests use the injected generated transport.
 - Do not create a separate transport test suite. Generated transport code is exercised by compilation and the client/server integration seams.
 
 ### Server tests
@@ -343,7 +343,7 @@ flowchart LR
 - Use fixed Chromium screenshot tests for stable visual states and compare them with the client-approved design drafts.
 - Regenerate Protobuf, Connect Query, generated test artifacts, and Kysely database types in CI; fail when generation produces an uncommitted difference.
 - Publish coverage reports to expose untested modules, but do not set an arbitrary global coverage percentage. The agreed behavior and critical scenarios determine sufficiency.
-- Verify the Core Web Vitals targets manually against a production build and seeded ten-year dataset in phase one. A repeated percentile performance suite is deferred to phase two.
+- Verify the Core Web Vitals targets manually against a production build and seeded ten-year dataset in the MVP. A repeated percentile performance suite is deferred to the backlog.
 
 ## Out of Scope
 
@@ -355,7 +355,7 @@ flowchart LR
 - Mobile or tablet layouts.
 - Firefox, WebKit, legacy browser support, polyfills, or compatibility hacks.
 - LAN hosting, internet hosting, cloud synchronization, or remote access.
-- A cloud backup destination in phase one; only the extension interface and local destination are included.
+- A cloud backup destination in the MVP; only the extension interface and local destination are included.
 - Multiple Report-file formats, free-form spreadsheet detection, partial imports, or importing individual Sale transactions.
 - Creating unknown Outlets inside the import form or mapping source Outlet names to existing Outlets.
 - Fuzzy Product matching, automatic name-based suggestions, or remembered mapping suggestions.
@@ -369,7 +369,7 @@ flowchart LR
 
 ## Further Notes
 
-- Documentation and programming terminology use the canonical English terms in `GLOSSARY.md`. The application interface uses the mapped Russian labels and is Russian-only in phase one.
+- Documentation and programming terminology use the canonical English terms in `GLOSSARY.md`. The application interface uses the mapped Russian labels and is Russian-only in the MVP.
 - The application name and visual system are defined in `docs/ui-design.md`; UI implementation and review treat it as the source of truth.
 - All displayed prices and monetary results are rubles, while persisted and transported values use whole kopecks.
 - The approved visual direction is represented by the local analytics, Product-mapping, and Report-flow showcase images under `artefacts/`. The non-`original` Report-flow image is the current version, and `docs/ui-design.md` resolves normalized identity and token decisions.
