@@ -59,7 +59,7 @@ const navigationItems: readonly NavigationItem[] = [
     label: 'Штучки',
     to: '/products',
   },
-  { icon: Store, label: 'Торговые точки', to: '/outlets' },
+  { icon: Store, label: 'Полки', to: '/outlets' },
 ];
 
 function NavigationIcon({

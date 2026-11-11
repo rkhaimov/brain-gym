@@ -251,7 +251,7 @@ describe('SalesReportService', () => {
       {
         expected: {
           field: SalesReportMutationFailureField.OUTLET,
-          message: 'Выберите действующую торговую точку',
+          message: 'Выберите действующую полку',
         },
         request: {
           outletId: 'missing',

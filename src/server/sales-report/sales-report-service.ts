@@ -23,7 +23,7 @@ import type {
 import type { EnvService } from '../env.js';
 import type { MutationQueue } from '../mutation-queue.js';
 
-const OUTLET_NOT_AVAILABLE_MESSAGE = 'Выберите действующую торговую точку';
+const OUTLET_NOT_AVAILABLE_MESSAGE = 'Выберите действующую полку';
 const REPORT_NOT_FOUND_MESSAGE = 'Отчёт не найден';
 
 export interface SalesReportRouteDependencies {

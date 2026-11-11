@@ -28,7 +28,7 @@ export function EditOutletDialog({ outlet, ...props }: EditOutletDialogProps) {
         })
       }
       submitLabel="Сохранить"
-      title="Изменить торговую точку"
+      title="Изменить полку"
     />
   );
 }

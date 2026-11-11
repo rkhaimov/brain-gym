@@ -207,7 +207,7 @@ function OutletListingInput({
         aria-describedby={describedBy}
         aria-expanded={open && visibleSuggestions.length > 0}
         aria-invalid={invalid || undefined}
-        aria-label="Позиция точки"
+        aria-label="Позиция полки"
         autoComplete="off"
         disabled={disabled}
         onBlur={(event) => {
@@ -460,7 +460,7 @@ export function ManualSalesReportDialog({
       >
         <DialogHeader>
           <DialogTitle>Новый отчёт</DialogTitle>
-          <DialogDescription>Торговая точка: {outletDescription}</DialogDescription>
+          <DialogDescription>Полка: {outletDescription}</DialogDescription>
         </DialogHeader>
 
         <form className="grid gap-5" noValidate onSubmit={submit}>
@@ -509,7 +509,7 @@ export function ManualSalesReportDialog({
               <div>
                 <h2 className="font-bold">Остатки на конец периода</h2>
                 <p className="text-sm text-muted-foreground">
-                  Укажите все позиции, которые остались в точке.
+                  Укажите все позиции, которые остались на полке.
                 </p>
               </div>
               <Button
@@ -524,15 +524,15 @@ export function ManualSalesReportDialog({
             </div>
             {stockBalances.length === 0 ? (
               <p className="p-4 text-sm text-muted-foreground">
-                Пустой остаток: в точке ничего не осталось.
+                Пустой остаток: на полке ничего не осталось.
               </p>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Позиция точки</TableHead>
+                    <TableHead>Позиция полки</TableHead>
                     <TableHead>Остаток</TableHead>
-                    <TableHead>Цена в точке, ₽</TableHead>
+                    <TableHead>Цена на полке, ₽</TableHead>
                     <TableHead className="text-right">Действия</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -584,7 +584,7 @@ export function ManualSalesReportDialog({
                               errors[priceKey] === undefined ? undefined : `${priceKey}-error`
                             }
                             aria-invalid={errors[priceKey] === undefined ? undefined : true}
-                            aria-label="Цена в точке"
+                            aria-label="Цена на полке"
                             disabled={mutation.isPending}
                             min="0"
                             onChange={(event) =>
@@ -648,11 +648,11 @@ export function ManualSalesReportDialog({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Позиция точки</TableHead>
+                    <TableHead>Позиция полки</TableHead>
                     <TableHead>Продано, шт.</TableHead>
                     <TableHead>Сумма продаж, ₽</TableHead>
                     <TableHead>Заработано, ₽</TableHead>
-                    <TableHead>Комиссия точки</TableHead>
+                    <TableHead>Комиссия полки</TableHead>
                     <TableHead className="text-right">Действия</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -747,7 +747,7 @@ export function ManualSalesReportDialog({
                           <FieldMessages errors={errors[earningsKey]} id={`${earningsKey}-error`} />
                         </TableCell>
                         <TableCell className="min-w-36 align-top">
-                          <output aria-label="Комиссия точки">{formatRubles(share)}</output>
+                          <output aria-label="Комиссия полки">{formatRubles(share)}</output>
                         </TableCell>
                         <TableCell className="text-right align-top">
                           <Button

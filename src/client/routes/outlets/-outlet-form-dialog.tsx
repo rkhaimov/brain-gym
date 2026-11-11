@@ -37,14 +37,14 @@ export function OutletFormDialog({
 
   return (
     <MaintenanceFormDialog
-      codeField={{ label: 'Код точки', placeholder: 'Необязательно' }}
+      codeField={{ label: 'Код полки', placeholder: 'Необязательно' }}
       defaultValues={{ code: defaultCode, name: defaultName }}
       description="Название и код сохраняются точно как введены"
       namePlaceholder={defaultName.length === 0 ? 'Например, Гончарная лавка' : undefined}
       onOpenChange={onOpenChange}
       open={open}
       refresh={refreshOutletCatalog}
-      requiredNameMessage="Введите название торговой точки"
+      requiredNameMessage="Введите название полки"
       returnFocusTo={returnFocusTo}
       submit={async ({ code, name }) => {
         const response = await submit(name, code.length === 0 ? undefined : code);
@@ -64,7 +64,7 @@ export function OutletFormDialog({
       }}
       submitLabel={submitLabel}
       title={title}
-      unexpectedErrorMessage="Не удалось сохранить торговую точку. Попробуйте ещё раз."
+      unexpectedErrorMessage="Не удалось сохранить полку. Попробуйте ещё раз."
     />
   );
 }

@@ -19,21 +19,21 @@ import { useRefreshOutletCatalog } from './-outlet-catalog-query.js';
 
 const outletCatalogCopy: MaintenanceCatalogCopy = {
   archiveAction: (name) => `Архивировать ${name}`,
-  archivedEmptyDescription: 'Архивированные торговые точки появятся здесь',
+  archivedEmptyDescription: 'Архивированные полки появятся здесь',
   archivedEmptyTitle: 'Архив пока пуст',
-  countLabel: (count) => `Количество торговых точек: ${count}`,
-  createAction: 'Создать торговую точку',
-  createFirstAction: 'Создать первую торговую точку',
+  countLabel: (count) => `Количество полок: ${count}`,
+  createAction: 'Создать полку',
+  createFirstAction: 'Создать первую полку',
   editAction: (name) => `Изменить ${name}`,
   editButton: 'Изменить',
-  emptyDescription: 'Добавьте первую торговую точку, чтобы начать вести отчёты',
-  emptyTitle: 'Торговых точек пока нет',
+  emptyDescription: 'Добавьте первую полку, чтобы начать вести отчёты',
+  emptyTitle: 'Полок пока нет',
   loadErrorDescription: 'Проверьте соединение с сервером и попробуйте снова.',
-  loadErrorTitle: 'Не удалось загрузить торговые точки',
-  loading: 'Загружаем торговые точки',
-  regionLabel: 'Все торговые точки',
+  loadErrorTitle: 'Не удалось загрузить полки',
+  loading: 'Загружаем полки',
+  regionLabel: 'Все полки',
   restoreAction: (name) => `Восстановить ${name}`,
-  tableLabel: 'Торговые точки',
+  tableLabel: 'Полки',
 };
 
 function OutletsPage() {
@@ -74,7 +74,7 @@ function OutletsPage() {
         }}
         copy={outletCatalogCopy}
         detailColumn={{
-          header: 'Код точки',
+          header: 'Код полки',
           render: (outlet) =>
             outlet.code === undefined ? (
               <span className="text-muted-foreground">Без кода</span>
@@ -112,5 +112,5 @@ function OutletsPage() {
 
 export const Route = createFileRoute('/outlets/')({
   component: OutletsPage,
-  staticData: { pageTitle: 'Торговые точки' },
+  staticData: { pageTitle: 'Полки' },
 });

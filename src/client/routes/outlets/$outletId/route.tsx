@@ -42,14 +42,14 @@ function OutletDetailsPage() {
   if (outlets.isPending) {
     return (
       <div className="flex items-center justify-center gap-2 p-12 text-muted-foreground">
-        <Spinner /> Загружаем торговую точку…
+        <Spinner /> Загружаем полку…
       </div>
     );
   }
   if (outlets.isError) {
     return (
       <Alert className="m-6" variant="destructive">
-        <AlertTitle>Не удалось загрузить торговую точку</AlertTitle>
+        <AlertTitle>Не удалось загрузить полку</AlertTitle>
         <AlertDescription>Проверьте соединение с сервером и попробуйте снова.</AlertDescription>
       </Alert>
     );
@@ -57,17 +57,17 @@ function OutletDetailsPage() {
   if (outlet === undefined) {
     return (
       <Alert className="m-6" variant="destructive">
-        <AlertTitle>Торговая точка не найдена</AlertTitle>
-        <AlertDescription>Вернитесь к списку торговых точек.</AlertDescription>
+        <AlertTitle>Полка не найдена</AlertTitle>
+        <AlertDescription>Вернитесь к списку полок.</AlertDescription>
       </Alert>
     );
   }
 
   return (
-    <section aria-label="Карточка торговой точки" className="flex flex-col gap-6 p-6">
+    <section aria-label="Карточка полки" className="flex flex-col gap-6 p-6">
       <div className="flex items-start gap-4">
         <Button asChild size="icon" variant="outline">
-          <Link aria-label="Назад к торговым точкам" to="/outlets">
+          <Link aria-label="Назад к полкам" to="/outlets">
             <ArrowLeft />
           </Link>
         </Button>
@@ -76,21 +76,18 @@ function OutletDetailsPage() {
             <h2 className="text-2xl font-bold">{outlet.name}</h2>
             <Badge variant="secondary">{outlet.code ?? 'Без кода'}</Badge>
           </div>
-          <p className="text-sm text-muted-foreground">Позиции и отчёты торговой точки</p>
+          <p className="text-sm text-muted-foreground">Позиции и отчёты полки</p>
         </div>
       </div>
 
       <Tabs defaultValue="listings">
-        <TabsList aria-label="Разделы торговой точки">
+        <TabsList aria-label="Разделы полки">
           <TabsTrigger value="listings">Позиции</TabsTrigger>
           <TabsTrigger value="reports">Отчёты</TabsTrigger>
         </TabsList>
 
         <TabsContent value="listings">
-          <section
-            aria-label="Позиции торговой точки"
-            className="overflow-hidden rounded-lg border"
-          >
+          <section aria-label="Позиции полки" className="overflow-hidden rounded-lg border">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -149,10 +146,7 @@ function OutletDetailsPage() {
                 <FilePlus2 /> Создать отчёт
               </Button>
             </div>
-            <section
-              aria-label="Отчёты торговой точки"
-              className="overflow-hidden rounded-lg border"
-            >
+            <section aria-label="Отчёты полки" className="overflow-hidden rounded-lg border">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -213,5 +207,5 @@ function OutletDetailsPage() {
 
 export const Route = createFileRoute('/outlets/$outletId')({
   component: OutletDetailsPage,
-  staticData: { pageTitle: 'Торговая точка' },
+  staticData: { pageTitle: 'Полка' },
 });
