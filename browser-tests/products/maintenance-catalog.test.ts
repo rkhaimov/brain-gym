@@ -60,6 +60,12 @@ test.describe(
 
       await expect.element(products.navigation()).toHaveAttribute('aria-current', 'page');
       await expect.element(products.header()).toHaveTextContent('Штучки');
+      await expect
+        .element(page.getByRole('button', { name: 'Активные' }))
+        .toHaveAttribute('aria-pressed', 'true');
+      await expect
+        .element(page.getByRole('table', { name: 'Штучки' }).getByText('Название', { exact: true }))
+        .toBeVisible();
       await expect.element(products.count(0)).toBeVisible();
       await expect.element(page.getByText('Quick Create', { exact: true })).not.toBeInTheDocument();
       await expect.element(page.getByText('Inbox', { exact: true })).not.toBeInTheDocument();
@@ -67,6 +73,9 @@ test.describe(
       await products.screenshotPage('Empty catalog');
 
       await products.showArchived();
+      await expect
+        .element(page.getByRole('button', { name: 'Архив' }))
+        .toHaveAttribute('aria-pressed', 'true');
       await expect.element(products.emptyArchiveMessage()).toBeVisible();
       await expect.element(products.headerCreateButton()).not.toBeInTheDocument();
       await products.screenshotPage('Empty archive');

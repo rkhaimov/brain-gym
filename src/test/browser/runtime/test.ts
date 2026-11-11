@@ -84,6 +84,8 @@ export const test = baseTest
             createSalesReport: salesReport.createSalesReport.handler,
             getSalesReport: salesReport.getSalesReport.handler,
             listSalesReports: salesReport.listSalesReports.handler,
+            setSalesReportArchived: salesReport.setSalesReportArchived.handler,
+            updateSalesReport: salesReport.updateSalesReport.handler,
           });
         });
         const application = await loadTestApplication();

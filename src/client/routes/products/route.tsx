@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@connectrpc/connect-query';
 import { createFileRoute } from '@tanstack/react-router';
-import { PackageOpen } from 'lucide-react';
+import { PackageOpen, Pencil } from 'lucide-react';
 
 import {
   MaintenanceCatalog,
@@ -18,9 +18,11 @@ import { EditProductDialog } from './-edit-product-dialog.js';
 import { useRefreshProductCatalog } from './-product-catalog-query.js';
 
 const productCatalogCopy: MaintenanceCatalogCopy = {
+  activeFilter: 'Активные',
   archiveAction: (name) => `Архивировать ${name}`,
   archivedEmptyDescription: 'Архивированные штучки появятся здесь',
   archivedEmptyTitle: 'Архив пока пуст',
+  archivedFilter: 'Архив',
   countLabel: (count) => `Количество штучек: ${count}`,
   createAction: 'Создать штучку',
   createFirstAction: 'Создать первую штучку',
@@ -31,6 +33,7 @@ const productCatalogCopy: MaintenanceCatalogCopy = {
   loadErrorDescription: 'Проверьте соединение с сервером и попробуйте снова.',
   loadErrorTitle: 'Не удалось загрузить каталог',
   loading: 'Загружаем каталог',
+  primaryColumn: 'Название',
   regionLabel: 'Все штучки',
   restoreAction: (name) => `Восстановить ${name}`,
   tableLabel: 'Штучки',
@@ -65,6 +68,8 @@ function ProductsPage() {
         }}
         copy={productCatalogCopy}
         emptyIcon={<PackageOpen />}
+        editIcon={<Pencil />}
+        entityLabel={(product) => product.name}
         onCreate={page.openCreateDialog}
         onEdit={page.openEditDialog}
         onSetArchived={page.changeArchived}

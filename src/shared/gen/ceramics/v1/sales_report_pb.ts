@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file ceramics/v1/sales_report.proto.
  */
 export const file_ceramics_v1_sales_report: GenFile = /*@__PURE__*/
-  fileDesc("Ch5jZXJhbWljcy92MS9zYWxlc19yZXBvcnQucHJvdG8SC2NlcmFtaWNzLnYxIm4KClNhbGVzRW50cnkSFAoMbGlzdGluZ19uYW1lGAEgASgJEhIKCnVuaXRzX3NvbGQYAiABKAESGAoQZWFybmluZ3Nfa29wZWNrcxgDIAEoARIcChRvdXRsZXRfc2hhcmVfa29wZWNrcxgEIAEoASJ4ChVDcmVhdGVTYWxlc0VudHJ5SW5wdXQSFAoMbGlzdGluZ19uYW1lGAEgASgJEhIKCnVuaXRzX3NvbGQYAiABKAESGAoQZWFybmluZ3Nfa29wZWNrcxgDIAEoARIbChNzYWxlc192YWx1ZV9rb3BlY2tzGAQgASgBIl4KEVN0b2NrQmFsYW5jZUVudHJ5EhQKDGxpc3RpbmdfbmFtZRgBIAEoCRIVCg1zdG9ja19iYWxhbmNlGAIgASgBEhwKFG91dGxldF9wcmljZV9rb3BlY2tzGAMgASgBIoACCgtTYWxlc1JlcG9ydBIKCgJpZBgBIAEoCRIRCglvdXRsZXRfaWQYAiABKAkSGQoRcGVyaW9kX3N0YXJ0X2RhdGUYAyABKAkSFwoPcGVyaW9kX2VuZF9kYXRlGAQgASgJEiYKBXNhbGVzGAUgAygLMhcuY2VyYW1pY3MudjEuU2FsZXNFbnRyeRI2Cg5zdG9ja19iYWxhbmNlcxgGIAMoCzIeLmNlcmFtaWNzLnYxLlN0b2NrQmFsYW5jZUVudHJ5EhUKDWNyZWF0ZWRfYXRfbXMYByABKAESFQoNdXBkYXRlZF9hdF9tcxgIIAEoARIQCghhcmNoaXZlZBgJIAEoCCLMAQoYQ3JlYXRlU2FsZXNSZXBvcnRSZXF1ZXN0EhEKCW91dGxldF9pZBgBIAEoCRIZChFwZXJpb2Rfc3RhcnRfZGF0ZRgCIAEoCRIXCg9wZXJpb2RfZW5kX2RhdGUYAyABKAkSMQoFc2FsZXMYBCADKAsyIi5jZXJhbWljcy52MS5DcmVhdGVTYWxlc0VudHJ5SW5wdXQSNgoOc3RvY2tfYmFsYW5jZXMYBSADKAsyHi5jZXJhbWljcy52MS5TdG9ja0JhbGFuY2VFbnRyeSLCAQoaU2FsZXNSZXBvcnRNdXRhdGlvbkZhaWx1cmUSOwoFZmllbGQYASABKA4yLC5jZXJhbWljcy52MS5TYWxlc1JlcG9ydE11dGF0aW9uRmFpbHVyZUZpZWxkEjAKB3NlY3Rpb24YAiABKA4yHy5jZXJhbWljcy52MS5TYWxlc1JlcG9ydFNlY3Rpb24SFgoJcm93X2luZGV4GAMgASgNSACIAQESDwoHbWVzc2FnZRgEIAEoCUIMCgpfcm93X2luZGV4Io4BChlDcmVhdGVTYWxlc1JlcG9ydFJlc3BvbnNlEisKB3N1Y2Nlc3MYASABKAsyGC5jZXJhbWljcy52MS5TYWxlc1JlcG9ydEgAEjoKB2ZhaWx1cmUYAiABKAsyJy5jZXJhbWljcy52MS5TYWxlc1JlcG9ydE11dGF0aW9uRmFpbHVyZUgAQggKBnJlc3VsdCIjChVHZXRTYWxlc1JlcG9ydFJlcXVlc3QSCgoCaWQYASABKAkiiwEKFkdldFNhbGVzUmVwb3J0UmVzcG9uc2USKwoHc3VjY2VzcxgBIAEoCzIYLmNlcmFtaWNzLnYxLlNhbGVzUmVwb3J0SAASOgoHZmFpbHVyZRgCIAEoCzInLmNlcmFtaWNzLnYxLlNhbGVzUmVwb3J0TXV0YXRpb25GYWlsdXJlSABCCAoGcmVzdWx0Ir4BChJTYWxlc1JlcG9ydFN1bW1hcnkSCgoCaWQYASABKAkSEQoJb3V0bGV0X2lkGAIgASgJEhkKEXBlcmlvZF9zdGFydF9kYXRlGAMgASgJEhcKD3BlcmlvZF9lbmRfZGF0ZRgEIAEoCRIVCg1jcmVhdGVkX2F0X21zGAUgASgBEhUKDXVwZGF0ZWRfYXRfbXMYBiABKAESEAoIYXJjaGl2ZWQYByABKAgSFQoNbGlzdGluZ19jb3VudBgIIAEoDSI+ChdMaXN0U2FsZXNSZXBvcnRzUmVxdWVzdBIRCglvdXRsZXRfaWQYASABKAkSEAoIYXJjaGl2ZWQYAiABKAgiTAoYTGlzdFNhbGVzUmVwb3J0c1Jlc3BvbnNlEjAKB3JlcG9ydHMYASADKAsyHy5jZXJhbWljcy52MS5TYWxlc1JlcG9ydFN1bW1hcnkqggEKElNhbGVzUmVwb3J0U2VjdGlvbhIkCiBTQUxFU19SRVBPUlRfU0VDVElPTl9VTlNQRUNJRklFRBAAEh4KGlNBTEVTX1JFUE9SVF9TRUNUSU9OX1NBTEVTEAESJgoiU0FMRVNfUkVQT1JUX1NFQ1RJT05fU1RPQ0tfQkFMQU5DRRACKq4ECh9TYWxlc1JlcG9ydE11dGF0aW9uRmFpbHVyZUZpZWxkEjMKL1NBTEVTX1JFUE9SVF9NVVRBVElPTl9GQUlMVVJFX0ZJRUxEX1VOU1BFQ0lGSUVEEAASLgoqU0FMRVNfUkVQT1JUX01VVEFUSU9OX0ZBSUxVUkVfRklFTERfT1VUTEVUEAESNAowU0FMRVNfUkVQT1JUX01VVEFUSU9OX0ZBSUxVUkVfRklFTERfUEVSSU9EX1NUQVJUEAISMgouU0FMRVNfUkVQT1JUX01VVEFUSU9OX0ZBSUxVUkVfRklFTERfUEVSSU9EX0VORBADEjQKMFNBTEVTX1JFUE9SVF9NVVRBVElPTl9GQUlMVVJFX0ZJRUxEX0xJU1RJTkdfTkFNRRAEEjIKLlNBTEVTX1JFUE9SVF9NVVRBVElPTl9GQUlMVVJFX0ZJRUxEX1VOSVRTX1NPTEQQBRIwCixTQUxFU19SRVBPUlRfTVVUQVRJT05fRkFJTFVSRV9GSUVMRF9FQVJOSU5HUxAGEjUKMVNBTEVTX1JFUE9SVF9NVVRBVElPTl9GQUlMVVJFX0ZJRUxEX1NUT0NLX0JBTEFOQ0UQBxI0CjBTQUxFU19SRVBPUlRfTVVUQVRJT05fRkFJTFVSRV9GSUVMRF9PVVRMRVRfUFJJQ0UQCBIzCi9TQUxFU19SRVBPUlRfTVVUQVRJT05fRkFJTFVSRV9GSUVMRF9TQUxFU19WQUxVRRAJMroCChJTYWxlc1JlcG9ydFNlcnZpY2USZAoRQ3JlYXRlU2FsZXNSZXBvcnQSJS5jZXJhbWljcy52MS5DcmVhdGVTYWxlc1JlcG9ydFJlcXVlc3QaJi5jZXJhbWljcy52MS5DcmVhdGVTYWxlc1JlcG9ydFJlc3BvbnNlIgASWwoOR2V0U2FsZXNSZXBvcnQSIi5jZXJhbWljcy52MS5HZXRTYWxlc1JlcG9ydFJlcXVlc3QaIy5jZXJhbWljcy52MS5HZXRTYWxlc1JlcG9ydFJlc3BvbnNlIgASYQoQTGlzdFNhbGVzUmVwb3J0cxIkLmNlcmFtaWNzLnYxLkxpc3RTYWxlc1JlcG9ydHNSZXF1ZXN0GiUuY2VyYW1pY3MudjEuTGlzdFNhbGVzUmVwb3J0c1Jlc3BvbnNlIgBiBnByb3RvMw");
+  fileDesc("Ch5jZXJhbWljcy92MS9zYWxlc19yZXBvcnQucHJvdG8SC2NlcmFtaWNzLnYxIosBCgpTYWxlc0VudHJ5EhQKDGxpc3RpbmdfbmFtZRgBIAEoCRISCgp1bml0c19zb2xkGAIgASgBEhgKEGVhcm5pbmdzX2tvcGVja3MYAyABKAESHAoUb3V0bGV0X3NoYXJlX2tvcGVja3MYBCABKAESGwoTc2FsZXNfdmFsdWVfa29wZWNrcxgFIAEoASJ4ChVDcmVhdGVTYWxlc0VudHJ5SW5wdXQSFAoMbGlzdGluZ19uYW1lGAEgASgJEhIKCnVuaXRzX3NvbGQYAiABKAESGAoQZWFybmluZ3Nfa29wZWNrcxgDIAEoARIbChNzYWxlc192YWx1ZV9rb3BlY2tzGAQgASgBIl4KEVN0b2NrQmFsYW5jZUVudHJ5EhQKDGxpc3RpbmdfbmFtZRgBIAEoCRIVCg1zdG9ja19iYWxhbmNlGAIgASgBEhwKFG91dGxldF9wcmljZV9rb3BlY2tzGAMgASgBIoACCgtTYWxlc1JlcG9ydBIKCgJpZBgBIAEoCRIRCglvdXRsZXRfaWQYAiABKAkSGQoRcGVyaW9kX3N0YXJ0X2RhdGUYAyABKAkSFwoPcGVyaW9kX2VuZF9kYXRlGAQgASgJEiYKBXNhbGVzGAUgAygLMhcuY2VyYW1pY3MudjEuU2FsZXNFbnRyeRI2Cg5zdG9ja19iYWxhbmNlcxgGIAMoCzIeLmNlcmFtaWNzLnYxLlN0b2NrQmFsYW5jZUVudHJ5EhUKDWNyZWF0ZWRfYXRfbXMYByABKAESFQoNdXBkYXRlZF9hdF9tcxgIIAEoARIQCghhcmNoaXZlZBgJIAEoCCLMAQoYQ3JlYXRlU2FsZXNSZXBvcnRSZXF1ZXN0EhEKCW91dGxldF9pZBgBIAEoCRIZChFwZXJpb2Rfc3RhcnRfZGF0ZRgCIAEoCRIXCg9wZXJpb2RfZW5kX2RhdGUYAyABKAkSMQoFc2FsZXMYBCADKAsyIi5jZXJhbWljcy52MS5DcmVhdGVTYWxlc0VudHJ5SW5wdXQSNgoOc3RvY2tfYmFsYW5jZXMYBSADKAsyHi5jZXJhbWljcy52MS5TdG9ja0JhbGFuY2VFbnRyeSLCAQoaU2FsZXNSZXBvcnRNdXRhdGlvbkZhaWx1cmUSOwoFZmllbGQYASABKA4yLC5jZXJhbWljcy52MS5TYWxlc1JlcG9ydE11dGF0aW9uRmFpbHVyZUZpZWxkEjAKB3NlY3Rpb24YAiABKA4yHy5jZXJhbWljcy52MS5TYWxlc1JlcG9ydFNlY3Rpb24SFgoJcm93X2luZGV4GAMgASgNSACIAQESDwoHbWVzc2FnZRgEIAEoCUIMCgpfcm93X2luZGV4Io4BChlDcmVhdGVTYWxlc1JlcG9ydFJlc3BvbnNlEisKB3N1Y2Nlc3MYASABKAsyGC5jZXJhbWljcy52MS5TYWxlc1JlcG9ydEgAEjoKB2ZhaWx1cmUYAiABKAsyJy5jZXJhbWljcy52MS5TYWxlc1JlcG9ydE11dGF0aW9uRmFpbHVyZUgAQggKBnJlc3VsdCLFAQoYVXBkYXRlU2FsZXNSZXBvcnRSZXF1ZXN0EgoKAmlkGAEgASgJEhkKEXBlcmlvZF9zdGFydF9kYXRlGAIgASgJEhcKD3BlcmlvZF9lbmRfZGF0ZRgDIAEoCRIxCgVzYWxlcxgEIAMoCzIiLmNlcmFtaWNzLnYxLkNyZWF0ZVNhbGVzRW50cnlJbnB1dBI2Cg5zdG9ja19iYWxhbmNlcxgFIAMoCzIeLmNlcmFtaWNzLnYxLlN0b2NrQmFsYW5jZUVudHJ5Io4BChlVcGRhdGVTYWxlc1JlcG9ydFJlc3BvbnNlEisKB3N1Y2Nlc3MYASABKAsyGC5jZXJhbWljcy52MS5TYWxlc1JlcG9ydEgAEjoKB2ZhaWx1cmUYAiABKAsyJy5jZXJhbWljcy52MS5TYWxlc1JlcG9ydE11dGF0aW9uRmFpbHVyZUgAQggKBnJlc3VsdCI9Ch1TZXRTYWxlc1JlcG9ydEFyY2hpdmVkUmVxdWVzdBIKCgJpZBgBIAEoCRIQCghhcmNoaXZlZBgCIAEoCCKTAQoeU2V0U2FsZXNSZXBvcnRBcmNoaXZlZFJlc3BvbnNlEisKB3N1Y2Nlc3MYASABKAsyGC5jZXJhbWljcy52MS5TYWxlc1JlcG9ydEgAEjoKB2ZhaWx1cmUYAiABKAsyJy5jZXJhbWljcy52MS5TYWxlc1JlcG9ydE11dGF0aW9uRmFpbHVyZUgAQggKBnJlc3VsdCIjChVHZXRTYWxlc1JlcG9ydFJlcXVlc3QSCgoCaWQYASABKAkiiwEKFkdldFNhbGVzUmVwb3J0UmVzcG9uc2USKwoHc3VjY2VzcxgBIAEoCzIYLmNlcmFtaWNzLnYxLlNhbGVzUmVwb3J0SAASOgoHZmFpbHVyZRgCIAEoCzInLmNlcmFtaWNzLnYxLlNhbGVzUmVwb3J0TXV0YXRpb25GYWlsdXJlSABCCAoGcmVzdWx0Ir4BChJTYWxlc1JlcG9ydFN1bW1hcnkSCgoCaWQYASABKAkSEQoJb3V0bGV0X2lkGAIgASgJEhkKEXBlcmlvZF9zdGFydF9kYXRlGAMgASgJEhcKD3BlcmlvZF9lbmRfZGF0ZRgEIAEoCRIVCg1jcmVhdGVkX2F0X21zGAUgASgBEhUKDXVwZGF0ZWRfYXRfbXMYBiABKAESEAoIYXJjaGl2ZWQYByABKAgSFQoNbGlzdGluZ19jb3VudBgIIAEoDSI+ChdMaXN0U2FsZXNSZXBvcnRzUmVxdWVzdBIRCglvdXRsZXRfaWQYASABKAkSEAoIYXJjaGl2ZWQYAiABKAgiTAoYTGlzdFNhbGVzUmVwb3J0c1Jlc3BvbnNlEjAKB3JlcG9ydHMYASADKAsyHy5jZXJhbWljcy52MS5TYWxlc1JlcG9ydFN1bW1hcnkqggEKElNhbGVzUmVwb3J0U2VjdGlvbhIkCiBTQUxFU19SRVBPUlRfU0VDVElPTl9VTlNQRUNJRklFRBAAEh4KGlNBTEVTX1JFUE9SVF9TRUNUSU9OX1NBTEVTEAESJgoiU0FMRVNfUkVQT1JUX1NFQ1RJT05fU1RPQ0tfQkFMQU5DRRACKq4ECh9TYWxlc1JlcG9ydE11dGF0aW9uRmFpbHVyZUZpZWxkEjMKL1NBTEVTX1JFUE9SVF9NVVRBVElPTl9GQUlMVVJFX0ZJRUxEX1VOU1BFQ0lGSUVEEAASLgoqU0FMRVNfUkVQT1JUX01VVEFUSU9OX0ZBSUxVUkVfRklFTERfT1VUTEVUEAESNAowU0FMRVNfUkVQT1JUX01VVEFUSU9OX0ZBSUxVUkVfRklFTERfUEVSSU9EX1NUQVJUEAISMgouU0FMRVNfUkVQT1JUX01VVEFUSU9OX0ZBSUxVUkVfRklFTERfUEVSSU9EX0VORBADEjQKMFNBTEVTX1JFUE9SVF9NVVRBVElPTl9GQUlMVVJFX0ZJRUxEX0xJU1RJTkdfTkFNRRAEEjIKLlNBTEVTX1JFUE9SVF9NVVRBVElPTl9GQUlMVVJFX0ZJRUxEX1VOSVRTX1NPTEQQBRIwCixTQUxFU19SRVBPUlRfTVVUQVRJT05fRkFJTFVSRV9GSUVMRF9FQVJOSU5HUxAGEjUKMVNBTEVTX1JFUE9SVF9NVVRBVElPTl9GQUlMVVJFX0ZJRUxEX1NUT0NLX0JBTEFOQ0UQBxI0CjBTQUxFU19SRVBPUlRfTVVUQVRJT05fRkFJTFVSRV9GSUVMRF9PVVRMRVRfUFJJQ0UQCBIzCi9TQUxFU19SRVBPUlRfTVVUQVRJT05fRkFJTFVSRV9GSUVMRF9TQUxFU19WQUxVRRAJMpUEChJTYWxlc1JlcG9ydFNlcnZpY2USZAoRQ3JlYXRlU2FsZXNSZXBvcnQSJS5jZXJhbWljcy52MS5DcmVhdGVTYWxlc1JlcG9ydFJlcXVlc3QaJi5jZXJhbWljcy52MS5DcmVhdGVTYWxlc1JlcG9ydFJlc3BvbnNlIgASZAoRVXBkYXRlU2FsZXNSZXBvcnQSJS5jZXJhbWljcy52MS5VcGRhdGVTYWxlc1JlcG9ydFJlcXVlc3QaJi5jZXJhbWljcy52MS5VcGRhdGVTYWxlc1JlcG9ydFJlc3BvbnNlIgAScwoWU2V0U2FsZXNSZXBvcnRBcmNoaXZlZBIqLmNlcmFtaWNzLnYxLlNldFNhbGVzUmVwb3J0QXJjaGl2ZWRSZXF1ZXN0GisuY2VyYW1pY3MudjEuU2V0U2FsZXNSZXBvcnRBcmNoaXZlZFJlc3BvbnNlIgASWwoOR2V0U2FsZXNSZXBvcnQSIi5jZXJhbWljcy52MS5HZXRTYWxlc1JlcG9ydFJlcXVlc3QaIy5jZXJhbWljcy52MS5HZXRTYWxlc1JlcG9ydFJlc3BvbnNlIgASYQoQTGlzdFNhbGVzUmVwb3J0cxIkLmNlcmFtaWNzLnYxLkxpc3RTYWxlc1JlcG9ydHNSZXF1ZXN0GiUuY2VyYW1pY3MudjEuTGlzdFNhbGVzUmVwb3J0c1Jlc3BvbnNlIgBiBnByb3RvMw");
 
 /**
  * @generated from message ceramics.v1.SalesEntry
@@ -35,6 +35,11 @@ export type SalesEntry = Message<"ceramics.v1.SalesEntry"> & {
    * @generated from field: double outlet_share_kopecks = 4;
    */
   outletShareKopecks: number;
+
+  /**
+   * @generated from field: double sales_value_kopecks = 5;
+   */
+  salesValueKopecks: number;
 };
 
 /**
@@ -259,6 +264,123 @@ export const CreateSalesReportResponseSchema: GenMessage<CreateSalesReportRespon
   messageDesc(file_ceramics_v1_sales_report, 6);
 
 /**
+ * @generated from message ceramics.v1.UpdateSalesReportRequest
+ */
+export type UpdateSalesReportRequest = Message<"ceramics.v1.UpdateSalesReportRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string period_start_date = 2;
+   */
+  periodStartDate: string;
+
+  /**
+   * @generated from field: string period_end_date = 3;
+   */
+  periodEndDate: string;
+
+  /**
+   * @generated from field: repeated ceramics.v1.CreateSalesEntryInput sales = 4;
+   */
+  sales: CreateSalesEntryInput[];
+
+  /**
+   * @generated from field: repeated ceramics.v1.StockBalanceEntry stock_balances = 5;
+   */
+  stockBalances: StockBalanceEntry[];
+};
+
+/**
+ * Describes the message ceramics.v1.UpdateSalesReportRequest.
+ * Use `create(UpdateSalesReportRequestSchema)` to create a new message.
+ */
+export const UpdateSalesReportRequestSchema: GenMessage<UpdateSalesReportRequest> = /*@__PURE__*/
+  messageDesc(file_ceramics_v1_sales_report, 7);
+
+/**
+ * @generated from message ceramics.v1.UpdateSalesReportResponse
+ */
+export type UpdateSalesReportResponse = Message<"ceramics.v1.UpdateSalesReportResponse"> & {
+  /**
+   * @generated from oneof ceramics.v1.UpdateSalesReportResponse.result
+   */
+  result: {
+    /**
+     * @generated from field: ceramics.v1.SalesReport success = 1;
+     */
+    value: SalesReport;
+    case: "success";
+  } | {
+    /**
+     * @generated from field: ceramics.v1.SalesReportMutationFailure failure = 2;
+     */
+    value: SalesReportMutationFailure;
+    case: "failure";
+  } | { case: undefined; value?: undefined };
+};
+
+/**
+ * Describes the message ceramics.v1.UpdateSalesReportResponse.
+ * Use `create(UpdateSalesReportResponseSchema)` to create a new message.
+ */
+export const UpdateSalesReportResponseSchema: GenMessage<UpdateSalesReportResponse> = /*@__PURE__*/
+  messageDesc(file_ceramics_v1_sales_report, 8);
+
+/**
+ * @generated from message ceramics.v1.SetSalesReportArchivedRequest
+ */
+export type SetSalesReportArchivedRequest = Message<"ceramics.v1.SetSalesReportArchivedRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: bool archived = 2;
+   */
+  archived: boolean;
+};
+
+/**
+ * Describes the message ceramics.v1.SetSalesReportArchivedRequest.
+ * Use `create(SetSalesReportArchivedRequestSchema)` to create a new message.
+ */
+export const SetSalesReportArchivedRequestSchema: GenMessage<SetSalesReportArchivedRequest> = /*@__PURE__*/
+  messageDesc(file_ceramics_v1_sales_report, 9);
+
+/**
+ * @generated from message ceramics.v1.SetSalesReportArchivedResponse
+ */
+export type SetSalesReportArchivedResponse = Message<"ceramics.v1.SetSalesReportArchivedResponse"> & {
+  /**
+   * @generated from oneof ceramics.v1.SetSalesReportArchivedResponse.result
+   */
+  result: {
+    /**
+     * @generated from field: ceramics.v1.SalesReport success = 1;
+     */
+    value: SalesReport;
+    case: "success";
+  } | {
+    /**
+     * @generated from field: ceramics.v1.SalesReportMutationFailure failure = 2;
+     */
+    value: SalesReportMutationFailure;
+    case: "failure";
+  } | { case: undefined; value?: undefined };
+};
+
+/**
+ * Describes the message ceramics.v1.SetSalesReportArchivedResponse.
+ * Use `create(SetSalesReportArchivedResponseSchema)` to create a new message.
+ */
+export const SetSalesReportArchivedResponseSchema: GenMessage<SetSalesReportArchivedResponse> = /*@__PURE__*/
+  messageDesc(file_ceramics_v1_sales_report, 10);
+
+/**
  * @generated from message ceramics.v1.GetSalesReportRequest
  */
 export type GetSalesReportRequest = Message<"ceramics.v1.GetSalesReportRequest"> & {
@@ -273,7 +395,7 @@ export type GetSalesReportRequest = Message<"ceramics.v1.GetSalesReportRequest">
  * Use `create(GetSalesReportRequestSchema)` to create a new message.
  */
 export const GetSalesReportRequestSchema: GenMessage<GetSalesReportRequest> = /*@__PURE__*/
-  messageDesc(file_ceramics_v1_sales_report, 7);
+  messageDesc(file_ceramics_v1_sales_report, 11);
 
 /**
  * @generated from message ceramics.v1.GetSalesReportResponse
@@ -302,7 +424,7 @@ export type GetSalesReportResponse = Message<"ceramics.v1.GetSalesReportResponse
  * Use `create(GetSalesReportResponseSchema)` to create a new message.
  */
 export const GetSalesReportResponseSchema: GenMessage<GetSalesReportResponse> = /*@__PURE__*/
-  messageDesc(file_ceramics_v1_sales_report, 8);
+  messageDesc(file_ceramics_v1_sales_report, 12);
 
 /**
  * @generated from message ceramics.v1.SalesReportSummary
@@ -354,7 +476,7 @@ export type SalesReportSummary = Message<"ceramics.v1.SalesReportSummary"> & {
  * Use `create(SalesReportSummarySchema)` to create a new message.
  */
 export const SalesReportSummarySchema: GenMessage<SalesReportSummary> = /*@__PURE__*/
-  messageDesc(file_ceramics_v1_sales_report, 9);
+  messageDesc(file_ceramics_v1_sales_report, 13);
 
 /**
  * @generated from message ceramics.v1.ListSalesReportsRequest
@@ -376,7 +498,7 @@ export type ListSalesReportsRequest = Message<"ceramics.v1.ListSalesReportsReque
  * Use `create(ListSalesReportsRequestSchema)` to create a new message.
  */
 export const ListSalesReportsRequestSchema: GenMessage<ListSalesReportsRequest> = /*@__PURE__*/
-  messageDesc(file_ceramics_v1_sales_report, 10);
+  messageDesc(file_ceramics_v1_sales_report, 14);
 
 /**
  * @generated from message ceramics.v1.ListSalesReportsResponse
@@ -393,7 +515,7 @@ export type ListSalesReportsResponse = Message<"ceramics.v1.ListSalesReportsResp
  * Use `create(ListSalesReportsResponseSchema)` to create a new message.
  */
 export const ListSalesReportsResponseSchema: GenMessage<ListSalesReportsResponse> = /*@__PURE__*/
-  messageDesc(file_ceramics_v1_sales_report, 11);
+  messageDesc(file_ceramics_v1_sales_report, 15);
 
 /**
  * @generated from enum ceramics.v1.SalesReportSection
@@ -493,6 +615,22 @@ export const SalesReportService: GenService<{
     methodKind: "unary";
     input: typeof CreateSalesReportRequestSchema;
     output: typeof CreateSalesReportResponseSchema;
+  },
+  /**
+   * @generated from rpc ceramics.v1.SalesReportService.UpdateSalesReport
+   */
+  updateSalesReport: {
+    methodKind: "unary";
+    input: typeof UpdateSalesReportRequestSchema;
+    output: typeof UpdateSalesReportResponseSchema;
+  },
+  /**
+   * @generated from rpc ceramics.v1.SalesReportService.SetSalesReportArchived
+   */
+  setSalesReportArchived: {
+    methodKind: "unary";
+    input: typeof SetSalesReportArchivedRequestSchema;
+    output: typeof SetSalesReportArchivedResponseSchema;
   },
   /**
    * @generated from rpc ceramics.v1.SalesReportService.GetSalesReport

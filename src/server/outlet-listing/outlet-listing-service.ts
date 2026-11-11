@@ -27,6 +27,7 @@ function createOutletListingService(
         .where('archived_at_ms', 'is', null)
         .orderBy('period_end_date', 'desc')
         .orderBy('updated_at_ms', 'desc')
+        .orderBy('id', 'desc')
         .execute();
       const sales = await database.db
         .selectFrom('sales_report_sales')
@@ -41,6 +42,7 @@ function createOutletListingService(
         .where('sales_reports.archived_at_ms', 'is', null)
         .orderBy('sales_reports.period_end_date', 'desc')
         .orderBy('sales_reports.updated_at_ms', 'desc')
+        .orderBy('sales_reports.id', 'desc')
         .execute();
       const stockBalances = await database.db
         .selectFrom('sales_report_stock_balances')
@@ -56,6 +58,7 @@ function createOutletListingService(
         .where('sales_reports.archived_at_ms', 'is', null)
         .orderBy('sales_reports.period_end_date', 'desc')
         .orderBy('sales_reports.updated_at_ms', 'desc')
+        .orderBy('sales_reports.id', 'desc')
         .execute();
       const latestReportId = reports[0]?.id;
       const lastPrice = new Map<string, number>();

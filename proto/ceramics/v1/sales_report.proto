@@ -7,6 +7,7 @@ message SalesEntry {
   double units_sold = 2;
   double earnings_kopecks = 3;
   double outlet_share_kopecks = 4;
+  double sales_value_kopecks = 5;
 }
 
 message CreateSalesEntryInput {
@@ -75,6 +76,33 @@ message CreateSalesReportResponse {
   }
 }
 
+message UpdateSalesReportRequest {
+  string id = 1;
+  string period_start_date = 2;
+  string period_end_date = 3;
+  repeated CreateSalesEntryInput sales = 4;
+  repeated StockBalanceEntry stock_balances = 5;
+}
+
+message UpdateSalesReportResponse {
+  oneof result {
+    SalesReport success = 1;
+    SalesReportMutationFailure failure = 2;
+  }
+}
+
+message SetSalesReportArchivedRequest {
+  string id = 1;
+  bool archived = 2;
+}
+
+message SetSalesReportArchivedResponse {
+  oneof result {
+    SalesReport success = 1;
+    SalesReportMutationFailure failure = 2;
+  }
+}
+
 message GetSalesReportRequest {
   string id = 1;
 }
@@ -108,6 +136,8 @@ message ListSalesReportsResponse {
 
 service SalesReportService {
   rpc CreateSalesReport(CreateSalesReportRequest) returns (CreateSalesReportResponse) {}
+  rpc UpdateSalesReport(UpdateSalesReportRequest) returns (UpdateSalesReportResponse) {}
+  rpc SetSalesReportArchived(SetSalesReportArchivedRequest) returns (SetSalesReportArchivedResponse) {}
   rpc GetSalesReport(GetSalesReportRequest) returns (GetSalesReportResponse) {}
   rpc ListSalesReports(ListSalesReportsRequest) returns (ListSalesReportsResponse) {}
 }

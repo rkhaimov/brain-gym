@@ -1,4 +1,4 @@
-import { Archive, ArchiveRestore, Pencil, Plus } from 'lucide-react';
+import { Archive, ArchiveRestore, Plus } from 'lucide-react';
 import type { MouseEvent, ReactNode } from 'react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/client/components/ui/alert.js';
@@ -19,25 +19,27 @@ import { maintenanceCatalogContract } from './maintenance-test-tags.js';
 export interface MaintenanceEntity {
   readonly archived: boolean;
   readonly id: string;
-  readonly name: string;
 }
 
 export interface MaintenanceCatalogCopy {
-  readonly archiveAction: (name: string) => string;
+  readonly activeFilter: string;
+  readonly archiveAction: (label: string) => string;
+  readonly archivedFilter: string;
   readonly archivedEmptyDescription: string;
   readonly archivedEmptyTitle: string;
   readonly countLabel: (count: number) => string;
   readonly createAction: string;
   readonly createFirstAction: string;
-  readonly editAction: (name: string) => string;
+  readonly editAction: (label: string) => string;
   readonly emptyDescription: string;
   readonly emptyTitle: string;
   readonly editButton: string;
   readonly loadErrorDescription: string;
   readonly loadErrorTitle: string;
   readonly loading: string;
+  readonly primaryColumn: string;
   readonly regionLabel: string;
-  readonly restoreAction: (name: string) => string;
+  readonly restoreAction: (label: string) => string;
   readonly tableLabel: string;
 }
 
@@ -67,6 +69,8 @@ interface MaintenanceCatalogProps<Entity extends MaintenanceEntity> {
       }>
     | undefined;
   readonly emptyIcon: ReactNode;
+  readonly editIcon: ReactNode;
+  readonly entityLabel: (entity: Entity) => string;
   readonly onCreate: (event: MouseEvent<HTMLButtonElement>) => void;
   readonly onEdit: (event: MouseEvent<HTMLButtonElement>, entity: Entity) => void;
   readonly onSetArchived: (entity: Entity, archived: boolean) => void;
@@ -81,6 +85,8 @@ function MaintenanceCatalogImplementation<Entity extends MaintenanceEntity>({
   copy,
   detailColumn,
   emptyIcon,
+  editIcon,
+  entityLabel,
   onCreate,
   onEdit,
   onSetArchived,
@@ -100,7 +106,7 @@ function MaintenanceCatalogImplementation<Entity extends MaintenanceEntity>({
               size="sm"
               variant={showArchived ? 'outline' : 'secondary'}
             >
-              Активные
+              {copy.activeFilter}
             </Button>
             <Button
               aria-pressed={showArchived}
@@ -108,7 +114,7 @@ function MaintenanceCatalogImplementation<Entity extends MaintenanceEntity>({
               size="sm"
               variant={showArchived ? 'secondary' : 'outline'}
             >
-              Архив
+              {copy.archivedFilter}
             </Button>
           </div>
           {catalog.entities === undefined ? null : (
@@ -130,7 +136,7 @@ function MaintenanceCatalogImplementation<Entity extends MaintenanceEntity>({
           <Table aria-label={copy.tableLabel}>
             <TableHeader className="sticky top-0 z-10 bg-muted">
               <TableRow>
-                <TableHead>Название</TableHead>
+                <TableHead>{copy.primaryColumn}</TableHead>
                 {detailColumn === undefined ? null : <TableHead>{detailColumn.header}</TableHead>}
                 <TableHead className="text-right">Действия</TableHead>
               </TableRow>
@@ -186,7 +192,7 @@ function MaintenanceCatalogImplementation<Entity extends MaintenanceEntity>({
               ) : (
                 catalog.entities?.map((entity) => (
                   <TableRow key={entity.id}>
-                    <TableCell>{entity.name}</TableCell>
+                    <TableCell>{entityLabel(entity)}</TableCell>
                     {detailColumn === undefined ? null : (
                       <TableCell>{detailColumn.render(entity)}</TableCell>
                     )}
@@ -204,19 +210,19 @@ function MaintenanceCatalogImplementation<Entity extends MaintenanceEntity>({
                           </Button>
                         )}
                         <Button
-                          aria-label={copy.editAction(entity.name)}
+                          aria-label={copy.editAction(entityLabel(entity))}
                           onClick={(event) => onEdit(event, entity)}
                           size="sm"
                           variant="ghost"
                         >
-                          <Pencil />
+                          {editIcon}
                           {copy.editButton}
                         </Button>
                         <Button
                           aria-label={
                             showArchived
-                              ? copy.restoreAction(entity.name)
-                              : copy.archiveAction(entity.name)
+                              ? copy.restoreAction(entityLabel(entity))
+                              : copy.archiveAction(entityLabel(entity))
                           }
                           disabled={archivePending}
                           onClick={() => onSetArchived(entity, !showArchived)}

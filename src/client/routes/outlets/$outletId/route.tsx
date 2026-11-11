@@ -1,11 +1,15 @@
-import { useQuery } from '@connectrpc/connect-query';
+import { useMutation, useQuery } from '@connectrpc/connect-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { ArrowLeft, FilePlus2, Store } from 'lucide-react';
+import { ArrowLeft, Eye, FileText, Store } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/client/components/ui/alert.js';
 import { Badge } from '@/client/components/ui/badge.js';
 import { Button } from '@/client/components/ui/button.js';
+import {
+  MaintenanceCatalog,
+  type MaintenanceCatalogCopy,
+} from '@/client/components/maintenance/maintenance-catalog.js';
 import { Spinner } from '@/client/components/ui/spinner.js';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/client/components/ui/tabs.js';
 import {
@@ -18,9 +22,35 @@ import {
 } from '@/client/components/ui/table.js';
 import { listOutlets } from '@/shared/gen/ceramics/v1/outlet-OutletService_connectquery.js';
 import { listOutletListings } from '@/shared/gen/ceramics/v1/outlet_listing-OutletListingService_connectquery.js';
-import { listSalesReports } from '@/shared/gen/ceramics/v1/sales_report-SalesReportService_connectquery.js';
+import {
+  listSalesReports,
+  setSalesReportArchived,
+} from '@/shared/gen/ceramics/v1/sales_report-SalesReportService_connectquery.js';
+import type { SalesReportSummary } from '@/shared/gen/ceramics/v1/sales_report_pb.js';
 
-import { ManualSalesReportDialog } from './-manual-sales-report-dialog.js';
+import { SalesReportDialog } from './-sales-report-dialog.js';
+
+const reportCatalogCopy: MaintenanceCatalogCopy = {
+  activeFilter: 'Действующие',
+  archiveAction: (period) => `Архивировать отчёт ${period}`,
+  archivedEmptyDescription: 'Архивированные отчёты появятся здесь',
+  archivedEmptyTitle: 'Архив отчётов пока пуст',
+  archivedFilter: 'В архиве',
+  countLabel: (count) => `Количество отчётов: ${count}`,
+  createAction: 'Создать отчёт',
+  createFirstAction: 'Создать первый отчёт',
+  editAction: (period) => `Открыть отчёт ${period}`,
+  editButton: 'Открыть',
+  emptyDescription: 'Создайте первый отчёт для этой полки',
+  emptyTitle: 'Отчётов пока нет',
+  loadErrorDescription: 'Проверьте соединение с сервером и попробуйте снова.',
+  loadErrorTitle: 'Не удалось загрузить отчёты',
+  loading: 'Загружаем отчёты',
+  primaryColumn: 'Отчётный период',
+  regionLabel: 'Отчёты полки',
+  restoreAction: (period) => `Восстановить отчёт ${period}`,
+  tableLabel: 'История отчётов',
+};
 
 function formatRubles(kopecks: number): string {
   return new Intl.NumberFormat('ru-RU', {
@@ -34,10 +64,25 @@ function OutletDetailsPage() {
   const { outletId } = Route.useParams();
   const outlets = useQuery(listOutlets, { archived: false });
   const listings = useQuery(listOutletListings, { outletId });
-  const reports = useQuery(listSalesReports, { archived: false, outletId });
+  const [showArchivedReports, setShowArchivedReports] = useState(false);
+  const reports = useQuery(listSalesReports, { archived: showArchivedReports, outletId });
+  const archiveReport = useMutation(setSalesReportArchived);
   const createReportTrigger = useRef<HTMLButtonElement | null>(null);
   const [createReportOpen, setCreateReportOpen] = useState(false);
+  const reportDialogTrigger = useRef<HTMLButtonElement | null>(null);
+  const [selectedReport, setSelectedReport] = useState<SalesReportSummary>();
   const outlet = outlets.data?.outlets.find((candidate) => candidate.id === outletId);
+  const reportEntries = reports.data?.reports;
+
+  async function changeReportArchived(reportId: string, archived: boolean): Promise<void> {
+    const response = await archiveReport.mutateAsync({ archived, id: reportId });
+    if (response.result.case !== 'success') {
+      throw new Error(
+        response.result.case === 'failure' ? response.result.value.message : 'Missing result',
+      );
+    }
+    await Promise.all([listings.refetch(), reports.refetch()]);
+  }
 
   if (outlets.isPending) {
     return (
@@ -135,63 +180,41 @@ function OutletDetailsPage() {
         </TabsContent>
 
         <TabsContent value="reports">
-          <div className="flex flex-col gap-4">
-            <div className="flex justify-end">
-              <Button
-                onClick={(event) => {
-                  createReportTrigger.current = event.currentTarget;
-                  setCreateReportOpen(true);
-                }}
-              >
-                <FilePlus2 /> Создать отчёт
-              </Button>
-            </div>
-            <section aria-label="Отчёты полки" className="overflow-hidden rounded-lg border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Период</TableHead>
-                    <TableHead>Позиций</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {reports.isPending ? (
-                    <TableRow>
-                      <TableCell className="h-24 text-center" colSpan={2}>
-                        <Spinner />
-                      </TableCell>
-                    </TableRow>
-                  ) : reports.isError ? (
-                    <TableRow>
-                      <TableCell className="h-24 text-center text-destructive" colSpan={2}>
-                        Не удалось загрузить отчёты
-                      </TableCell>
-                    </TableRow>
-                  ) : reports.data?.reports.length === 0 ? (
-                    <TableRow>
-                      <TableCell className="h-40 text-center text-muted-foreground" colSpan={2}>
-                        Отчётов пока нет
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    reports.data?.reports.map((report) => (
-                      <TableRow key={report.id}>
-                        <TableCell>
-                          {report.periodStartDate} — {report.periodEndDate}
-                        </TableCell>
-                        <TableCell>{report.listingCount}</TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </section>
-          </div>
+          <MaintenanceCatalog
+            archivePending={archiveReport.isPending}
+            catalog={{
+              entities: reportEntries,
+              isError: reports.isError,
+              isPending: reports.isPending,
+              refetch: reports.refetch,
+            }}
+            copy={reportCatalogCopy}
+            detailColumn={{
+              header: 'Позиций',
+              render: (report) => report.listingCount,
+            }}
+            emptyIcon={<FileText />}
+            editIcon={<Eye />}
+            entityLabel={(report) => `${report.periodStartDate} — ${report.periodEndDate}`}
+            onCreate={(event) => {
+              createReportTrigger.current = event.currentTarget;
+              setCreateReportOpen(true);
+            }}
+            onEdit={(event, report) => {
+              reportDialogTrigger.current = event.currentTarget;
+              setSelectedReport(report);
+            }}
+            onSetArchived={(report, archived) => {
+              void changeReportArchived(report.id, archived);
+            }}
+            onShowArchivedChange={setShowArchivedReports}
+            showArchived={showArchivedReports}
+          />
         </TabsContent>
       </Tabs>
 
       {createReportOpen ? (
-        <ManualSalesReportDialog
+        <SalesReportDialog
           onOpenChange={setCreateReportOpen}
           onSaved={async () => {
             await Promise.all([listings.refetch(), reports.refetch()]);
@@ -201,6 +224,26 @@ function OutletDetailsPage() {
           returnFocusTo={createReportTrigger}
         />
       ) : null}
+      {selectedReport === undefined ? null : (
+        <SalesReportDialog
+          archivePending={archiveReport.isPending}
+          onOpenChange={(open) => {
+            if (!open) setSelectedReport(undefined);
+          }}
+          onRestore={
+            selectedReport.archived
+              ? () => changeReportArchived(selectedReport.id, false)
+              : undefined
+          }
+          onSaved={async () => {
+            await Promise.all([listings.refetch(), reports.refetch()]);
+          }}
+          open
+          outlet={outlet}
+          report={selectedReport}
+          returnFocusTo={reportDialogTrigger}
+        />
+      )}
     </section>
   );
 }

@@ -10,6 +10,16 @@ import { SalesReportService } from "./sales_report_pb.js";
 export const createSalesReport = SalesReportService.method.createSalesReport;
 
 /**
+ * @generated from rpc ceramics.v1.SalesReportService.UpdateSalesReport
+ */
+export const updateSalesReport = SalesReportService.method.updateSalesReport;
+
+/**
+ * @generated from rpc ceramics.v1.SalesReportService.SetSalesReportArchived
+ */
+export const setSalesReportArchived = SalesReportService.method.setSalesReportArchived;
+
+/**
  * @generated from rpc ceramics.v1.SalesReportService.GetSalesReport
  */
 export const getSalesReport = SalesReportService.method.getSalesReport;

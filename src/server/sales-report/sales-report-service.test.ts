@@ -132,6 +132,150 @@ describe('SalesReportService', () => {
     expect(persisted.result.value).toEqual(created.result.value);
   });
 
+  test('creator can edit every active report value without changing its Outlet', async ({
+    clients,
+  }) => {
+    const outlet = await clients.outlets.createOutlet({ name: 'Гончарная лавка' });
+    assertSuccess(outlet);
+    const created = await clients.reports.createSalesReport({
+      outletId: outlet.result.value.id,
+      periodEndDate: '2026-11-30',
+      periodStartDate: '2026-11-01',
+      sales: [
+        {
+          earningsKopecks: 6000,
+          listingName: 'Кольцо',
+          salesValueKopecks: 7000,
+          unitsSold: 2,
+        },
+      ],
+      stockBalances: [{ listingName: 'Кольцо', outletPriceKopecks: 3500, stockBalance: 5 }],
+    });
+    assertSuccess(created);
+
+    const updated = await clients.reports.updateSalesReport({
+      id: created.result.value.id,
+      periodEndDate: '2026-12-31',
+      periodStartDate: '2026-12-01',
+      sales: [
+        {
+          earningsKopecks: 8000,
+          listingName: 'Серьги',
+          salesValueKopecks: 10_000,
+          unitsSold: 4,
+        },
+      ],
+      stockBalances: [{ listingName: 'Серьги', outletPriceKopecks: 2500, stockBalance: 7 }],
+    });
+
+    assertSuccess(updated);
+    expect(updated.result.value).toMatchObject({
+      id: created.result.value.id,
+      outletId: outlet.result.value.id,
+      periodEndDate: '2026-12-31',
+      periodStartDate: '2026-12-01',
+      sales: [
+        {
+          earningsKopecks: 8000,
+          listingName: 'Серьги',
+          outletShareKopecks: 2000,
+          salesValueKopecks: 10_000,
+          unitsSold: 4,
+        },
+      ],
+      stockBalances: [{ listingName: 'Серьги', outletPriceKopecks: 2500, stockBalance: 7 }],
+    });
+    expect(updated.result.value.updatedAtMs).toBeGreaterThan(created.result.value.updatedAtMs);
+
+    const persisted = await clients.reports.getSalesReport({ id: created.result.value.id });
+    assertSuccess(persisted);
+    expect(persisted.result.value).toEqual(updated.result.value);
+  });
+
+  test('a rejected edit leaves the complete report unchanged', async ({ clients }) => {
+    const outlet = await clients.outlets.createOutlet({ name: 'Гончарная лавка' });
+    assertSuccess(outlet);
+    const created = await clients.reports.createSalesReport({
+      outletId: outlet.result.value.id,
+      periodEndDate: '2026-11-30',
+      periodStartDate: '2026-11-01',
+      sales: [
+        { earningsKopecks: 6000, listingName: 'Кольцо', salesValueKopecks: 7000, unitsSold: 2 },
+      ],
+      stockBalances: [{ listingName: 'Кольцо', outletPriceKopecks: 3500, stockBalance: 5 }],
+    });
+    assertSuccess(created);
+
+    await expect(
+      clients.reports.updateSalesReport({
+        id: created.result.value.id,
+        periodEndDate: '2026-10-31',
+        periodStartDate: '2026-11-01',
+        sales: [
+          { earningsKopecks: 9000, listingName: 'Серьги', salesValueKopecks: 8000, unitsSold: 3 },
+        ],
+        stockBalances: [{ listingName: 'Серьги', outletPriceKopecks: 4000, stockBalance: 7 }],
+      }),
+    ).resolves.toMatchObject({ result: { case: 'failure' } });
+
+    const persisted = await clients.reports.getSalesReport({ id: created.result.value.id });
+    assertSuccess(persisted);
+    expect(persisted.result.value).toEqual(created.result.value);
+  });
+
+  test('creator can archive and restore a report but cannot edit it while archived', async ({
+    clients,
+  }) => {
+    const outlet = await clients.outlets.createOutlet({ name: 'Гончарная лавка' });
+    assertSuccess(outlet);
+    const created = await clients.reports.createSalesReport({
+      outletId: outlet.result.value.id,
+      periodEndDate: '2026-11-30',
+      periodStartDate: '2026-11-01',
+      stockBalances: [{ listingName: 'Кольцо', outletPriceKopecks: 3500, stockBalance: 5 }],
+    });
+    assertSuccess(created);
+
+    const archived = await clients.reports.setSalesReportArchived({
+      archived: true,
+      id: created.result.value.id,
+    });
+    assertSuccess(archived);
+    expect(archived.result.value).toMatchObject({
+      archived: true,
+      id: created.result.value.id,
+      updatedAtMs: created.result.value.updatedAtMs,
+    });
+    await expect(
+      clients.reports.listSalesReports({ archived: false, outletId: outlet.result.value.id }),
+    ).resolves.toMatchObject({ reports: [] });
+    await expect(
+      clients.reports.listSalesReports({ archived: true, outletId: outlet.result.value.id }),
+    ).resolves.toMatchObject({ reports: [{ archived: true, id: created.result.value.id }] });
+    await expect(
+      clients.reports.updateSalesReport({
+        id: created.result.value.id,
+        periodEndDate: '2026-12-31',
+        periodStartDate: '2026-12-01',
+      }),
+    ).resolves.toMatchObject({
+      result: { case: 'failure', value: { message: 'Сначала восстановите отчёт' } },
+    });
+
+    const restored = await clients.reports.setSalesReportArchived({
+      archived: false,
+      id: created.result.value.id,
+    });
+    assertSuccess(restored);
+    expect(restored.result.value).toMatchObject({
+      archived: false,
+      updatedAtMs: created.result.value.updatedAtMs,
+    });
+    const persisted = await clients.reports.getSalesReport({ id: created.result.value.id });
+    assertSuccess(persisted);
+    expect(persisted.result.value.stockBalances).toEqual(created.result.value.stockBalances);
+  });
+
   test('creator can list an Outlet report history', async ({ clients }) => {
     const outlet = await clients.outlets.createOutlet({ name: 'Гончарная лавка' });
     assertSuccess(outlet);

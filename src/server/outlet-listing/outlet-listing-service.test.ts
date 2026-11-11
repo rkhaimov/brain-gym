@@ -114,4 +114,96 @@ describe('OutletListingService', () => {
       ],
     });
   });
+
+  test('derives current Stock from period end and collision-safe saved ordering', async ({
+    clients,
+  }) => {
+    testEnv.now.mockReturnValue(new Date('2026-11-11T10:00:00.000Z'));
+    const outlet = await clients.outlets.createOutlet({ name: 'Гончарная лавка' });
+    assertSuccess(outlet);
+
+    const laterPeriod = await clients.reports.createSalesReport({
+      outletId: outlet.result.value.id,
+      periodEndDate: '2026-12-31',
+      periodStartDate: '2026-12-01',
+      sales: [
+        { earningsKopecks: 3000, listingName: 'Яшма', salesValueKopecks: 3500, unitsSold: 1 },
+      ],
+      stockBalances: [{ listingName: 'Яшма', outletPriceKopecks: 3500, stockBalance: 5 }],
+    });
+    const olderPeriodSavedLater = await clients.reports.createSalesReport({
+      outletId: outlet.result.value.id,
+      periodEndDate: '2026-11-30',
+      periodStartDate: '2026-11-01',
+      stockBalances: [{ listingName: 'Яшма', outletPriceKopecks: 3400, stockBalance: 9 }],
+    });
+    assertSuccess(laterPeriod);
+    assertSuccess(olderPeriodSavedLater);
+
+    await expect(
+      clients.listings.listOutletListings({ outletId: outlet.result.value.id }),
+    ).resolves.toMatchObject({
+      listings: [{ currentStockBalance: 5, latestUnitsSold: 1, name: 'Яшма' }],
+    });
+
+    const equalDateSavedLater = await clients.reports.createSalesReport({
+      outletId: outlet.result.value.id,
+      periodEndDate: '2026-12-31',
+      periodStartDate: '2026-12-01',
+      stockBalances: [{ listingName: 'Агат', outletPriceKopecks: 4200, stockBalance: 7 }],
+    });
+    assertSuccess(equalDateSavedLater);
+    expect(equalDateSavedLater.result.value.updatedAtMs).toBeGreaterThan(
+      laterPeriod.result.value.updatedAtMs,
+    );
+    await expect(
+      clients.listings.listOutletListings({ outletId: outlet.result.value.id }),
+    ).resolves.toMatchObject({
+      listings: [
+        { currentStockBalance: 0, latestUnitsSold: 0, name: 'Яшма' },
+        { currentStockBalance: 7, latestUnitsSold: 0, name: 'Агат' },
+      ],
+    });
+
+    const edited = await clients.reports.updateSalesReport({
+      id: laterPeriod.result.value.id,
+      periodEndDate: '2026-12-31',
+      periodStartDate: '2026-12-01',
+      stockBalances: [{ listingName: 'Яшма', outletPriceKopecks: 3600, stockBalance: 3 }],
+    });
+    assertSuccess(edited);
+    await expect(
+      clients.listings.listOutletListings({ outletId: outlet.result.value.id }),
+    ).resolves.toMatchObject({
+      listings: [
+        { currentStockBalance: 3, latestUnitsSold: 0, name: 'Яшма' },
+        { currentStockBalance: 0, latestUnitsSold: 0, name: 'Агат' },
+      ],
+    });
+
+    await clients.reports.setSalesReportArchived({
+      archived: true,
+      id: laterPeriod.result.value.id,
+    });
+    await expect(
+      clients.listings.listOutletListings({ outletId: outlet.result.value.id }),
+    ).resolves.toMatchObject({
+      listings: [
+        { currentStockBalance: 0, name: 'Яшма' },
+        { currentStockBalance: 7, name: 'Агат' },
+      ],
+    });
+    await clients.reports.setSalesReportArchived({
+      archived: false,
+      id: laterPeriod.result.value.id,
+    });
+    await expect(
+      clients.listings.listOutletListings({ outletId: outlet.result.value.id }),
+    ).resolves.toMatchObject({
+      listings: [
+        { currentStockBalance: 3, name: 'Яшма' },
+        { currentStockBalance: 0, name: 'Агат' },
+      ],
+    });
+  });
 });

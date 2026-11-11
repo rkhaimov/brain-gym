@@ -159,7 +159,7 @@ flowchart LR
 
 ### Reviewing history, stock, and analytics
 
-72. As the creator, I can view a history containing every Sales report and filter it by Outlet or archive state.
+72. As the creator, I can open an Outlet's Sales report history and filter it by archive state.
 73. As the creator, I can open any historical Sales report and inspect the Stock balances recorded by that report.
 74. As the creator, current Stock for an Outlet listing comes from the active Sales report with the latest Reporting period end date.
 75. As the creator, when two active reports for the same Outlet listing have the same Reporting period end date, the report saved most recently determines current Stock. Saving an edit updates that ordering.

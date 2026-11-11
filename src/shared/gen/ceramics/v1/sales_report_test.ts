@@ -21,7 +21,11 @@ import {
   SalesReportSection,
   SalesReportService,
   SalesReportSummarySchema,
+  SetSalesReportArchivedRequestSchema,
+  SetSalesReportArchivedResponseSchema,
   StockBalanceEntrySchema,
+  UpdateSalesReportRequestSchema,
+  UpdateSalesReportResponseSchema,
 } from './sales_report_pb.js';
 import type {
   CreateSalesEntryInput,
@@ -35,7 +39,11 @@ import type {
   SalesReport,
   SalesReportMutationFailure,
   SalesReportSummary,
+  SetSalesReportArchivedRequest,
+  SetSalesReportArchivedResponse,
   StockBalanceEntry,
+  UpdateSalesReportRequest,
+  UpdateSalesReportResponse,
 } from './sales_report_pb.js';
 
 export type SalesEntryStubOverrides = MessageInitShape<typeof SalesEntrySchema>;
@@ -48,6 +56,7 @@ export function createSalesEntryStub(
     unitsSold: 1,
     earningsKopecks: 1,
     outletShareKopecks: 1,
+    salesValueKopecks: 1,
     ...overrides,
   });
 }
@@ -133,6 +142,55 @@ export function createCreateSalesReportResponseStub(
   overrides: CreateSalesReportResponseStubOverrides = {},
 ): CreateSalesReportResponse {
   return create(CreateSalesReportResponseSchema, {
+    result: { case: 'success', value: createSalesReportStub() },
+    ...overrides,
+  });
+}
+
+export type UpdateSalesReportRequestStubOverrides = MessageInitShape<typeof UpdateSalesReportRequestSchema>;
+
+export function createUpdateSalesReportRequestStub(
+  overrides: UpdateSalesReportRequestStubOverrides = {},
+): UpdateSalesReportRequest {
+  return create(UpdateSalesReportRequestSchema, {
+    id: 'test-id',
+    periodStartDate: 'test-periodStartDate',
+    periodEndDate: 'test-periodEndDate',
+    sales: [createCreateSalesEntryInputStub()],
+    stockBalances: [createStockBalanceEntryStub()],
+    ...overrides,
+  });
+}
+
+export type UpdateSalesReportResponseStubOverrides = MessageInitShape<typeof UpdateSalesReportResponseSchema>;
+
+export function createUpdateSalesReportResponseStub(
+  overrides: UpdateSalesReportResponseStubOverrides = {},
+): UpdateSalesReportResponse {
+  return create(UpdateSalesReportResponseSchema, {
+    result: { case: 'success', value: createSalesReportStub() },
+    ...overrides,
+  });
+}
+
+export type SetSalesReportArchivedRequestStubOverrides = MessageInitShape<typeof SetSalesReportArchivedRequestSchema>;
+
+export function createSetSalesReportArchivedRequestStub(
+  overrides: SetSalesReportArchivedRequestStubOverrides = {},
+): SetSalesReportArchivedRequest {
+  return create(SetSalesReportArchivedRequestSchema, {
+    id: 'test-id',
+    archived: true,
+    ...overrides,
+  });
+}
+
+export type SetSalesReportArchivedResponseStubOverrides = MessageInitShape<typeof SetSalesReportArchivedResponseSchema>;
+
+export function createSetSalesReportArchivedResponseStub(
+  overrides: SetSalesReportArchivedResponseStubOverrides = {},
+): SetSalesReportArchivedResponse {
+  return create(SetSalesReportArchivedResponseSchema, {
     result: { case: 'success', value: createSalesReportStub() },
     ...overrides,
   });
@@ -238,6 +296,80 @@ function createCreateSalesReportRpcSpy(): CreateSalesReportRpcSpy {
   };
 }
 
+export interface UpdateSalesReportRpcSpy {
+  readonly handler: Mock<(request: UpdateSalesReportRequest) => Promise<UpdateSalesReportResponse>>;
+  getLastRequest(): Promise<UpdateSalesReportRequest>;
+  rejects(error: ConnectError): void;
+  resolves(value: UpdateSalesReportResponse): void;
+}
+
+function createUpdateSalesReportRpcSpy(): UpdateSalesReportRpcSpy {
+  const handler = vi.fn<(request: UpdateSalesReportRequest) => Promise<UpdateSalesReportResponse>>(
+    async () => createUpdateSalesReportResponseStub(),
+  );
+
+  return {
+    handler,
+    async getLastRequest() {
+      let request: UpdateSalesReportRequest | undefined;
+      await vi.waitFor(() => {
+        const call = handler.mock.calls.at(-1);
+        if (call === undefined) {
+          throw new Error('updateSalesReport has not received a request');
+        }
+        request = call[0];
+      });
+      if (request === undefined) {
+        throw new Error('updateSalesReport request was not captured');
+      }
+      return request;
+    },
+    rejects(error) {
+      handler.mockRejectedValue(error);
+    },
+    resolves(value) {
+      handler.mockResolvedValue(value);
+    },
+  };
+}
+
+export interface SetSalesReportArchivedRpcSpy {
+  readonly handler: Mock<(request: SetSalesReportArchivedRequest) => Promise<SetSalesReportArchivedResponse>>;
+  getLastRequest(): Promise<SetSalesReportArchivedRequest>;
+  rejects(error: ConnectError): void;
+  resolves(value: SetSalesReportArchivedResponse): void;
+}
+
+function createSetSalesReportArchivedRpcSpy(): SetSalesReportArchivedRpcSpy {
+  const handler = vi.fn<(request: SetSalesReportArchivedRequest) => Promise<SetSalesReportArchivedResponse>>(
+    async () => createSetSalesReportArchivedResponseStub(),
+  );
+
+  return {
+    handler,
+    async getLastRequest() {
+      let request: SetSalesReportArchivedRequest | undefined;
+      await vi.waitFor(() => {
+        const call = handler.mock.calls.at(-1);
+        if (call === undefined) {
+          throw new Error('setSalesReportArchived has not received a request');
+        }
+        request = call[0];
+      });
+      if (request === undefined) {
+        throw new Error('setSalesReportArchived request was not captured');
+      }
+      return request;
+    },
+    rejects(error) {
+      handler.mockRejectedValue(error);
+    },
+    resolves(value) {
+      handler.mockResolvedValue(value);
+    },
+  };
+}
+
 export interface GetSalesReportRpcSpy {
   readonly handler: Mock<(request: GetSalesReportRequest) => Promise<GetSalesReportResponse>>;
   getLastRequest(): Promise<GetSalesReportRequest>;
@@ -314,6 +446,8 @@ function createListSalesReportsRpcSpy(): ListSalesReportsRpcSpy {
 
 export interface SalesReportServiceSpies {
   readonly createSalesReport: CreateSalesReportRpcSpy;
+  readonly updateSalesReport: UpdateSalesReportRpcSpy;
+  readonly setSalesReportArchived: SetSalesReportArchivedRpcSpy;
   readonly getSalesReport: GetSalesReportRpcSpy;
   readonly listSalesReports: ListSalesReportsRpcSpy;
 }
@@ -326,12 +460,16 @@ export interface SalesReportServiceMock {
 export function createSalesReportServiceMock(): SalesReportServiceMock {
   const spies: SalesReportServiceSpies = {
     createSalesReport: createCreateSalesReportRpcSpy(),
+    updateSalesReport: createUpdateSalesReportRpcSpy(),
+    setSalesReportArchived: createSetSalesReportArchivedRpcSpy(),
     getSalesReport: createGetSalesReportRpcSpy(),
     listSalesReports: createListSalesReportsRpcSpy(),
   };
   const transport = createRouterTransport((router) => {
     router.service(SalesReportService, {
       createSalesReport: spies.createSalesReport.handler,
+      updateSalesReport: spies.updateSalesReport.handler,
+      setSalesReportArchived: spies.setSalesReportArchived.handler,
       getSalesReport: spies.getSalesReport.handler,
       listSalesReports: spies.listSalesReports.handler,
     });

@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@connectrpc/connect-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { ArrowRight, Store } from 'lucide-react';
+import { ArrowRight, Pencil, Store } from 'lucide-react';
 
 import {
   MaintenanceCatalog,
@@ -18,9 +18,11 @@ import { EditOutletDialog } from './-edit-outlet-dialog.js';
 import { useRefreshOutletCatalog } from './-outlet-catalog-query.js';
 
 const outletCatalogCopy: MaintenanceCatalogCopy = {
+  activeFilter: 'Активные',
   archiveAction: (name) => `Архивировать ${name}`,
   archivedEmptyDescription: 'Архивированные полки появятся здесь',
   archivedEmptyTitle: 'Архив пока пуст',
+  archivedFilter: 'Архив',
   countLabel: (count) => `Количество полок: ${count}`,
   createAction: 'Создать полку',
   createFirstAction: 'Создать первую полку',
@@ -31,6 +33,7 @@ const outletCatalogCopy: MaintenanceCatalogCopy = {
   loadErrorDescription: 'Проверьте соединение с сервером и попробуйте снова.',
   loadErrorTitle: 'Не удалось загрузить полки',
   loading: 'Загружаем полки',
+  primaryColumn: 'Название',
   regionLabel: 'Все полки',
   restoreAction: (name) => `Восстановить ${name}`,
   tableLabel: 'Полки',
@@ -83,6 +86,8 @@ function OutletsPage() {
             ),
         }}
         emptyIcon={<Store />}
+        editIcon={<Pencil />}
+        entityLabel={(outlet) => outlet.name}
         onCreate={page.openCreateDialog}
         onEdit={page.openEditDialog}
         onSetArchived={page.changeArchived}

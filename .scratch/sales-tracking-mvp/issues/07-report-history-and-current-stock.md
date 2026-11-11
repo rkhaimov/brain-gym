@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-- [ ] A Sales report history lists active reports and can be filtered by Outlet and archive state.
+- [ ] Each Outlet's Sales report history lists active reports and can be filtered by archive state.
 - [ ] Opening a report shows its Reporting period, Sales values, historical Stock balances, Stock Outlet prices, Earnings, and Outlet shares.
 - [ ] The creator can edit every active report value, including its Reporting period, listings, quantities, Sales values, Stock Outlet prices, and Earnings.
 - [ ] A saved Sales report's Outlet cannot be changed in place.

@@ -12,7 +12,7 @@
 - [ ] Overall totals remain visible above the Outlet comparison and match the equivalent Product comparison totals for the same selection.
 - [ ] Opening an Outlet shows its current Stock balances by exact Outlet listing.
 - [ ] Outlet details show Product results and visibly marked Unmapped listings.
-- [ ] Outlet details expose the Outlet's Sales report history and allow the creator to open a historical report.
+- [ ] Outlet details retain the Sales report history and historical-report opening delivered by ticket 07.
 - [ ] The current Outlet name and code appear even when historical reports were recorded before a rename or code change.
 - [ ] Archived Outlets remain available in historical contexts but are excluded from ordinary active selections by default.
 - [ ] Server integration tests verify Outlet grouping, totals, filters, archive behavior, and agreement with Product-level totals.
