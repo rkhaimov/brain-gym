@@ -57,6 +57,8 @@ export function createSalesEntryStub(
     earningsKopecks: 1,
     outletShareKopecks: 1,
     salesValueKopecks: 1,
+    reportListingId: 'test-reportListingId',
+    product: undefined,
     ...overrides,
   });
 }
@@ -84,6 +86,8 @@ export function createStockBalanceEntryStub(
     listingName: 'test-listingName',
     stockBalance: 1,
     outletPriceKopecks: 1,
+    reportListingId: 'test-reportListingId',
+    product: undefined,
     ...overrides,
   });
 }

@@ -7,15 +7,24 @@ import { vi } from 'vitest';
 import type { Mock } from 'vitest';
 
 import {
+  CreateProductAndMapReportListingRequestSchema,
+  CreateProductAndMapReportListingResponseSchema,
   ListReportListingsRequestSchema,
   ListReportListingsResponseSchema,
+  ReportListingFilter,
   ReportListingSchema,
   ReportListingService,
+  SetReportListingProductRequestSchema,
+  SetReportListingProductResponseSchema,
 } from './report_listing_pb.js';
 import type {
+  CreateProductAndMapReportListingRequest,
+  CreateProductAndMapReportListingResponse,
   ListReportListingsRequest,
   ListReportListingsResponse,
   ReportListing,
+  SetReportListingProductRequest,
+  SetReportListingProductResponse,
 } from './report_listing_pb.js';
 
 export type ReportListingStubOverrides = MessageInitShape<typeof ReportListingSchema>;
@@ -29,6 +38,7 @@ export function createReportListingStub(
     lastOutletPriceKopecks: 1,
     latestUnitsSold: 1,
     currentStockBalance: 1,
+    product: undefined,
     ...overrides,
   });
 }
@@ -40,6 +50,7 @@ export function createListReportListingsRequestStub(
 ): ListReportListingsRequest {
   return create(ListReportListingsRequestSchema, {
     outletId: 'test-outletId',
+    filter: ReportListingFilter.ALL,
     ...overrides,
   });
 }
@@ -51,6 +62,55 @@ export function createListReportListingsResponseStub(
 ): ListReportListingsResponse {
   return create(ListReportListingsResponseSchema, {
     listings: [createReportListingStub()],
+    allCount: 1,
+    unmappedCount: 1,
+    mappedCount: 1,
+    ...overrides,
+  });
+}
+
+export type SetReportListingProductRequestStubOverrides = MessageInitShape<typeof SetReportListingProductRequestSchema>;
+
+export function createSetReportListingProductRequestStub(
+  overrides: SetReportListingProductRequestStubOverrides = {},
+): SetReportListingProductRequest {
+  return create(SetReportListingProductRequestSchema, {
+    reportListingId: 'test-reportListingId',
+    productId: 'test-productId',
+    ...overrides,
+  });
+}
+
+export type SetReportListingProductResponseStubOverrides = MessageInitShape<typeof SetReportListingProductResponseSchema>;
+
+export function createSetReportListingProductResponseStub(
+  overrides: SetReportListingProductResponseStubOverrides = {},
+): SetReportListingProductResponse {
+  return create(SetReportListingProductResponseSchema, {
+    result: { case: 'success', value: createReportListingStub() },
+    ...overrides,
+  });
+}
+
+export type CreateProductAndMapReportListingRequestStubOverrides = MessageInitShape<typeof CreateProductAndMapReportListingRequestSchema>;
+
+export function createCreateProductAndMapReportListingRequestStub(
+  overrides: CreateProductAndMapReportListingRequestStubOverrides = {},
+): CreateProductAndMapReportListingRequest {
+  return create(CreateProductAndMapReportListingRequestSchema, {
+    reportListingId: 'test-reportListingId',
+    name: 'test-name',
+    ...overrides,
+  });
+}
+
+export type CreateProductAndMapReportListingResponseStubOverrides = MessageInitShape<typeof CreateProductAndMapReportListingResponseSchema>;
+
+export function createCreateProductAndMapReportListingResponseStub(
+  overrides: CreateProductAndMapReportListingResponseStubOverrides = {},
+): CreateProductAndMapReportListingResponse {
+  return create(CreateProductAndMapReportListingResponseSchema, {
+    result: { case: 'success', value: createReportListingStub() },
     ...overrides,
   });
 }
@@ -92,8 +152,84 @@ function createListReportListingsRpcSpy(): ListReportListingsRpcSpy {
   };
 }
 
+export interface SetReportListingProductRpcSpy {
+  readonly handler: Mock<(request: SetReportListingProductRequest) => Promise<SetReportListingProductResponse>>;
+  getLastRequest(): Promise<SetReportListingProductRequest>;
+  rejects(error: ConnectError): void;
+  resolves(value: SetReportListingProductResponse): void;
+}
+
+function createSetReportListingProductRpcSpy(): SetReportListingProductRpcSpy {
+  const handler = vi.fn<(request: SetReportListingProductRequest) => Promise<SetReportListingProductResponse>>(
+    async () => createSetReportListingProductResponseStub(),
+  );
+
+  return {
+    handler,
+    async getLastRequest() {
+      let request: SetReportListingProductRequest | undefined;
+      await vi.waitFor(() => {
+        const call = handler.mock.calls.at(-1);
+        if (call === undefined) {
+          throw new Error('setReportListingProduct has not received a request');
+        }
+        request = call[0];
+      });
+      if (request === undefined) {
+        throw new Error('setReportListingProduct request was not captured');
+      }
+      return request;
+    },
+    rejects(error) {
+      handler.mockRejectedValue(error);
+    },
+    resolves(value) {
+      handler.mockResolvedValue(value);
+    },
+  };
+}
+
+export interface CreateProductAndMapReportListingRpcSpy {
+  readonly handler: Mock<(request: CreateProductAndMapReportListingRequest) => Promise<CreateProductAndMapReportListingResponse>>;
+  getLastRequest(): Promise<CreateProductAndMapReportListingRequest>;
+  rejects(error: ConnectError): void;
+  resolves(value: CreateProductAndMapReportListingResponse): void;
+}
+
+function createCreateProductAndMapReportListingRpcSpy(): CreateProductAndMapReportListingRpcSpy {
+  const handler = vi.fn<(request: CreateProductAndMapReportListingRequest) => Promise<CreateProductAndMapReportListingResponse>>(
+    async () => createCreateProductAndMapReportListingResponseStub(),
+  );
+
+  return {
+    handler,
+    async getLastRequest() {
+      let request: CreateProductAndMapReportListingRequest | undefined;
+      await vi.waitFor(() => {
+        const call = handler.mock.calls.at(-1);
+        if (call === undefined) {
+          throw new Error('createProductAndMapReportListing has not received a request');
+        }
+        request = call[0];
+      });
+      if (request === undefined) {
+        throw new Error('createProductAndMapReportListing request was not captured');
+      }
+      return request;
+    },
+    rejects(error) {
+      handler.mockRejectedValue(error);
+    },
+    resolves(value) {
+      handler.mockResolvedValue(value);
+    },
+  };
+}
+
 export interface ReportListingServiceSpies {
   readonly listReportListings: ListReportListingsRpcSpy;
+  readonly setReportListingProduct: SetReportListingProductRpcSpy;
+  readonly createProductAndMapReportListing: CreateProductAndMapReportListingRpcSpy;
 }
 
 export interface ReportListingServiceMock {
@@ -104,10 +240,14 @@ export interface ReportListingServiceMock {
 export function createReportListingServiceMock(): ReportListingServiceMock {
   const spies: ReportListingServiceSpies = {
     listReportListings: createListReportListingsRpcSpy(),
+    setReportListingProduct: createSetReportListingProductRpcSpy(),
+    createProductAndMapReportListing: createCreateProductAndMapReportListingRpcSpy(),
   };
   const transport = createRouterTransport((router) => {
     router.service(ReportListingService, {
       listReportListings: spies.listReportListings.handler,
+      setReportListingProduct: spies.setReportListingProduct.handler,
+      createProductAndMapReportListing: spies.createProductAndMapReportListing.handler,
     });
   });
   return { spies, transport };

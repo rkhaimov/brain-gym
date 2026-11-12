@@ -8,3 +8,13 @@ import { ReportListingService } from "./report_listing_pb.js";
  * @generated from rpc ceramics.v1.ReportListingService.ListReportListings
  */
 export const listReportListings = ReportListingService.method.listReportListings;
+
+/**
+ * @generated from rpc ceramics.v1.ReportListingService.SetReportListingProduct
+ */
+export const setReportListingProduct = ReportListingService.method.setReportListingProduct;
+
+/**
+ * @generated from rpc ceramics.v1.ReportListingService.CreateProductAndMapReportListing
+ */
+export const createProductAndMapReportListing = ReportListingService.method.createProductAndMapReportListing;

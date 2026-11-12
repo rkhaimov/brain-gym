@@ -6,6 +6,7 @@ import { useRef, useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/client/components/ui/alert.js';
 import { Badge } from '@/client/components/ui/badge.js';
 import { Button } from '@/client/components/ui/button.js';
+import { ReportListingProductCombobox } from '@/client/components/report-listing/report-listing-product-combobox.js';
 import {
   MaintenanceCatalog,
   type MaintenanceCatalogCopy,
@@ -129,7 +130,8 @@ function OutletDetailsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Название</TableHead>
+                  <TableHead>Штучка</TableHead>
+                  <TableHead>Название в отчёте</TableHead>
                   <TableHead>Последняя цена</TableHead>
                   <TableHead>Продано в последнем отчёте</TableHead>
                   <TableHead>Текущий остаток</TableHead>
@@ -138,19 +140,19 @@ function OutletDetailsPage() {
               <TableBody>
                 {listings.isPending ? (
                   <TableRow>
-                    <TableCell className="h-24 text-center" colSpan={4}>
+                    <TableCell className="h-24 text-center" colSpan={5}>
                       <Spinner />
                     </TableCell>
                   </TableRow>
                 ) : listings.isError ? (
                   <TableRow>
-                    <TableCell className="h-24 text-center text-destructive" colSpan={4}>
+                    <TableCell className="h-24 text-center text-destructive" colSpan={5}>
                       Не удалось загрузить позиции
                     </TableCell>
                   </TableRow>
                 ) : listings.data?.listings.length === 0 ? (
                   <TableRow>
-                    <TableCell className="h-40 text-center" colSpan={4}>
+                    <TableCell className="h-40 text-center" colSpan={5}>
                       <div className="flex flex-col items-center gap-2 text-muted-foreground">
                         <Store />
                         Позиции появятся после первого отчёта
@@ -160,6 +162,12 @@ function OutletDetailsPage() {
                 ) : (
                   listings.data?.listings.map((listing) => (
                     <TableRow key={listing.id}>
+                      <TableCell className="w-80">
+                        <ReportListingProductCombobox
+                          listing={listing}
+                          refreshListings={listings.refetch}
+                        />
+                      </TableCell>
                       <TableCell className="font-medium">{listing.name}</TableCell>
                       <TableCell>{formatRussianCurrency(listing.lastOutletPriceKopecks)}</TableCell>
                       <TableCell>{listing.latestUnitsSold}</TableCell>

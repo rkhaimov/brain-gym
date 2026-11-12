@@ -29,6 +29,7 @@ export interface ReportListings {
   created_at_ms: number;
   id: string;
   name: string;
+  product_id: string | null;
 }
 
 export interface SalesReports {

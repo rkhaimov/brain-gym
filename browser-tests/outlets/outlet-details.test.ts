@@ -9,8 +9,13 @@ import {
   createOutletStub,
 } from '@/shared/gen/ceramics/v1/outlet_test.js';
 import {
+  createListProductsResponseStub,
+  createProductStub,
+} from '@/shared/gen/ceramics/v1/product_test.js';
+import {
   createListReportListingsResponseStub,
   createReportListingStub,
+  createSetReportListingProductResponseStub,
 } from '@/shared/gen/ceramics/v1/report_listing_test.js';
 import {
   createCreateSalesReportResponseStub,
@@ -33,17 +38,20 @@ const outlet = createOutletStub({
   id: 'outlet-id',
   name: 'Гончарная лавка',
 });
+const ring = createProductStub({ archived: false, id: 'ring-id', name: 'Кольцо' });
 const knownListing = createReportListingStub({
   currentStockBalance: 5,
   id: 'listing-id',
   lastOutletPriceKopecks: 3500,
   latestUnitsSold: 2,
-  name: 'Кольцо',
+  name: 'Кольцо ручной работы',
+  product: ring,
 });
 
 test.describe('Outlet details and Sales report history', () => {
-  test.beforeEach(({ outletService, reportListingService, salesReportService }) => {
+  test.beforeEach(({ outletService, productService, reportListingService, salesReportService }) => {
     outletService.listOutlets.resolves(createListOutletsResponseStub({ outlets: [outlet] }));
+    productService.listProducts.resolves(createListProductsResponseStub({ products: [ring] }));
     reportListingService.listReportListings.resolves(
       createListReportListingsResponseStub({ listings: [knownListing] }),
     );
@@ -59,10 +67,58 @@ test.describe('Outlet details and Sales report history', () => {
 
     await expect.element(page.getByRole('heading', { name: outlet.name })).toBeVisible();
     await expect.element(page.getByText('GL', { exact: true })).toBeVisible();
+    await expect.element(page.getByText(ring.name, { exact: true })).toBeVisible();
     await expect.element(page.getByText(knownListing.name, { exact: true })).toBeVisible();
     await expect.element(page.getByText('35,00 ₽')).toBeVisible();
     await expect.element(page.getByText('5', { exact: true })).toBeVisible();
     await details.screenshotPage('Report listing summaries');
+  });
+
+  test('maps an Outlet Report listing without changing its name or metrics', async ({
+    reportListingService,
+  }) => {
+    let listing = createReportListingStub({
+      currentStockBalance: 7,
+      id: 'unmapped-listing',
+      lastOutletPriceKopecks: 4800,
+      latestUnitsSold: 3,
+      name: 'Кольцо — витрина',
+      product: undefined,
+    });
+    reportListingService.listReportListings.handler.mockImplementation(async () =>
+      createListReportListingsResponseStub({ listings: [listing] }),
+    );
+    reportListingService.setReportListingProduct.handler.mockImplementation(async () => {
+      listing = createReportListingStub({ ...listing, product: ring });
+      return createSetReportListingProductResponseStub({
+        result: { case: 'success', value: listing },
+      });
+    });
+
+    const details = createOutletDetailsPage();
+    await details.open();
+    await expect.element(page.getByText(listing.name, { exact: true })).toBeVisible();
+    const initialListCallCount = reportListingService.listReportListings.handler.mock.calls.length;
+    await page.getByText('Сопоставить', { exact: true }).click();
+    await page.getByText(ring.name, { exact: true }).click();
+
+    await expect(
+      reportListingService.setReportListingProduct.getLastRequest(),
+    ).resolves.toMatchObject({
+      productId: ring.id,
+      reportListingId: listing.id,
+    });
+    await expect(reportListingService.listReportListings.getLastRequest()).resolves.toMatchObject({
+      outletId: outlet.id,
+    });
+    expect(reportListingService.listReportListings.handler.mock.calls.length).toBeGreaterThan(
+      initialListCallCount,
+    );
+    await expect.element(page.getByText(ring.name, { exact: true })).toBeVisible();
+    await expect.element(page.getByText(listing.name, { exact: true })).toBeVisible();
+    await expect.element(page.getByText('48,00 ₽', { exact: true })).toBeVisible();
+    await expect.element(page.getByText('3', { exact: true })).toBeVisible();
+    await expect.element(page.getByText('7', { exact: true })).toBeVisible();
   });
 
   test('filters the Outlet report history by archive state', async ({ salesReportService }) => {
@@ -510,7 +566,13 @@ test.describe('Outlet details and Sales report history', () => {
           unitsSold: 1,
         },
       ],
-      stockBalances: [{ listingName: 'Кольцо', outletPriceKopecks: 3500, stockBalance: 5 }],
+      stockBalances: [
+        {
+          listingName: knownListing.name,
+          outletPriceKopecks: 3500,
+          stockBalance: 5,
+        },
+      ],
     });
     await expect.element(details.dialog()).not.toBeInTheDocument();
     await expect.element(page.getByText('01.11.2026 — 30.11.2026')).toBeVisible();

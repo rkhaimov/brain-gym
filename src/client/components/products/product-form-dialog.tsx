@@ -1,19 +1,21 @@
 import type { RefObject } from 'react';
 
 import { MaintenanceFormDialog } from '@/client/components/maintenance/maintenance-form-dialog.js';
-import type {
-  CreateProductResponse,
-  RenameProductResponse,
-} from '@/shared/gen/ceramics/v1/product_pb.js';
 
-import { useRefreshProductCatalog } from './-product-catalog-query.js';
+type ProductMutationResponse = Readonly<{
+  result:
+    | Readonly<{ case: 'success' }>
+    | Readonly<{ case: 'failure'; value: string }>
+    | Readonly<{ case: undefined }>;
+}>;
 
 interface ProductFormDialogProps {
   readonly defaultName: string;
   readonly onOpenChange: (open: boolean) => void;
   readonly open: boolean;
+  readonly refresh: () => Promise<void>;
   readonly returnFocusTo: RefObject<HTMLButtonElement | null>;
-  readonly submit: (name: string) => Promise<CreateProductResponse | RenameProductResponse>;
+  readonly submit: (name: string) => Promise<ProductMutationResponse>;
   readonly submitLabel: string;
   readonly title: string;
 }
@@ -22,13 +24,12 @@ export function ProductFormDialog({
   defaultName,
   onOpenChange,
   open,
+  refresh,
   returnFocusTo,
   submit,
   submitLabel,
   title,
 }: ProductFormDialogProps) {
-  const refreshProductCatalog = useRefreshProductCatalog();
-
   return (
     <MaintenanceFormDialog
       defaultValues={{ code: '', name: defaultName }}
@@ -36,7 +37,7 @@ export function ProductFormDialog({
       namePlaceholder={defaultName.length === 0 ? 'Например, Кольцо' : undefined}
       onOpenChange={onOpenChange}
       open={open}
-      refresh={refreshProductCatalog}
+      refresh={refresh}
       requiredNameMessage="Введите название штучки"
       returnFocusTo={returnFocusTo}
       submit={async ({ name }) => {

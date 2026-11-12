@@ -92,7 +92,7 @@ export async function startApplicationServer(
         env,
         mutationQueue,
       });
-      registerReportListingRoutes(router, { database });
+      registerReportListingRoutes(router, { database, env, mutationQueue });
       registerSalesReportRoutes(router, {
         database,
         env,

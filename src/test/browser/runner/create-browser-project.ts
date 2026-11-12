@@ -7,6 +7,7 @@ import {
   maintenanceCatalogContract,
   maintenanceFormContract,
 } from '../../../client/components/maintenance/maintenance-test-tags.js';
+import { reportListingProductComboboxContract } from '../../../client/components/report-listing/report-listing-product-combobox-test-tags.js';
 
 import { browserCommands } from './commands.js';
 import { createNeutralizeTestStylesPlugin } from './neutralize-test-styles.js';
@@ -82,6 +83,10 @@ export function createBrowserProject(): TestProjectInlineConfiguration {
         {
           description: 'Owns behavior encapsulated by the shared maintenance form',
           name: maintenanceFormContract.testTag,
+        },
+        {
+          description: 'Owns the shared Report-listing Product combobox interaction contract',
+          name: reportListingProductComboboxContract.testTag,
         },
       ],
     },

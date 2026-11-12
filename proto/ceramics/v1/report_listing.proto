@@ -2,22 +2,62 @@ syntax = "proto3";
 
 package ceramics.v1;
 
+import "ceramics/v1/product.proto";
+
+enum ReportListingFilter {
+  REPORT_LISTING_FILTER_UNSPECIFIED = 0;
+  REPORT_LISTING_FILTER_ALL = 1;
+  REPORT_LISTING_FILTER_UNMAPPED = 2;
+  REPORT_LISTING_FILTER_MAPPED = 3;
+}
+
 message ReportListing {
   string id = 1;
   string name = 2;
   double last_outlet_price_kopecks = 3;
   double latest_units_sold = 4;
   double current_stock_balance = 5;
+  Product product = 6;
 }
 
 message ListReportListingsRequest {
-  string outlet_id = 1;
+  optional string outlet_id = 1;
+  ReportListingFilter filter = 2;
 }
 
 message ListReportListingsResponse {
   repeated ReportListing listings = 1;
+  uint32 all_count = 2;
+  uint32 unmapped_count = 3;
+  uint32 mapped_count = 4;
+}
+
+message SetReportListingProductRequest {
+  string report_listing_id = 1;
+  optional string product_id = 2;
+}
+
+message SetReportListingProductResponse {
+  oneof result {
+    ReportListing success = 1;
+    string failure = 2;
+  }
+}
+
+message CreateProductAndMapReportListingRequest {
+  string report_listing_id = 1;
+  string name = 2;
+}
+
+message CreateProductAndMapReportListingResponse {
+  oneof result {
+    ReportListing success = 1;
+    string failure = 2;
+  }
 }
 
 service ReportListingService {
   rpc ListReportListings(ListReportListingsRequest) returns (ListReportListingsResponse) {}
+  rpc SetReportListingProduct(SetReportListingProductRequest) returns (SetReportListingProductResponse) {}
+  rpc CreateProductAndMapReportListing(CreateProductAndMapReportListingRequest) returns (CreateProductAndMapReportListingResponse) {}
 }

@@ -8,9 +8,12 @@ import type { ApplicationDatabase } from '../database/database.js';
 import type { Products } from '../database/generated.js';
 import type { EnvService } from '../env.js';
 import type { MutationQueue } from '../mutation-queue.js';
+import {
+  createProductRecord,
+  PRODUCT_NAME_ALREADY_EXISTS_MESSAGE,
+  PRODUCT_NAME_REQUIRED_MESSAGE,
+} from './product-operations.js';
 
-const NAME_REQUIRED_MESSAGE = 'Введите название штучки';
-const NAME_ALREADY_EXISTS_MESSAGE = 'Штучка с таким названием уже существует';
 const PRODUCT_NOT_FOUND_MESSAGE = 'Штучка не найдена';
 
 type ProductId = string & { readonly __productId: true };
@@ -45,10 +48,6 @@ function productFailure(message: string) {
   return { result: { case: 'failure' as const, value: message } };
 }
 
-function isUniqueConstraintError(error: unknown): boolean {
-  return error instanceof Error && 'code' in error && error.code === 'SQLITE_CONSTRAINT_UNIQUE';
-}
-
 function createProductService(
   dependencies: ProductRouteDependencies,
 ): ServiceImpl<typeof ProductService> {
@@ -57,43 +56,22 @@ function createProductService(
   return {
     async createProduct(request) {
       if (request.name.length === 0) {
-        return productFailure(NAME_REQUIRED_MESSAGE);
+        return productFailure(PRODUCT_NAME_REQUIRED_MESSAGE);
       }
 
-      return mutationQueue.run(async () => {
-        try {
-          return await database.db.transaction().execute(async (transaction) => {
-            const existing = await transaction
-              .selectFrom('products')
-              .select('id')
-              .where('name', '=', request.name)
-              .executeTakeFirst();
-            if (existing !== undefined) {
-              return productFailure(NAME_ALREADY_EXISTS_MESSAGE);
-            }
-
-            const id = createProductId(env.randomUUID());
-            const product: DomainProduct = { archived: false, id, name: request.name };
-            await transaction
-              .insertInto('products')
-              .values({
-                created_at_ms: env.now().getTime(),
-                id: product.id,
-                name: product.name,
-              })
-              .executeTakeFirstOrThrow();
-
-            return {
-              result: { case: 'success' as const, value: productToProtobuf(product) },
-            };
-          });
-        } catch (error) {
-          if (isUniqueConstraintError(error)) {
-            return productFailure(NAME_ALREADY_EXISTS_MESSAGE);
-          }
-          throw error;
-        }
-      });
+      return mutationQueue.run(async () =>
+        database.db.transaction().execute(async (transaction) => {
+          const result = await createProductRecord(transaction, env, request.name);
+          return result.case === 'failure'
+            ? productFailure(result.message)
+            : {
+                result: {
+                  case: 'success' as const,
+                  value: productToProtobuf(productFromDatabase(result.product)),
+                },
+              };
+        }),
+      );
     },
 
     async listProducts(request) {
@@ -110,7 +88,7 @@ function createProductService(
 
     async renameProduct(request) {
       if (request.name.length === 0) {
-        return productFailure(NAME_REQUIRED_MESSAGE);
+        return productFailure(PRODUCT_NAME_REQUIRED_MESSAGE);
       }
 
       return mutationQueue.run(async () => {
@@ -130,8 +108,12 @@ function createProductService(
                 },
               };
         } catch (error) {
-          if (isUniqueConstraintError(error)) {
-            return productFailure(NAME_ALREADY_EXISTS_MESSAGE);
+          if (
+            error instanceof Error &&
+            'code' in error &&
+            error.code === 'SQLITE_CONSTRAINT_UNIQUE'
+          ) {
+            return productFailure(PRODUCT_NAME_ALREADY_EXISTS_MESSAGE);
           }
           throw error;
         }

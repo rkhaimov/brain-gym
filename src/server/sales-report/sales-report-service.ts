@@ -27,6 +27,8 @@ import type {
 } from '../database/generated.js';
 import type { EnvService } from '../env.js';
 import type { MutationQueue } from '../mutation-queue.js';
+import { resolvedProductToProtobuf } from '../product/product-operations.js';
+import type { ResolvedProductFields } from '../product/product-operations.js';
 
 const OUTLET_NOT_AVAILABLE_MESSAGE = 'Выберите действующий магазин';
 const REPORT_NOT_FOUND_MESSAGE = 'Отчёт не найден';
@@ -51,14 +53,17 @@ type Report = Readonly<
   >
 >;
 
-type ListingIdentity = Readonly<Pick<Selectable<ReportListings>, 'created_at_ms' | 'id' | 'name'>>;
+type ListingIdentity = Readonly<
+  Pick<Selectable<ReportListings>, 'created_at_ms' | 'id' | 'name'> & ResolvedProductFields
+>;
 
 type StoredSale = Readonly<
   Pick<
     Selectable<SalesReportSales>,
     'earnings_kopecks' | 'outlet_share_kopecks' | 'report_listing_id' | 'units_sold'
   > &
-    Pick<Selectable<ReportListings>, 'created_at_ms' | 'name'>
+    Pick<Selectable<ReportListings>, 'created_at_ms' | 'name'> &
+    ResolvedProductFields
 >;
 
 type StoredStockBalance = Readonly<
@@ -66,7 +71,8 @@ type StoredStockBalance = Readonly<
     Selectable<SalesReportStockBalances>,
     'outlet_price_kopecks' | 'report_listing_id' | 'stock_balance'
   > &
-    Pick<Selectable<ReportListings>, 'created_at_ms' | 'name'>
+    Pick<Selectable<ReportListings>, 'created_at_ms' | 'name'> &
+    ResolvedProductFields
 >;
 
 function compareListings(
@@ -96,6 +102,8 @@ function reportToProtobuf(
         earningsKopecks: sale.earnings_kopecks,
         listingName: sale.name,
         outletShareKopecks: sale.outlet_share_kopecks,
+        product: resolvedProductToProtobuf(sale),
+        reportListingId: sale.report_listing_id,
         salesValueKopecks: sale.earnings_kopecks + sale.outlet_share_kopecks,
         unitsSold: sale.units_sold,
       }),
@@ -104,6 +112,8 @@ function reportToProtobuf(
       create(StockBalanceEntrySchema, {
         listingName: stock.name,
         outletPriceKopecks: stock.outlet_price_kopecks,
+        product: resolvedProductToProtobuf(stock),
+        reportListingId: stock.report_listing_id,
         stockBalance: stock.stock_balance,
       }),
     ),
@@ -151,14 +161,25 @@ async function resolveListings(
   for (const listingName of listingNames) {
     let reportListing = await transaction
       .selectFrom('report_listings')
-      .select(['created_at_ms', 'id', 'name'])
-      .where('name', '=', listingName)
+      .leftJoin('products', 'products.id', 'report_listings.product_id')
+      .select([
+        'report_listings.created_at_ms',
+        'report_listings.id',
+        'report_listings.name',
+        'report_listings.product_id',
+        'products.archived_at_ms as product_archived_at_ms',
+        'products.name as product_name',
+      ])
+      .where('report_listings.name', '=', listingName)
       .executeTakeFirst();
     if (reportListing === undefined) {
       reportListing = {
         created_at_ms: nextCreatedAtMs++,
         id: env.randomUUID(),
         name: listingName,
+        product_archived_at_ms: null,
+        product_id: null,
+        product_name: null,
       };
       await transaction
         .insertInto('report_listings')
@@ -195,6 +216,9 @@ async function replaceReportContents(
       created_at_ms: listing.created_at_ms,
       earnings_kopecks: sale.earningsKopecks,
       name: listing.name,
+      product_archived_at_ms: listing.product_archived_at_ms,
+      product_id: listing.product_id,
+      product_name: listing.product_name,
       report_listing_id: listing.id,
       outlet_share_kopecks: sale.salesValueKopecks - sale.earningsKopecks,
       units_sold: sale.unitsSold,
@@ -221,6 +245,9 @@ async function replaceReportContents(
     return {
       created_at_ms: listing.created_at_ms,
       name: listing.name,
+      product_archived_at_ms: listing.product_archived_at_ms,
+      product_id: listing.product_id,
+      product_name: listing.product_name,
       report_listing_id: listing.id,
       outlet_price_kopecks: stock.outletPriceKopecks,
       stock_balance: stock.stockBalance,
@@ -252,10 +279,14 @@ async function loadReportContents(
   const sales = await database
     .selectFrom('sales_report_sales')
     .innerJoin('report_listings', 'report_listings.id', 'report_listing_id')
+    .leftJoin('products', 'products.id', 'report_listings.product_id')
     .select([
       'report_listings.created_at_ms',
       'sales_report_sales.earnings_kopecks',
       'report_listings.name',
+      'report_listings.product_id',
+      'products.archived_at_ms as product_archived_at_ms',
+      'products.name as product_name',
       'sales_report_sales.report_listing_id',
       'sales_report_sales.outlet_share_kopecks',
       'sales_report_sales.units_sold',
@@ -265,9 +296,13 @@ async function loadReportContents(
   const stockBalances = await database
     .selectFrom('sales_report_stock_balances')
     .innerJoin('report_listings', 'report_listings.id', 'report_listing_id')
+    .leftJoin('products', 'products.id', 'report_listings.product_id')
     .select([
       'report_listings.created_at_ms',
       'report_listings.name',
+      'report_listings.product_id',
+      'products.archived_at_ms as product_archived_at_ms',
+      'products.name as product_name',
       'sales_report_stock_balances.report_listing_id',
       'sales_report_stock_balances.outlet_price_kopecks',
       'sales_report_stock_balances.stock_balance',

@@ -2,15 +2,17 @@
 // @generated from file ceramics/v1/report_listing.proto (package ceramics.v1, syntax proto3)
 /* eslint-disable */
 
-import type { GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
-import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
+import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
+import { enumDesc, fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
+import type { Product } from "./product_pb.js";
+import { file_ceramics_v1_product } from "./product_pb.js";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file ceramics/v1/report_listing.proto.
  */
 export const file_ceramics_v1_report_listing: GenFile = /*@__PURE__*/
-  fileDesc("CiBjZXJhbWljcy92MS9yZXBvcnRfbGlzdGluZy5wcm90bxILY2VyYW1pY3MudjEihgEKDVJlcG9ydExpc3RpbmcSCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRIhChlsYXN0X291dGxldF9wcmljZV9rb3BlY2tzGAMgASgBEhkKEWxhdGVzdF91bml0c19zb2xkGAQgASgBEh0KFWN1cnJlbnRfc3RvY2tfYmFsYW5jZRgFIAEoASIuChlMaXN0UmVwb3J0TGlzdGluZ3NSZXF1ZXN0EhEKCW91dGxldF9pZBgBIAEoCSJKChpMaXN0UmVwb3J0TGlzdGluZ3NSZXNwb25zZRIsCghsaXN0aW5ncxgBIAMoCzIaLmNlcmFtaWNzLnYxLlJlcG9ydExpc3RpbmcyfwoUUmVwb3J0TGlzdGluZ1NlcnZpY2USZwoSTGlzdFJlcG9ydExpc3RpbmdzEiYuY2VyYW1pY3MudjEuTGlzdFJlcG9ydExpc3RpbmdzUmVxdWVzdBonLmNlcmFtaWNzLnYxLkxpc3RSZXBvcnRMaXN0aW5nc1Jlc3BvbnNlIgBiBnByb3RvMw");
+  fileDesc("CiBjZXJhbWljcy92MS9yZXBvcnRfbGlzdGluZy5wcm90bxILY2VyYW1pY3MudjEirQEKDVJlcG9ydExpc3RpbmcSCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRIhChlsYXN0X291dGxldF9wcmljZV9rb3BlY2tzGAMgASgBEhkKEWxhdGVzdF91bml0c19zb2xkGAQgASgBEh0KFWN1cnJlbnRfc3RvY2tfYmFsYW5jZRgFIAEoARIlCgdwcm9kdWN0GAYgASgLMhQuY2VyYW1pY3MudjEuUHJvZHVjdCJzChlMaXN0UmVwb3J0TGlzdGluZ3NSZXF1ZXN0EhYKCW91dGxldF9pZBgBIAEoCUgAiAEBEjAKBmZpbHRlchgCIAEoDjIgLmNlcmFtaWNzLnYxLlJlcG9ydExpc3RpbmdGaWx0ZXJCDAoKX291dGxldF9pZCKLAQoaTGlzdFJlcG9ydExpc3RpbmdzUmVzcG9uc2USLAoIbGlzdGluZ3MYASADKAsyGi5jZXJhbWljcy52MS5SZXBvcnRMaXN0aW5nEhEKCWFsbF9jb3VudBgCIAEoDRIWCg51bm1hcHBlZF9jb3VudBgDIAEoDRIUCgxtYXBwZWRfY291bnQYBCABKA0iYwoeU2V0UmVwb3J0TGlzdGluZ1Byb2R1Y3RSZXF1ZXN0EhkKEXJlcG9ydF9saXN0aW5nX2lkGAEgASgJEhcKCnByb2R1Y3RfaWQYAiABKAlIAIgBAUINCgtfcHJvZHVjdF9pZCJtCh9TZXRSZXBvcnRMaXN0aW5nUHJvZHVjdFJlc3BvbnNlEi0KB3N1Y2Nlc3MYASABKAsyGi5jZXJhbWljcy52MS5SZXBvcnRMaXN0aW5nSAASEQoHZmFpbHVyZRgCIAEoCUgAQggKBnJlc3VsdCJSCidDcmVhdGVQcm9kdWN0QW5kTWFwUmVwb3J0TGlzdGluZ1JlcXVlc3QSGQoRcmVwb3J0X2xpc3RpbmdfaWQYASABKAkSDAoEbmFtZRgCIAEoCSJ2CihDcmVhdGVQcm9kdWN0QW5kTWFwUmVwb3J0TGlzdGluZ1Jlc3BvbnNlEi0KB3N1Y2Nlc3MYASABKAsyGi5jZXJhbWljcy52MS5SZXBvcnRMaXN0aW5nSAASEQoHZmFpbHVyZRgCIAEoCUgAQggKBnJlc3VsdCqhAQoTUmVwb3J0TGlzdGluZ0ZpbHRlchIlCiFSRVBPUlRfTElTVElOR19GSUxURVJfVU5TUEVDSUZJRUQQABIdChlSRVBPUlRfTElTVElOR19GSUxURVJfQUxMEAESIgoeUkVQT1JUX0xJU1RJTkdfRklMVEVSX1VOTUFQUEVEEAISIAocUkVQT1JUX0xJU1RJTkdfRklMVEVSX01BUFBFRBADMosDChRSZXBvcnRMaXN0aW5nU2VydmljZRJnChJMaXN0UmVwb3J0TGlzdGluZ3MSJi5jZXJhbWljcy52MS5MaXN0UmVwb3J0TGlzdGluZ3NSZXF1ZXN0GicuY2VyYW1pY3MudjEuTGlzdFJlcG9ydExpc3RpbmdzUmVzcG9uc2UiABJ2ChdTZXRSZXBvcnRMaXN0aW5nUHJvZHVjdBIrLmNlcmFtaWNzLnYxLlNldFJlcG9ydExpc3RpbmdQcm9kdWN0UmVxdWVzdBosLmNlcmFtaWNzLnYxLlNldFJlcG9ydExpc3RpbmdQcm9kdWN0UmVzcG9uc2UiABKRAQogQ3JlYXRlUHJvZHVjdEFuZE1hcFJlcG9ydExpc3RpbmcSNC5jZXJhbWljcy52MS5DcmVhdGVQcm9kdWN0QW5kTWFwUmVwb3J0TGlzdGluZ1JlcXVlc3QaNS5jZXJhbWljcy52MS5DcmVhdGVQcm9kdWN0QW5kTWFwUmVwb3J0TGlzdGluZ1Jlc3BvbnNlIgBiBnByb3RvMw", [file_ceramics_v1_product]);
 
 /**
  * @generated from message ceramics.v1.ReportListing
@@ -40,6 +42,11 @@ export type ReportListing = Message<"ceramics.v1.ReportListing"> & {
    * @generated from field: double current_stock_balance = 5;
    */
   currentStockBalance: number;
+
+  /**
+   * @generated from field: ceramics.v1.Product product = 6;
+   */
+  product?: Product | undefined;
 };
 
 /**
@@ -54,9 +61,14 @@ export const ReportListingSchema: GenMessage<ReportListing> = /*@__PURE__*/
  */
 export type ListReportListingsRequest = Message<"ceramics.v1.ListReportListingsRequest"> & {
   /**
-   * @generated from field: string outlet_id = 1;
+   * @generated from field: optional string outlet_id = 1;
    */
-  outletId: string;
+  outletId?: string | undefined;
+
+  /**
+   * @generated from field: ceramics.v1.ReportListingFilter filter = 2;
+   */
+  filter: ReportListingFilter;
 };
 
 /**
@@ -74,6 +86,21 @@ export type ListReportListingsResponse = Message<"ceramics.v1.ListReportListings
    * @generated from field: repeated ceramics.v1.ReportListing listings = 1;
    */
   listings: ReportListing[];
+
+  /**
+   * @generated from field: uint32 all_count = 2;
+   */
+  allCount: number;
+
+  /**
+   * @generated from field: uint32 unmapped_count = 3;
+   */
+  unmappedCount: number;
+
+  /**
+   * @generated from field: uint32 mapped_count = 4;
+   */
+  mappedCount: number;
 };
 
 /**
@@ -82,6 +109,139 @@ export type ListReportListingsResponse = Message<"ceramics.v1.ListReportListings
  */
 export const ListReportListingsResponseSchema: GenMessage<ListReportListingsResponse> = /*@__PURE__*/
   messageDesc(file_ceramics_v1_report_listing, 2);
+
+/**
+ * @generated from message ceramics.v1.SetReportListingProductRequest
+ */
+export type SetReportListingProductRequest = Message<"ceramics.v1.SetReportListingProductRequest"> & {
+  /**
+   * @generated from field: string report_listing_id = 1;
+   */
+  reportListingId: string;
+
+  /**
+   * @generated from field: optional string product_id = 2;
+   */
+  productId?: string | undefined;
+};
+
+/**
+ * Describes the message ceramics.v1.SetReportListingProductRequest.
+ * Use `create(SetReportListingProductRequestSchema)` to create a new message.
+ */
+export const SetReportListingProductRequestSchema: GenMessage<SetReportListingProductRequest> = /*@__PURE__*/
+  messageDesc(file_ceramics_v1_report_listing, 3);
+
+/**
+ * @generated from message ceramics.v1.SetReportListingProductResponse
+ */
+export type SetReportListingProductResponse = Message<"ceramics.v1.SetReportListingProductResponse"> & {
+  /**
+   * @generated from oneof ceramics.v1.SetReportListingProductResponse.result
+   */
+  result: {
+    /**
+     * @generated from field: ceramics.v1.ReportListing success = 1;
+     */
+    value: ReportListing;
+    case: "success";
+  } | {
+    /**
+     * @generated from field: string failure = 2;
+     */
+    value: string;
+    case: "failure";
+  } | { case: undefined; value?: undefined };
+};
+
+/**
+ * Describes the message ceramics.v1.SetReportListingProductResponse.
+ * Use `create(SetReportListingProductResponseSchema)` to create a new message.
+ */
+export const SetReportListingProductResponseSchema: GenMessage<SetReportListingProductResponse> = /*@__PURE__*/
+  messageDesc(file_ceramics_v1_report_listing, 4);
+
+/**
+ * @generated from message ceramics.v1.CreateProductAndMapReportListingRequest
+ */
+export type CreateProductAndMapReportListingRequest = Message<"ceramics.v1.CreateProductAndMapReportListingRequest"> & {
+  /**
+   * @generated from field: string report_listing_id = 1;
+   */
+  reportListingId: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+};
+
+/**
+ * Describes the message ceramics.v1.CreateProductAndMapReportListingRequest.
+ * Use `create(CreateProductAndMapReportListingRequestSchema)` to create a new message.
+ */
+export const CreateProductAndMapReportListingRequestSchema: GenMessage<CreateProductAndMapReportListingRequest> = /*@__PURE__*/
+  messageDesc(file_ceramics_v1_report_listing, 5);
+
+/**
+ * @generated from message ceramics.v1.CreateProductAndMapReportListingResponse
+ */
+export type CreateProductAndMapReportListingResponse = Message<"ceramics.v1.CreateProductAndMapReportListingResponse"> & {
+  /**
+   * @generated from oneof ceramics.v1.CreateProductAndMapReportListingResponse.result
+   */
+  result: {
+    /**
+     * @generated from field: ceramics.v1.ReportListing success = 1;
+     */
+    value: ReportListing;
+    case: "success";
+  } | {
+    /**
+     * @generated from field: string failure = 2;
+     */
+    value: string;
+    case: "failure";
+  } | { case: undefined; value?: undefined };
+};
+
+/**
+ * Describes the message ceramics.v1.CreateProductAndMapReportListingResponse.
+ * Use `create(CreateProductAndMapReportListingResponseSchema)` to create a new message.
+ */
+export const CreateProductAndMapReportListingResponseSchema: GenMessage<CreateProductAndMapReportListingResponse> = /*@__PURE__*/
+  messageDesc(file_ceramics_v1_report_listing, 6);
+
+/**
+ * @generated from enum ceramics.v1.ReportListingFilter
+ */
+export enum ReportListingFilter {
+  /**
+   * @generated from enum value: REPORT_LISTING_FILTER_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: REPORT_LISTING_FILTER_ALL = 1;
+   */
+  ALL = 1,
+
+  /**
+   * @generated from enum value: REPORT_LISTING_FILTER_UNMAPPED = 2;
+   */
+  UNMAPPED = 2,
+
+  /**
+   * @generated from enum value: REPORT_LISTING_FILTER_MAPPED = 3;
+   */
+  MAPPED = 3,
+}
+
+/**
+ * Describes the enum ceramics.v1.ReportListingFilter.
+ */
+export const ReportListingFilterSchema: GenEnum<ReportListingFilter> = /*@__PURE__*/
+  enumDesc(file_ceramics_v1_report_listing, 0);
 
 /**
  * @generated from service ceramics.v1.ReportListingService
@@ -94,6 +254,22 @@ export const ReportListingService: GenService<{
     methodKind: "unary";
     input: typeof ListReportListingsRequestSchema;
     output: typeof ListReportListingsResponseSchema;
+  },
+  /**
+   * @generated from rpc ceramics.v1.ReportListingService.SetReportListingProduct
+   */
+  setReportListingProduct: {
+    methodKind: "unary";
+    input: typeof SetReportListingProductRequestSchema;
+    output: typeof SetReportListingProductResponseSchema;
+  },
+  /**
+   * @generated from rpc ceramics.v1.ReportListingService.CreateProductAndMapReportListing
+   */
+  createProductAndMapReportListing: {
+    methodKind: "unary";
+    input: typeof CreateProductAndMapReportListingRequestSchema;
+    output: typeof CreateProductAndMapReportListingResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_ceramics_v1_report_listing, 0);

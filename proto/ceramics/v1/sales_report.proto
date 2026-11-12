@@ -2,12 +2,16 @@ syntax = "proto3";
 
 package ceramics.v1;
 
+import "ceramics/v1/product.proto";
+
 message SalesEntry {
   string listing_name = 1;
   double units_sold = 2;
   double earnings_kopecks = 3;
   double outlet_share_kopecks = 4;
   double sales_value_kopecks = 5;
+  string report_listing_id = 6;
+  Product product = 7;
 }
 
 message CreateSalesEntryInput {
@@ -21,6 +25,8 @@ message StockBalanceEntry {
   string listing_name = 1;
   double stock_balance = 2;
   double outlet_price_kopecks = 3;
+  string report_listing_id = 4;
+  Product product = 5;
 }
 
 message SalesReport {

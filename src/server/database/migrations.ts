@@ -28,6 +28,9 @@ const createSchema: Migration = {
       .addColumn('id', 'text', (column) => column.primaryKey().notNull())
       .addColumn('name', sql`text collate binary`, (column) => column.notNull())
       .addColumn('created_at_ms', 'integer', (column) => column.notNull())
+      .addColumn('product_id', 'text', (column) =>
+        column.references('products.id').onDelete('restrict'),
+      )
       .addUniqueConstraint('report_listings_name_unique', ['name'])
       .addCheckConstraint('report_listings_name_nonempty', sql`length(name) > 0`)
       .execute();

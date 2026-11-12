@@ -72,7 +72,10 @@ export const test = baseTest
             updateOutlet: outlet.updateOutlet.handler,
           });
           router.service(ReportListingService, {
+            createProductAndMapReportListing:
+              reportListing.createProductAndMapReportListing.handler,
             listReportListings: reportListing.listReportListings.handler,
+            setReportListingProduct: reportListing.setReportListingProduct.handler,
           });
           router.service(ProductService, {
             createProduct: product.createProduct.handler,

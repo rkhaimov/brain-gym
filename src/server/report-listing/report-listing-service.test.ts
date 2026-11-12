@@ -2,35 +2,62 @@ import { createClient, createRouterTransport } from '@connectrpc/connect';
 import { describe, expect } from 'vitest';
 
 import { OutletService } from '../../shared/gen/ceramics/v1/outlet_pb.js';
-import { ReportListingService } from '../../shared/gen/ceramics/v1/report_listing_pb.js';
+import { ProductService } from '../../shared/gen/ceramics/v1/product_pb.js';
+import {
+  ReportListingFilter,
+  ReportListingService,
+} from '../../shared/gen/ceramics/v1/report_listing_pb.js';
 import { SalesReportService } from '../../shared/gen/ceramics/v1/sales_report_pb.js';
 import { assertSuccess } from '../../test/server/assertions.js';
 import { testEnv } from '../../test/server/env.js';
 import { test as serverTest } from '../../test/server/test.js';
 import { MutationQueue } from '../mutation-queue.js';
 import { registerOutletRoutes } from '../outlet/outlet-service.js';
+import { registerProductRoutes } from '../product/product-service.js';
 import { registerSalesReportRoutes } from '../sales-report/sales-report-service.js';
 import { registerReportListingRoutes } from './report-listing-service.js';
 
-const test = serverTest.extend<{
-  readonly clients: {
-    readonly listings: ReturnType<typeof createClient<typeof ReportListingService>>;
-    readonly outlets: ReturnType<typeof createClient<typeof OutletService>>;
-    readonly reports: ReturnType<typeof createClient<typeof SalesReportService>>;
+function createClients(database: Parameters<typeof registerOutletRoutes>[1]['database']) {
+  const mutationQueue = new MutationQueue();
+  const dependencies = { database, env: testEnv, mutationQueue };
+  const transport = createRouterTransport((router) => {
+    registerOutletRoutes(router, dependencies);
+    registerProductRoutes(router, dependencies);
+    registerReportListingRoutes(router, dependencies);
+    registerSalesReportRoutes(router, dependencies);
+  });
+  return {
+    listings: createClient(ReportListingService, transport),
+    outlets: createClient(OutletService, transport),
+    products: createClient(ProductService, transport),
+    reports: createClient(SalesReportService, transport),
   };
+}
+
+type Clients = ReturnType<typeof createClients>;
+
+const test = serverTest.extend<{
+  readonly clients: Clients & { restart(): Promise<void> };
 }>({
   clients: async ({ database }, use) => {
-    const mutationQueue = new MutationQueue();
-    const dependencies = { database: database.value, env: testEnv, mutationQueue };
-    const transport = createRouterTransport((router) => {
-      registerOutletRoutes(router, dependencies);
-      registerReportListingRoutes(router, { database: database.value });
-      registerSalesReportRoutes(router, dependencies);
-    });
+    let clients = createClients(database.value);
     await use({
-      listings: createClient(ReportListingService, transport),
-      outlets: createClient(OutletService, transport),
-      reports: createClient(SalesReportService, transport),
+      get listings() {
+        return clients.listings;
+      },
+      get outlets() {
+        return clients.outlets;
+      },
+      get products() {
+        return clients.products;
+      },
+      get reports() {
+        return clients.reports;
+      },
+      async restart() {
+        await database.restart();
+        clients = createClients(database.value);
+      },
     });
   },
 });
@@ -274,5 +301,226 @@ describe('ReportListingService', () => {
         { currentStockBalance: 0, name: 'Агат' },
       ],
     });
+  });
+
+  test('persists one mapping across Outlets, price changes, and database restarts', async ({
+    clients,
+  }) => {
+    const firstOutlet = await clients.outlets.createOutlet({ name: 'Гончарная лавка' });
+    const secondOutlet = await clients.outlets.createOutlet({ name: 'Керамический дворик' });
+    const product = await clients.products.createProduct({ name: 'Кольцо' });
+    assertSuccess(firstOutlet);
+    assertSuccess(secondOutlet);
+    assertSuccess(product);
+
+    const firstReport = await clients.reports.createSalesReport({
+      outletId: firstOutlet.result.value.id,
+      periodEndDate: '2026-11-30',
+      periodStartDate: '2026-11-01',
+      stockBalances: [
+        { listingName: ' Кольцо ручной работы ', outletPriceKopecks: 3500, stockBalance: 5 },
+      ],
+    });
+    const secondReport = await clients.reports.createSalesReport({
+      outletId: secondOutlet.result.value.id,
+      periodEndDate: '2026-12-31',
+      periodStartDate: '2026-12-01',
+      stockBalances: [
+        { listingName: 'Кольцо ручной работы', outletPriceKopecks: 4900, stockBalance: 2 },
+      ],
+    });
+    assertSuccess(firstReport);
+    assertSuccess(secondReport);
+
+    const globalListings = await clients.listings.listReportListings({
+      filter: ReportListingFilter.ALL,
+    });
+    expect(globalListings).toMatchObject({
+      allCount: 1,
+      listings: [{ name: 'Кольцо ручной работы' }],
+      mappedCount: 0,
+      unmappedCount: 1,
+    });
+    const listingId = globalListings.listings[0]?.id;
+    if (listingId === undefined) throw new Error('Expected a global Report listing');
+
+    await expect(
+      clients.listings.setReportListingProduct({
+        productId: product.result.value.id,
+        reportListingId: listingId,
+      }),
+    ).resolves.toMatchObject({
+      result: { case: 'success', value: { product: { id: product.result.value.id } } },
+    });
+    await clients.restart();
+
+    await expect(
+      clients.listings.listReportListings({ outletId: secondOutlet.result.value.id }),
+    ).resolves.toMatchObject({
+      listings: [
+        {
+          lastOutletPriceKopecks: 4900,
+          name: 'Кольцо ручной работы',
+          product: { id: product.result.value.id, name: 'Кольцо' },
+        },
+      ],
+    });
+  });
+
+  test('retroactively remaps and unmaps historical report rows and preserves archived mappings', async ({
+    clients,
+  }) => {
+    const outlet = await clients.outlets.createOutlet({ name: 'Гончарная лавка' });
+    const ring = await clients.products.createProduct({ name: 'Кольцо' });
+    const pendant = await clients.products.createProduct({ name: 'Кулон' });
+    assertSuccess(outlet);
+    assertSuccess(ring);
+    assertSuccess(pendant);
+    const report = await clients.reports.createSalesReport({
+      outletId: outlet.result.value.id,
+      periodEndDate: '2026-11-30',
+      periodStartDate: '2026-11-01',
+      sales: [
+        {
+          earningsKopecks: 3000,
+          listingName: 'Авторское украшение',
+          salesValueKopecks: 3500,
+          unitsSold: 1,
+        },
+      ],
+      stockBalances: [
+        { listingName: 'Авторское украшение', outletPriceKopecks: 3500, stockBalance: 4 },
+      ],
+    });
+    assertSuccess(report);
+    const listings = await clients.listings.listReportListings({});
+    const listingId = listings.listings[0]?.id;
+    if (listingId === undefined) throw new Error('Expected a Report listing');
+
+    await clients.listings.setReportListingProduct({
+      productId: ring.result.value.id,
+      reportListingId: listingId,
+    });
+    await expect(
+      clients.reports.getSalesReport({ id: report.result.value.id }),
+    ).resolves.toMatchObject({
+      result: {
+        case: 'success',
+        value: {
+          sales: [{ product: { id: ring.result.value.id }, reportListingId: listingId }],
+          stockBalances: [{ product: { id: ring.result.value.id }, reportListingId: listingId }],
+        },
+      },
+    });
+
+    await clients.listings.setReportListingProduct({
+      productId: pendant.result.value.id,
+      reportListingId: listingId,
+    });
+    const remapped = await clients.reports.getSalesReport({ id: report.result.value.id });
+    assertSuccess(remapped);
+    expect(remapped.result.value.sales[0]?.product?.id).toBe(pendant.result.value.id);
+
+    await clients.listings.setReportListingProduct({ reportListingId: listingId });
+    const unmapped = await clients.reports.getSalesReport({ id: report.result.value.id });
+    assertSuccess(unmapped);
+    expect(unmapped.result.value.sales[0]?.product).toBeUndefined();
+    expect(unmapped.result.value.stockBalances[0]?.product).toBeUndefined();
+
+    await clients.listings.setReportListingProduct({
+      productId: ring.result.value.id,
+      reportListingId: listingId,
+    });
+    await clients.products.setProductArchived({ archived: true, id: ring.result.value.id });
+    await expect(
+      clients.reports.getSalesReport({ id: report.result.value.id }),
+    ).resolves.toMatchObject({
+      result: {
+        case: 'success',
+        value: { sales: [{ product: { archived: true, id: ring.result.value.id } }] },
+      },
+    });
+    await clients.products.setProductArchived({ archived: true, id: pendant.result.value.id });
+    await expect(
+      clients.listings.setReportListingProduct({
+        productId: pendant.result.value.id,
+        reportListingId: listingId,
+      }),
+    ).resolves.toMatchObject({ result: { case: 'failure' } });
+  });
+
+  test('filters exact-name identities and atomically creates a mapped Product', async ({
+    clients,
+  }) => {
+    const outlet = await clients.outlets.createOutlet({ name: 'Гончарная лавка' });
+    assertSuccess(outlet);
+    const report = await clients.reports.createSalesReport({
+      outletId: outlet.result.value.id,
+      periodEndDate: '2026-11-30',
+      periodStartDate: '2026-11-01',
+      stockBalances: [
+        { listingName: ' Кольцо ', outletPriceKopecks: 3500, stockBalance: 1 },
+        { listingName: 'кольцо', outletPriceKopecks: 3600, stockBalance: 2 },
+        { listingName: 'Кольцо!', outletPriceKopecks: 3700, stockBalance: 3 },
+      ],
+    });
+    assertSuccess(report);
+
+    const initial = await clients.listings.listReportListings({
+      filter: ReportListingFilter.UNMAPPED,
+    });
+    expect(initial).toMatchObject({ allCount: 3, mappedCount: 0, unmappedCount: 3 });
+    expect(initial.listings.map((listing) => listing.name)).toEqual([
+      'Кольцо',
+      'кольцо',
+      'Кольцо!',
+    ]);
+    const listingId = initial.listings.find(({ name }) => name === 'Кольцо')?.id;
+    const duplicateListingId = initial.listings.find(({ name }) => name === 'Кольцо!')?.id;
+    if (listingId === undefined || duplicateListingId === undefined) {
+      throw new Error('Expected exact-name Report listings');
+    }
+
+    await expect(
+      clients.listings.createProductAndMapReportListing({
+        name: 'Авторское кольцо',
+        reportListingId: listingId,
+      }),
+    ).resolves.toMatchObject({
+      result: {
+        case: 'success',
+        value: { name: 'Кольцо', product: { name: 'Авторское кольцо' } },
+      },
+    });
+    await expect(
+      clients.listings.listReportListings({ filter: ReportListingFilter.MAPPED }),
+    ).resolves.toMatchObject({
+      allCount: 3,
+      listings: [{ id: listingId, product: { name: 'Авторское кольцо' } }],
+      mappedCount: 1,
+      unmappedCount: 2,
+    });
+    const stillUnmapped = await clients.listings.listReportListings({
+      filter: ReportListingFilter.UNMAPPED,
+    });
+    expect(stillUnmapped.listings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: duplicateListingId, name: 'Кольцо!' }),
+        expect.objectContaining({ name: 'кольцо' }),
+      ]),
+    );
+
+    await expect(
+      clients.listings.createProductAndMapReportListing({
+        name: 'Авторское кольцо',
+        reportListingId: duplicateListingId,
+      }),
+    ).resolves.toMatchObject({ result: { case: 'failure' } });
+    await expect(clients.products.listProducts({})).resolves.toMatchObject({
+      products: [{ name: 'Авторское кольцо' }],
+    });
+    await expect(
+      clients.listings.listReportListings({ filter: ReportListingFilter.UNMAPPED }),
+    ).resolves.toMatchObject({ unmappedCount: 2 });
   });
 });
