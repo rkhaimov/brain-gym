@@ -15,10 +15,10 @@ import type { DB, Outlets } from '../database/generated.js';
 import type { EnvService } from '../env.js';
 import type { MutationQueue } from '../mutation-queue.js';
 
-const NAME_REQUIRED_MESSAGE = 'Введите название полки';
-const NAME_ALREADY_EXISTS_MESSAGE = 'Полка с таким названием уже существует';
-const CODE_ALREADY_EXISTS_MESSAGE = 'Полка с таким кодом уже существует';
-const OUTLET_NOT_FOUND_MESSAGE = 'Полка не найдена';
+const NAME_REQUIRED_MESSAGE = 'Введите название магазина';
+const NAME_ALREADY_EXISTS_MESSAGE = 'Магазин с таким названием уже существует';
+const CODE_ALREADY_EXISTS_MESSAGE = 'Магазин с таким кодом уже существует';
+const OUTLET_NOT_FOUND_MESSAGE = 'Магазин не найден';
 
 type OutletId = string & { readonly __outletId: true };
 

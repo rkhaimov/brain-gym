@@ -598,7 +598,7 @@ function createOutletDetailsPage() {
     openCreateReport: () => page.getByRole('button', { name: 'Создать отчёт' }).click(),
     openReport: (start: string, end: string) =>
       page.getByRole('button', { name: `Открыть отчёт ${periodLabel(start, end)}` }).click(),
-    outletShare: (index: number) => salesRow(index).getByLabelText('Комиссия полки'),
+    outletShare: (index: number) => salesRow(index).getByLabelText('Комиссия магазина'),
     periodEnd: () => dialog().getByLabelText('Конец периода'),
     periodStart: () => dialog().getByLabelText('Начало периода'),
     salesListing: (index: number) =>
@@ -610,13 +610,14 @@ function createOutletDetailsPage() {
     restoreReport: () => dialog().getByRole('button', { name: 'Восстановить отчёт' }).click(),
     screenshotDialog: (name: string) => screenshot(dialog(), name),
     screenshotPage: (name: string) =>
-      screenshot(page.getByRole('region', { name: 'Карточка полки' }), name),
+      screenshot(page.getByRole('region', { name: 'Карточка магазина' }), name),
     showReports: () => page.getByRole('tab', { name: 'Отчёты' }).click(),
     showArchivedReports: () => page.getByRole('button', { name: 'В архиве' }).click(),
     stockBalance: (index: number) => stockRow(index).getByRole('spinbutton', { name: 'Остаток' }),
     stockListing: (index: number) =>
       stockRow(index).getByRole('combobox', { name: 'Позиция отчёта' }),
-    stockPrice: (index: number) => stockRow(index).getByRole('textbox', { name: 'Цена на полке' }),
+    stockPrice: (index: number) =>
+      stockRow(index).getByRole('textbox', { name: 'Цена в магазине' }),
     unitsSold: (index: number) => salesRow(index).getByRole('spinbutton', { name: 'Продано, шт.' }),
   };
 }

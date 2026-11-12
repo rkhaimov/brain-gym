@@ -112,7 +112,7 @@ describe('OutletService', () => {
         case: 'failure',
         value: {
           field: OutletMutationFailureField.NAME,
-          message: 'Полка с таким названием уже существует',
+          message: 'Магазин с таким названием уже существует',
         },
       },
     });
@@ -121,7 +121,7 @@ describe('OutletService', () => {
         case: 'failure',
         value: {
           field: OutletMutationFailureField.CODE,
-          message: 'Полка с таким кодом уже существует',
+          message: 'Магазин с таким кодом уже существует',
         },
       },
     });
@@ -147,7 +147,7 @@ describe('OutletService', () => {
         case: 'failure',
         value: {
           field: OutletMutationFailureField.NAME,
-          message: 'Полка с таким названием уже существует',
+          message: 'Магазин с таким названием уже существует',
         },
       },
     });
@@ -162,7 +162,7 @@ describe('OutletService', () => {
         case: 'failure',
         value: {
           field: OutletMutationFailureField.CODE,
-          message: 'Полка с таким кодом уже существует',
+          message: 'Магазин с таким кодом уже существует',
         },
       },
     });
@@ -206,7 +206,7 @@ describe('OutletService', () => {
         case: 'failure',
         value: {
           field: OutletMutationFailureField.NAME,
-          message: 'Введите название полки',
+          message: 'Введите название магазина',
         },
       },
     });
@@ -219,7 +219,7 @@ describe('OutletService', () => {
         case: 'failure',
         value: {
           field: OutletMutationFailureField.NAME,
-          message: 'Введите название полки',
+          message: 'Введите название магазина',
         },
       },
     });

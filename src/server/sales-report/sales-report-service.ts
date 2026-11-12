@@ -28,7 +28,7 @@ import type {
 import type { EnvService } from '../env.js';
 import type { MutationQueue } from '../mutation-queue.js';
 
-const OUTLET_NOT_AVAILABLE_MESSAGE = 'Выберите действующую полку';
+const OUTLET_NOT_AVAILABLE_MESSAGE = 'Выберите действующий магазин';
 const REPORT_NOT_FOUND_MESSAGE = 'Отчёт не найден';
 const REPORT_ARCHIVED_MESSAGE = 'Сначала восстановите отчёт';
 

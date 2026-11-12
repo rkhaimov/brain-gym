@@ -22,7 +22,7 @@ export function CreateOutletDialog(props: CreateOutletDialogProps) {
         mutation.mutateAsync({ name, ...(code === undefined ? {} : { code }) })
       }
       submitLabel="Создать"
-      title="Новая полка"
+      title="Новый магазин"
     />
   );
 }

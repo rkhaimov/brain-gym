@@ -42,13 +42,13 @@ const reportCatalogCopy: MaintenanceCatalogCopy = {
   createFirstAction: 'Создать первый отчёт',
   editAction: (period) => `Открыть отчёт ${period}`,
   editButton: 'Открыть',
-  emptyDescription: 'Создайте первый отчёт для этой полки',
+  emptyDescription: 'Создайте первый отчёт для этого магазина',
   emptyTitle: 'Отчётов пока нет',
   loadErrorDescription: 'Проверьте соединение с сервером и попробуйте снова.',
   loadErrorTitle: 'Не удалось загрузить отчёты',
   loading: 'Загружаем отчёты',
   primaryColumn: 'Отчётный период',
-  regionLabel: 'Отчёты полки',
+  regionLabel: 'Отчёты магазина',
   restoreAction: (period) => `Восстановить отчёт ${period}`,
   tableLabel: 'История отчётов',
 };
@@ -80,14 +80,14 @@ function OutletDetailsPage() {
   if (outlets.isPending) {
     return (
       <div className="flex items-center justify-center gap-2 p-12 text-muted-foreground">
-        <Spinner /> Загружаем полку…
+        <Spinner /> Загружаем магазин…
       </div>
     );
   }
   if (outlets.isError) {
     return (
       <Alert className="m-6" variant="destructive">
-        <AlertTitle>Не удалось загрузить полку</AlertTitle>
+        <AlertTitle>Не удалось загрузить магазин</AlertTitle>
         <AlertDescription>Проверьте соединение с сервером и попробуйте снова.</AlertDescription>
       </Alert>
     );
@@ -95,17 +95,17 @@ function OutletDetailsPage() {
   if (outlet === undefined) {
     return (
       <Alert className="m-6" variant="destructive">
-        <AlertTitle>Полка не найдена</AlertTitle>
+        <AlertTitle>Магазин не найден</AlertTitle>
         <AlertDescription>Вернитесь к списку полок.</AlertDescription>
       </Alert>
     );
   }
 
   return (
-    <section aria-label="Карточка полки" className="flex flex-col gap-6 p-6">
+    <section aria-label="Карточка магазина" className="flex flex-col gap-6 p-6">
       <div className="flex items-start gap-4">
         <Button asChild size="icon" variant="outline">
-          <Link aria-label="Назад к полкам" to="/outlets">
+          <Link aria-label="Назад к магазинам" to="/outlets">
             <ArrowLeft />
           </Link>
         </Button>
@@ -114,18 +114,18 @@ function OutletDetailsPage() {
             <h2 className="text-2xl font-bold">{outlet.name}</h2>
             <Badge variant="secondary">{outlet.code ?? 'Без кода'}</Badge>
           </div>
-          <p className="text-sm text-muted-foreground">Позиции и отчёты полки</p>
+          <p className="text-sm text-muted-foreground">Позиции и отчёты магазина</p>
         </div>
       </div>
 
       <Tabs defaultValue="listings">
-        <TabsList aria-label="Разделы полки">
+        <TabsList aria-label="Разделы магазина">
           <TabsTrigger value="listings">Позиции</TabsTrigger>
           <TabsTrigger value="reports">Отчёты</TabsTrigger>
         </TabsList>
 
         <TabsContent value="listings">
-          <section aria-label="Позиции полки" className="overflow-hidden rounded-lg border">
+          <section aria-label="Позиции магазина" className="overflow-hidden rounded-lg border">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -245,5 +245,5 @@ function OutletDetailsPage() {
 
 export const Route = createFileRoute('/outlets/$outletId')({
   component: OutletDetailsPage,
-  staticData: { pageTitle: 'Полка' },
+  staticData: { pageTitle: 'Магазин' },
 });

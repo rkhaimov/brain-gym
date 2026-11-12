@@ -220,7 +220,7 @@ test.describe('Outlet maintenance', () => {
           case: 'failure',
           value: createOutletMutationFailureStub({
             field: OutletMutationFailureField.CODE,
-            message: 'Полка с таким кодом уже существует',
+            message: 'Магазин с таким кодом уже существует',
           }),
         },
       }),
@@ -234,30 +234,30 @@ test.describe('Outlet maintenance', () => {
     await outlets.create();
 
     await expect.element(outlets.code()).toHaveAttribute('aria-invalid', 'true');
-    await expect.element(page.getByText('Полка с таким кодом уже существует')).toBeVisible();
+    await expect.element(page.getByText('Магазин с таким кодом уже существует')).toBeVisible();
     await outlets.screenshotDialog('Outlet code collision');
   });
 });
 
 function createOutletsPage() {
-  const catalog = () => page.getByRole('region', { name: 'Все полки' });
-  const createDialog = () => page.getByRole('dialog', { name: 'Новая полка' });
-  const editDialog = () => page.getByRole('dialog', { name: 'Изменить полку' });
+  const catalog = () => page.getByRole('region', { name: 'Все магазины' });
+  const createDialog = () => page.getByRole('dialog', { name: 'Новый магазин' });
+  const editDialog = () => page.getByRole('dialog', { name: 'Изменить магазин' });
 
   return {
     archive: (name: string) =>
       catalog()
         .getByRole('button', { name: `Архивировать ${name}` })
         .click(),
-    code: () => createDialog().getByRole('textbox', { name: 'Код полки' }),
+    code: () => createDialog().getByRole('textbox', { name: 'Код магазина' }),
     create: () => createDialog().getByRole('button', { name: 'Создать' }).click(),
-    editCode: () => editDialog().getByRole('textbox', { name: 'Код полки' }),
+    editCode: () => editDialog().getByRole('textbox', { name: 'Код магазина' }),
     editName: () => editDialog().getByRole('textbox', { name: 'Название' }),
     name: () => createDialog().getByRole('textbox', { name: 'Название' }),
-    navigation: () => page.getByRole('link', { exact: true, name: 'Полки' }),
+    navigation: () => page.getByRole('link', { exact: true, name: 'Магазины' }),
     noCode: () => page.getByText('Без кода', { exact: true }),
     open: () => window.openApplicationRoute('/outlets'),
-    openCreateDialog: () => page.getByRole('button', { name: 'Создать полку' }).click(),
+    openCreateDialog: () => page.getByRole('button', { name: 'Создать магазин' }).click(),
     openEditDialog: (name: string) =>
       catalog()
         .getByRole('button', { name: `Изменить ${name}` })

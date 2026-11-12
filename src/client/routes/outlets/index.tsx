@@ -20,23 +20,23 @@ import { useRefreshOutletCatalog } from './-outlet-catalog-query.js';
 const outletCatalogCopy: MaintenanceCatalogCopy = {
   activeFilter: 'Активные',
   archiveAction: (name) => `Архивировать ${name}`,
-  archivedEmptyDescription: 'Архивированные полки появятся здесь',
+  archivedEmptyDescription: 'Архивированные магазины появятся здесь',
   archivedEmptyTitle: 'Архив пока пуст',
   archivedFilter: 'Архив',
   countLabel: (count) => `Количество полок: ${count}`,
-  createAction: 'Создать полку',
-  createFirstAction: 'Создать первую полку',
+  createAction: 'Создать магазин',
+  createFirstAction: 'Создать первый магазин',
   editAction: (name) => `Изменить ${name}`,
   editButton: 'Изменить',
-  emptyDescription: 'Добавьте первую полку, чтобы начать вести отчёты',
+  emptyDescription: 'Добавьте первый магазин, чтобы начать вести отчёты',
   emptyTitle: 'Полок пока нет',
   loadErrorDescription: 'Проверьте соединение с сервером и попробуйте снова.',
-  loadErrorTitle: 'Не удалось загрузить полки',
-  loading: 'Загружаем полки',
+  loadErrorTitle: 'Не удалось загрузить магазины',
+  loading: 'Загружаем магазины',
   primaryColumn: 'Название',
-  regionLabel: 'Все полки',
+  regionLabel: 'Все магазины',
   restoreAction: (name) => `Восстановить ${name}`,
-  tableLabel: 'Полки',
+  tableLabel: 'Магазины',
 };
 
 function OutletsPage() {
@@ -77,7 +77,7 @@ function OutletsPage() {
         }}
         copy={outletCatalogCopy}
         detailColumn={{
-          header: 'Код полки',
+          header: 'Код магазина',
           render: (outlet) =>
             outlet.code === undefined ? (
               <span className="text-muted-foreground">Без кода</span>
@@ -117,5 +117,5 @@ function OutletsPage() {
 
 export const Route = createFileRoute('/outlets/')({
   component: OutletsPage,
-  staticData: { pageTitle: 'Полки' },
+  staticData: { pageTitle: 'Магазины' },
 });

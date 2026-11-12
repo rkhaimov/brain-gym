@@ -549,7 +549,7 @@ function SalesReportDialogForm({
                 ? 'Просмотр отчёта'
                 : 'Редактировать отчёт'}
           </DialogTitle>
-          <DialogDescription>Полка: {outletDescription}</DialogDescription>
+          <DialogDescription>Магазин: {outletDescription}</DialogDescription>
         </DialogHeader>
 
         {reportLoadPending ? (
@@ -613,7 +613,7 @@ function SalesReportDialogForm({
                 <div>
                   <h2 className="font-bold">Остатки на конец периода</h2>
                   <p className="text-sm text-muted-foreground">
-                    Укажите все позиции, которые остались на полке.
+                    Укажите все позиции, которые остались в магазине.
                   </p>
                 </div>
                 <Button
@@ -628,7 +628,7 @@ function SalesReportDialogForm({
               </div>
               {stockBalances.length === 0 ? (
                 <p className="p-4 text-sm text-muted-foreground">
-                  Пустой остаток: на полке ничего не осталось.
+                  Пустой остаток: в магазине ничего не осталось.
                 </p>
               ) : (
                 <Table>
@@ -636,7 +636,7 @@ function SalesReportDialogForm({
                     <TableRow>
                       <TableHead>Позиция отчёта</TableHead>
                       <TableHead>Остаток</TableHead>
-                      <TableHead>Цена на полке, ₽</TableHead>
+                      <TableHead>Цена в магазине, ₽</TableHead>
                       <TableHead className="text-right">Действия</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -690,7 +690,7 @@ function SalesReportDialogForm({
                                 errors[priceKey] === undefined ? undefined : `${priceKey}-error`
                               }
                               aria-invalid={errors[priceKey] === undefined ? undefined : true}
-                              aria-label="Цена на полке"
+                              aria-label="Цена в магазине"
                               disabled={mutationPending || readOnly}
                               onValueChange={(value) =>
                                 updateStockBalance(index, {
@@ -755,7 +755,7 @@ function SalesReportDialogForm({
                       <TableHead>Продано, шт.</TableHead>
                       <TableHead>Сумма продаж, ₽</TableHead>
                       <TableHead>Заработано, ₽</TableHead>
-                      <TableHead>Комиссия полки</TableHead>
+                      <TableHead>Комиссия магазина</TableHead>
                       <TableHead className="text-right">Действия</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -849,7 +849,7 @@ function SalesReportDialogForm({
                             />
                           </TableCell>
                           <TableCell className="min-w-36 align-top">
-                            <output aria-label="Комиссия полки">
+                            <output aria-label="Комиссия магазина">
                               {formatRussianCurrency(share)}
                             </output>
                           </TableCell>
