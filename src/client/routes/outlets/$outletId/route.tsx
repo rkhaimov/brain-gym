@@ -12,6 +12,7 @@ import {
 } from '@/client/components/maintenance/maintenance-catalog.js';
 import { Spinner } from '@/client/components/ui/spinner.js';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/client/components/ui/tabs.js';
+import { formatRussianCurrency, formatRussianDate } from '@/client/lib/localization.js';
 import {
   Table,
   TableBody,
@@ -51,14 +52,6 @@ const reportCatalogCopy: MaintenanceCatalogCopy = {
   restoreAction: (period) => `Восстановить отчёт ${period}`,
   tableLabel: 'История отчётов',
 };
-
-function formatRubles(kopecks: number): string {
-  return new Intl.NumberFormat('ru-RU', {
-    currency: 'RUB',
-    minimumFractionDigits: 2,
-    style: 'currency',
-  }).format(kopecks / 100);
-}
 
 function OutletDetailsPage() {
   const { outletId } = Route.useParams();
@@ -168,7 +161,7 @@ function OutletDetailsPage() {
                   listings.data?.listings.map((listing) => (
                     <TableRow key={listing.id}>
                       <TableCell className="font-medium">{listing.name}</TableCell>
-                      <TableCell>{formatRubles(listing.lastOutletPriceKopecks)}</TableCell>
+                      <TableCell>{formatRussianCurrency(listing.lastOutletPriceKopecks)}</TableCell>
                       <TableCell>{listing.latestUnitsSold}</TableCell>
                       <TableCell>{listing.currentStockBalance}</TableCell>
                     </TableRow>
@@ -195,7 +188,9 @@ function OutletDetailsPage() {
             }}
             emptyIcon={<FileText />}
             editIcon={<Eye />}
-            entityLabel={(report) => `${report.periodStartDate} — ${report.periodEndDate}`}
+            entityLabel={(report) =>
+              `${formatRussianDate(report.periodStartDate)} — ${formatRussianDate(report.periodEndDate)}`
+            }
             onCreate={(event) => {
               createReportTrigger.current = event.currentTarget;
               setCreateReportOpen(true);

@@ -18,6 +18,13 @@ import {
 import { Field, FieldError, FieldLabel } from '@/client/components/ui/field.js';
 import { Input } from '@/client/components/ui/input.js';
 import {
+  formatRussianCurrency,
+  formatRussianCurrencyInput,
+  formatRussianDate,
+  parseRussianDate,
+  parseRussianRubles,
+} from '@/client/lib/localization.js';
+import {
   Table,
   TableBody,
   TableCell,
@@ -40,6 +47,8 @@ import {
 import type { SalesReport, SalesReportSummary } from '@/shared/gen/ceramics/v1/sales_report_pb.js';
 import { normalizeSalesReport, validateSalesReport } from '@/shared/sales-report-validation.js';
 import type { SalesReportValidationIssue } from '@/shared/sales-report-validation.js';
+
+import { CurrencyInput } from './-currency-input.js';
 
 interface SaleDraft {
   readonly id: number;
@@ -80,25 +89,6 @@ function wholeNumber(value: string): number | undefined {
   if (!/^\d+$/.test(value)) return undefined;
   const number = Number(value);
   return Number.isSafeInteger(number) ? number : undefined;
-}
-
-function kopecksFromRubles(value: string): number | undefined {
-  const match = /^(\d+)(?:[.,](\d{1,2}))?$/.exec(value);
-  if (match === null) return undefined;
-  const rubles = Number(match[1]);
-  const kopecks = Number((match[2] ?? '').padEnd(2, '0'));
-  const total = rubles * 100 + kopecks;
-  return Number.isSafeInteger(total) ? total : undefined;
-}
-
-function formatRubles(value: number | undefined): string {
-  return value === undefined
-    ? '—'
-    : new Intl.NumberFormat('ru-RU', {
-        currency: 'RUB',
-        minimumFractionDigits: 2,
-        style: 'currency',
-      }).format(value / 100);
 }
 
 function clientValidationMessage(issue: SalesReportValidationIssue): string {
@@ -332,14 +322,18 @@ function SalesReportDialogForm({
   const nextRowId = useRef(
     (reportValue?.sales.length ?? 0) + (reportValue?.stockBalances.length ?? 0) + 1,
   );
-  const [periodStartDate, setPeriodStartDate] = useState(reportValue?.periodStartDate ?? '');
-  const [periodEndDate, setPeriodEndDate] = useState(reportValue?.periodEndDate ?? '');
+  const [periodStartDate, setPeriodStartDate] = useState(
+    formatRussianDate(reportValue?.periodStartDate ?? ''),
+  );
+  const [periodEndDate, setPeriodEndDate] = useState(
+    formatRussianDate(reportValue?.periodEndDate ?? ''),
+  );
   const [sales, setSales] = useState<SaleDraft[]>(() =>
     (reportValue?.sales ?? []).map((sale, index) => ({
-      earningsRubles: String(sale.earningsKopecks / 100),
+      earningsRubles: formatRussianCurrencyInput(sale.earningsKopecks),
       id: index + 1,
       listingName: sale.listingName,
-      salesValueRubles: String(sale.salesValueKopecks / 100),
+      salesValueRubles: formatRussianCurrencyInput(sale.salesValueKopecks),
       unitsSold: String(sale.unitsSold),
     })),
   );
@@ -347,7 +341,7 @@ function SalesReportDialogForm({
     (reportValue?.stockBalances ?? []).map((stock, index) => ({
       id: (reportValue?.sales.length ?? 0) + index + 1,
       listingName: stock.listingName,
-      outletPriceRubles: String(stock.outletPriceKopecks / 100),
+      outletPriceRubles: formatRussianCurrencyInput(stock.outletPriceKopecks),
       stockBalance: String(stock.stockBalance),
     })),
   );
@@ -413,12 +407,12 @@ function SalesReportDialogForm({
     const request = normalizeSalesReport(
       create(CreateSalesReportRequestSchema, {
         outletId: outlet.id,
-        periodEndDate,
-        periodStartDate,
+        periodEndDate: parseRussianDate(periodEndDate) ?? '',
+        periodStartDate: parseRussianDate(periodStartDate) ?? '',
         sales: sales.map((sale, index) => {
           const unitsSold = wholeNumber(sale.unitsSold);
-          const earningsKopecks = kopecksFromRubles(sale.earningsRubles);
-          const salesValueKopecks = kopecksFromRubles(sale.salesValueRubles);
+          const earningsKopecks = parseRussianRubles(sale.earningsRubles);
+          const salesValueKopecks = parseRussianRubles(sale.salesValueRubles);
           if (unitsSold === undefined) {
             addError(
               parsingErrors,
@@ -449,7 +443,7 @@ function SalesReportDialogForm({
         }),
         stockBalances: stockBalances.map((stock, index) => {
           const stockBalance = wholeNumber(stock.stockBalance);
-          const outletPriceKopecks = kopecksFromRubles(stock.outletPriceRubles);
+          const outletPriceKopecks = parseRussianRubles(stock.outletPriceRubles);
           if (stockBalance === undefined) {
             addError(
               parsingErrors,
@@ -579,11 +573,14 @@ function SalesReportDialogForm({
                   autoFocus
                   disabled={mutationPending || readOnly}
                   id="period-start"
+                  inputMode="numeric"
+                  maxLength={10}
                   onChange={(event) => {
                     setPeriodStartDate(event.target.value);
                     clearError(PERIOD_START_ERROR);
                   }}
-                  type="date"
+                  placeholder="ДД.ММ.ГГГГ"
+                  type="text"
                   value={periodStartDate}
                 />
                 <FieldMessages errors={errors[PERIOD_START_ERROR]} id="period-start-error" />
@@ -597,11 +594,14 @@ function SalesReportDialogForm({
                   aria-invalid={errors[PERIOD_END_ERROR] === undefined ? undefined : true}
                   disabled={mutationPending || readOnly}
                   id="period-end"
+                  inputMode="numeric"
+                  maxLength={10}
                   onChange={(event) => {
                     setPeriodEndDate(event.target.value);
                     clearError(PERIOD_END_ERROR);
                   }}
-                  type="date"
+                  placeholder="ДД.ММ.ГГГГ"
+                  type="text"
                   value={periodEndDate}
                 />
                 <FieldMessages errors={errors[PERIOD_END_ERROR]} id="period-end-error" />
@@ -685,21 +685,18 @@ function SalesReportDialogForm({
                             <FieldMessages errors={errors[balanceKey]} id={`${balanceKey}-error`} />
                           </TableCell>
                           <TableCell className="min-w-44 align-top whitespace-normal">
-                            <Input
+                            <CurrencyInput
                               aria-describedby={
                                 errors[priceKey] === undefined ? undefined : `${priceKey}-error`
                               }
                               aria-invalid={errors[priceKey] === undefined ? undefined : true}
                               aria-label="Цена на полке"
                               disabled={mutationPending || readOnly}
-                              min="0"
-                              onChange={(event) =>
+                              onValueChange={(value) =>
                                 updateStockBalance(index, {
-                                  outletPriceRubles: event.target.value,
+                                  outletPriceRubles: value,
                                 })
                               }
-                              step="0.01"
-                              type="number"
                               value={stock.outletPriceRubles}
                             />
                             <FieldMessages errors={errors[priceKey]} id={`${priceKey}-error`} />
@@ -768,8 +765,8 @@ function SalesReportDialogForm({
                       const unitsKey = salesError(index, 'units-sold');
                       const salesValueKey = salesError(index, 'sales-value');
                       const earningsKey = salesError(index, 'earnings');
-                      const salesValue = kopecksFromRubles(sale.salesValueRubles);
-                      const earnings = kopecksFromRubles(sale.earningsRubles);
+                      const salesValue = parseRussianRubles(sale.salesValueRubles);
+                      const earnings = parseRussianRubles(sale.earningsRubles);
                       const share =
                         salesValue === undefined || earnings === undefined || earnings > salesValue
                           ? undefined
@@ -812,7 +809,7 @@ function SalesReportDialogForm({
                             <FieldMessages errors={errors[unitsKey]} id={`${unitsKey}-error`} />
                           </TableCell>
                           <TableCell className="min-w-40 align-top whitespace-normal">
-                            <Input
+                            <CurrencyInput
                               aria-describedby={
                                 errors[salesValueKey] === undefined
                                   ? undefined
@@ -821,12 +818,9 @@ function SalesReportDialogForm({
                               aria-invalid={errors[salesValueKey] === undefined ? undefined : true}
                               aria-label="Сумма продаж"
                               disabled={mutationPending || readOnly}
-                              min="0"
-                              onChange={(event) =>
-                                updateSale(index, { salesValueRubles: event.target.value })
+                              onValueChange={(value) =>
+                                updateSale(index, { salesValueRubles: value })
                               }
-                              step="0.01"
-                              type="number"
                               value={sale.salesValueRubles}
                             />
                             <FieldMessages
@@ -835,7 +829,7 @@ function SalesReportDialogForm({
                             />
                           </TableCell>
                           <TableCell className="min-w-40 align-top whitespace-normal">
-                            <Input
+                            <CurrencyInput
                               aria-describedby={
                                 errors[earningsKey] === undefined
                                   ? undefined
@@ -844,12 +838,9 @@ function SalesReportDialogForm({
                               aria-invalid={errors[earningsKey] === undefined ? undefined : true}
                               aria-label="Заработано"
                               disabled={mutationPending || readOnly}
-                              min="0"
-                              onChange={(event) =>
-                                updateSale(index, { earningsRubles: event.target.value })
+                              onValueChange={(value) =>
+                                updateSale(index, { earningsRubles: value })
                               }
-                              step="0.01"
-                              type="number"
                               value={sale.earningsRubles}
                             />
                             <FieldMessages
@@ -858,7 +849,9 @@ function SalesReportDialogForm({
                             />
                           </TableCell>
                           <TableCell className="min-w-36 align-top">
-                            <output aria-label="Комиссия полки">{formatRubles(share)}</output>
+                            <output aria-label="Комиссия полки">
+                              {formatRussianCurrency(share)}
+                            </output>
                           </TableCell>
                           <TableCell className="text-right align-top">
                             <Button

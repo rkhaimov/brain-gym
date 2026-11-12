@@ -3,6 +3,7 @@ import { expect } from 'vitest';
 import type { Mock } from 'vitest';
 import { page, userEvent } from 'vitest/browser';
 
+import { formatRussianDate } from '@/client/lib/localization.js';
 import {
   createListOutletsResponseStub,
   createOutletStub,
@@ -185,13 +186,15 @@ test.describe('Outlet details and Sales report history', () => {
     await details.openReport(report.periodStartDate, report.periodEndDate);
 
     await expect.element(details.dialog()).toHaveAccessibleName('Редактировать отчёт');
-    await expect.element(details.salesValue(0)).toHaveValue(70);
+    await expect.element(details.periodStart()).toHaveValue('01.11.2026');
+    await expect.element(details.periodEnd()).toHaveValue('30.11.2026');
+    await expect.element(details.salesValue(0)).toHaveValue('70,00');
     await expect.element(details.outletShare(0)).toHaveTextContent('10,00 ₽');
-    await expect.element(details.stockPrice(0)).toHaveValue(35);
+    await expect.element(details.stockPrice(0)).toHaveValue('35,00');
     await details.screenshotDialog('Historical Sales report');
 
-    await details.periodStart().fill('2026-11-02');
-    await details.periodEnd().fill('2026-12-01');
+    await details.periodStart().fill('02.11.2026');
+    await details.periodEnd().fill('01.12.2026');
     await details.salesListing(0).fill('Серьги');
     await details.unitsSold(0).fill('3');
     await details.salesValue(0).fill('90');
@@ -461,8 +464,8 @@ test.describe('Outlet details and Sales report history', () => {
     await details.showReports();
     await details.screenshotPage('Empty Sales report history');
     await details.openCreateReport();
-    await details.periodStart().fill('2026-11-01');
-    await details.periodEnd().fill('2026-11-30');
+    await details.periodStart().fill('01.11.2026');
+    await details.periodEnd().fill('30.11.2026');
 
     await details.addStock();
     await details.stockListing(0).click();
@@ -511,7 +514,7 @@ test.describe('Outlet details and Sales report history', () => {
       stockBalances: [{ listingName: 'Кольцо', outletPriceKopecks: 3500, stockBalance: 5 }],
     });
     await expect.element(details.dialog()).not.toBeInTheDocument();
-    await expect.element(page.getByText('2026-11-01 — 2026-11-30')).toBeVisible();
+    await expect.element(page.getByText('01.11.2026 — 30.11.2026')).toBeVisible();
     await details.screenshotPage('Saved Sales report history');
   });
 
@@ -522,8 +525,8 @@ test.describe('Outlet details and Sales report history', () => {
     await details.open();
     await details.showReports();
     await details.openCreateReport();
-    await details.periodStart().fill('2026-11-30');
-    await details.periodEnd().fill('2026-11-01');
+    await details.periodStart().fill('30.11.2026');
+    await details.periodEnd().fill('01.11.2026');
     await details.addSale();
     await details.salesListing(0).fill('Кольцо');
     await details.salesValue(0).fill('35');
@@ -566,8 +569,8 @@ test.describe('Outlet details and Sales report history', () => {
     await details.open();
     await details.showReports();
     await details.openCreateReport();
-    await details.periodStart().fill('2026-11-01');
-    await details.periodEnd().fill('2026-11-30');
+    await details.periodStart().fill('01.11.2026');
+    await details.periodEnd().fill('30.11.2026');
     await details.save();
 
     await expect(salesReportService.createSalesReport.getLastRequest()).resolves.toMatchObject({
@@ -579,6 +582,8 @@ test.describe('Outlet details and Sales report history', () => {
 
 function createOutletDetailsPage() {
   const dialog = () => page.getByRole('dialog');
+  const periodLabel = (start: string, end: string) =>
+    `${formatRussianDate(start)} — ${formatRussianDate(end)}`;
   const salesRow = (index: number) =>
     dialog().getByRole('group', { name: `Продажа ${String(index + 1)}` });
   const stockRow = (index: number) =>
@@ -587,22 +592,22 @@ function createOutletDetailsPage() {
     addSale: () => dialog().getByRole('button', { name: 'Добавить продажу' }).click(),
     addStock: () => dialog().getByRole('button', { name: 'Добавить остаток' }).click(),
     archiveReport: (start: string, end: string) =>
-      page.getByRole('button', { name: `Архивировать отчёт ${start} — ${end}` }).click(),
+      page.getByRole('button', { name: `Архивировать отчёт ${periodLabel(start, end)}` }).click(),
     dialog,
-    earnings: (index: number) => salesRow(index).getByRole('spinbutton', { name: 'Заработано' }),
+    earnings: (index: number) => salesRow(index).getByRole('textbox', { name: 'Заработано' }),
     open: () => window.openApplicationRoute(`/outlets/${outlet.id}`),
     openCreateReport: () => page.getByRole('button', { name: 'Создать отчёт' }).click(),
     openReport: (start: string, end: string) =>
-      page.getByRole('button', { name: `Открыть отчёт ${start} — ${end}` }).click(),
+      page.getByRole('button', { name: `Открыть отчёт ${periodLabel(start, end)}` }).click(),
     outletShare: (index: number) => salesRow(index).getByLabelText('Комиссия полки'),
     periodEnd: () => dialog().getByLabelText('Конец периода'),
     periodStart: () => dialog().getByLabelText('Начало периода'),
     salesListing: (index: number) =>
       salesRow(index).getByRole('combobox', { name: 'Позиция полки' }),
-    salesValue: (index: number) =>
-      salesRow(index).getByRole('spinbutton', { name: 'Сумма продаж' }),
+    salesValue: (index: number) => salesRow(index).getByRole('textbox', { name: 'Сумма продаж' }),
     save: () => dialog().getByRole('button', { name: 'Сохранить отчёт' }).click(),
-    report: (start: string, end: string) => page.getByText(`${start} — ${end}`, { exact: true }),
+    report: (start: string, end: string) =>
+      page.getByText(periodLabel(start, end), { exact: true }),
     restoreReport: () => dialog().getByRole('button', { name: 'Восстановить отчёт' }).click(),
     screenshotDialog: (name: string) => screenshot(dialog(), name),
     screenshotPage: (name: string) =>
@@ -612,8 +617,7 @@ function createOutletDetailsPage() {
     stockBalance: (index: number) => stockRow(index).getByRole('spinbutton', { name: 'Остаток' }),
     stockListing: (index: number) =>
       stockRow(index).getByRole('combobox', { name: 'Позиция полки' }),
-    stockPrice: (index: number) =>
-      stockRow(index).getByRole('spinbutton', { name: 'Цена на полке' }),
+    stockPrice: (index: number) => stockRow(index).getByRole('textbox', { name: 'Цена на полке' }),
     unitsSold: (index: number) => salesRow(index).getByRole('spinbutton', { name: 'Продано, шт.' }),
   };
 }
