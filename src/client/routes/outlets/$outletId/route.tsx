@@ -22,7 +22,7 @@ import {
   TableRow,
 } from '@/client/components/ui/table.js';
 import { listOutlets } from '@/shared/gen/ceramics/v1/outlet-OutletService_connectquery.js';
-import { listOutletListings } from '@/shared/gen/ceramics/v1/outlet_listing-OutletListingService_connectquery.js';
+import { listReportListings } from '@/shared/gen/ceramics/v1/report_listing-ReportListingService_connectquery.js';
 import {
   listSalesReports,
   setSalesReportArchived,
@@ -56,7 +56,7 @@ const reportCatalogCopy: MaintenanceCatalogCopy = {
 function OutletDetailsPage() {
   const { outletId } = Route.useParams();
   const outlets = useQuery(listOutlets, { archived: false });
-  const listings = useQuery(listOutletListings, { outletId });
+  const listings = useQuery(listReportListings, { outletId });
   const [showArchivedReports, setShowArchivedReports] = useState(false);
   const reports = useQuery(listSalesReports, { archived: showArchivedReports, outletId });
   const archiveReport = useMutation(setSalesReportArchived);

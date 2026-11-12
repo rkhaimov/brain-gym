@@ -20,7 +20,7 @@ import type { SalesReportValidationIssue } from '../../shared/sales-report-valid
 import type { ApplicationDatabase } from '../database/database.js';
 import type {
   DB,
-  OutletListings,
+  ReportListings,
   SalesReports,
   SalesReportSales,
   SalesReportStockBalances,
@@ -51,27 +51,27 @@ type Report = Readonly<
   >
 >;
 
-type ListingIdentity = Readonly<Pick<Selectable<OutletListings>, 'created_at_ms' | 'id' | 'name'>>;
+type ListingIdentity = Readonly<Pick<Selectable<ReportListings>, 'created_at_ms' | 'id' | 'name'>>;
 
 type StoredSale = Readonly<
   Pick<
     Selectable<SalesReportSales>,
-    'earnings_kopecks' | 'outlet_listing_id' | 'outlet_share_kopecks' | 'units_sold'
+    'earnings_kopecks' | 'outlet_share_kopecks' | 'report_listing_id' | 'units_sold'
   > &
-    Pick<Selectable<OutletListings>, 'created_at_ms' | 'name'>
+    Pick<Selectable<ReportListings>, 'created_at_ms' | 'name'>
 >;
 
 type StoredStockBalance = Readonly<
   Pick<
     Selectable<SalesReportStockBalances>,
-    'outlet_listing_id' | 'outlet_price_kopecks' | 'stock_balance'
+    'outlet_price_kopecks' | 'report_listing_id' | 'stock_balance'
   > &
-    Pick<Selectable<OutletListings>, 'created_at_ms' | 'name'>
+    Pick<Selectable<ReportListings>, 'created_at_ms' | 'name'>
 >;
 
 function compareListings(
-  left: Readonly<Pick<Selectable<OutletListings>, 'created_at_ms' | 'name'>>,
-  right: Readonly<Pick<Selectable<OutletListings>, 'created_at_ms' | 'name'>>,
+  left: Readonly<Pick<Selectable<ReportListings>, 'created_at_ms' | 'name'>>,
+  right: Readonly<Pick<Selectable<ReportListings>, 'created_at_ms' | 'name'>>,
 ): number {
   return (
     left.created_at_ms - right.created_at_ms ||
@@ -136,12 +136,11 @@ async function nextSavedAtMs(transaction: Transaction<DB>, env: EnvService): Pro
 async function resolveListings(
   transaction: Transaction<DB>,
   env: EnvService,
-  outletId: string,
   request: CreateSalesReportRequest,
 ): Promise<Map<string, ListingIdentity>> {
   const listings = new Map<string, ListingIdentity>();
   const latestListing = await transaction
-    .selectFrom('outlet_listings')
+    .selectFrom('report_listings')
     .select(({ fn }) => fn.max<number>('created_at_ms').as('created_at_ms'))
     .executeTakeFirst();
   let nextCreatedAtMs = Math.max(env.now().getTime(), (latestListing?.created_at_ms ?? -1) + 1);
@@ -150,29 +149,27 @@ async function resolveListings(
     ...request.stockBalances.map((stock) => stock.listingName),
   ]);
   for (const listingName of listingNames) {
-    let outletListing = await transaction
-      .selectFrom('outlet_listings')
+    let reportListing = await transaction
+      .selectFrom('report_listings')
       .select(['created_at_ms', 'id', 'name'])
-      .where('outlet_id', '=', outletId)
       .where('name', '=', listingName)
       .executeTakeFirst();
-    if (outletListing === undefined) {
-      outletListing = {
+    if (reportListing === undefined) {
+      reportListing = {
         created_at_ms: nextCreatedAtMs++,
         id: env.randomUUID(),
         name: listingName,
       };
       await transaction
-        .insertInto('outlet_listings')
+        .insertInto('report_listings')
         .values({
-          created_at_ms: outletListing.created_at_ms,
-          id: outletListing.id,
-          name: outletListing.name,
-          outlet_id: outletId,
+          created_at_ms: reportListing.created_at_ms,
+          id: reportListing.id,
+          name: reportListing.name,
         })
         .executeTakeFirstOrThrow();
     }
-    listings.set(listingName, outletListing);
+    listings.set(listingName, reportListing);
   }
   return listings;
 }
@@ -198,7 +195,7 @@ async function replaceReportContents(
       created_at_ms: listing.created_at_ms,
       earnings_kopecks: sale.earningsKopecks,
       name: listing.name,
-      outlet_listing_id: listing.id,
+      report_listing_id: listing.id,
       outlet_share_kopecks: sale.salesValueKopecks - sale.earningsKopecks,
       units_sold: sale.unitsSold,
     };
@@ -209,7 +206,7 @@ async function replaceReportContents(
       .values(
         sales.map((sale) => ({
           earnings_kopecks: sale.earnings_kopecks,
-          outlet_listing_id: sale.outlet_listing_id,
+          report_listing_id: sale.report_listing_id,
           outlet_share_kopecks: sale.outlet_share_kopecks,
           report_id: reportId,
           units_sold: sale.units_sold,
@@ -224,7 +221,7 @@ async function replaceReportContents(
     return {
       created_at_ms: listing.created_at_ms,
       name: listing.name,
-      outlet_listing_id: listing.id,
+      report_listing_id: listing.id,
       outlet_price_kopecks: stock.outletPriceKopecks,
       stock_balance: stock.stockBalance,
     };
@@ -234,7 +231,7 @@ async function replaceReportContents(
       .insertInto('sales_report_stock_balances')
       .values(
         stockBalances.map((stock) => ({
-          outlet_listing_id: stock.outlet_listing_id,
+          report_listing_id: stock.report_listing_id,
           outlet_price_kopecks: stock.outlet_price_kopecks,
           report_id: reportId,
           stock_balance: stock.stock_balance,
@@ -254,12 +251,12 @@ async function loadReportContents(
 > {
   const sales = await database
     .selectFrom('sales_report_sales')
-    .innerJoin('outlet_listings', 'outlet_listings.id', 'outlet_listing_id')
+    .innerJoin('report_listings', 'report_listings.id', 'report_listing_id')
     .select([
-      'outlet_listings.created_at_ms',
+      'report_listings.created_at_ms',
       'sales_report_sales.earnings_kopecks',
-      'outlet_listings.name',
-      'sales_report_sales.outlet_listing_id',
+      'report_listings.name',
+      'sales_report_sales.report_listing_id',
       'sales_report_sales.outlet_share_kopecks',
       'sales_report_sales.units_sold',
     ])
@@ -267,11 +264,11 @@ async function loadReportContents(
     .execute();
   const stockBalances = await database
     .selectFrom('sales_report_stock_balances')
-    .innerJoin('outlet_listings', 'outlet_listings.id', 'outlet_listing_id')
+    .innerJoin('report_listings', 'report_listings.id', 'report_listing_id')
     .select([
-      'outlet_listings.created_at_ms',
-      'outlet_listings.name',
-      'sales_report_stock_balances.outlet_listing_id',
+      'report_listings.created_at_ms',
+      'report_listings.name',
+      'sales_report_stock_balances.report_listing_id',
       'sales_report_stock_balances.outlet_price_kopecks',
       'sales_report_stock_balances.stock_balance',
     ])
@@ -306,7 +303,7 @@ function createSalesReportService(
             });
           }
 
-          const listings = await resolveListings(transaction, env, request.outletId, request);
+          const listings = await resolveListings(transaction, env, request);
           const timestamp = await nextSavedAtMs(transaction, env);
           const report = {
             archived_at_ms: null,
@@ -368,7 +365,7 @@ function createSalesReportService(
           const validationFailure = validateSalesReport(request)[0];
           if (validationFailure !== undefined) return reportFailure(validationFailure);
 
-          const listings = await resolveListings(transaction, env, existing.outlet_id, request);
+          const listings = await resolveListings(transaction, env, request);
           const report: Report = {
             ...existing,
             period_end_date: request.periodEndDate,
@@ -463,18 +460,18 @@ function createSalesReportService(
       const reportIds = reports.map((report) => report.id);
       const sales = await database.db
         .selectFrom('sales_report_sales')
-        .select(['outlet_listing_id', 'report_id'])
+        .select(['report_id', 'report_listing_id'])
         .where('report_id', 'in', reportIds)
         .execute();
       const stockBalances = await database.db
         .selectFrom('sales_report_stock_balances')
-        .select(['outlet_listing_id', 'report_id'])
+        .select(['report_id', 'report_listing_id'])
         .where('report_id', 'in', reportIds)
         .execute();
       const listingIdsByReport = new Map<string, Set<string>>();
       for (const row of [...sales, ...stockBalances]) {
         const listingIds = listingIdsByReport.get(row.report_id) ?? new Set<string>();
-        listingIds.add(row.outlet_listing_id);
+        listingIds.add(row.report_listing_id);
         listingIdsByReport.set(row.report_id, listingIds);
       }
 

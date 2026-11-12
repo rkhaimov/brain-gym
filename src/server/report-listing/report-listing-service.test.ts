@@ -2,7 +2,7 @@ import { createClient, createRouterTransport } from '@connectrpc/connect';
 import { describe, expect } from 'vitest';
 
 import { OutletService } from '../../shared/gen/ceramics/v1/outlet_pb.js';
-import { OutletListingService } from '../../shared/gen/ceramics/v1/outlet_listing_pb.js';
+import { ReportListingService } from '../../shared/gen/ceramics/v1/report_listing_pb.js';
 import { SalesReportService } from '../../shared/gen/ceramics/v1/sales_report_pb.js';
 import { assertSuccess } from '../../test/server/assertions.js';
 import { testEnv } from '../../test/server/env.js';
@@ -10,11 +10,11 @@ import { test as serverTest } from '../../test/server/test.js';
 import { MutationQueue } from '../mutation-queue.js';
 import { registerOutletRoutes } from '../outlet/outlet-service.js';
 import { registerSalesReportRoutes } from '../sales-report/sales-report-service.js';
-import { registerOutletListingRoutes } from './outlet-listing-service.js';
+import { registerReportListingRoutes } from './report-listing-service.js';
 
 const test = serverTest.extend<{
   readonly clients: {
-    readonly listings: ReturnType<typeof createClient<typeof OutletListingService>>;
+    readonly listings: ReturnType<typeof createClient<typeof ReportListingService>>;
     readonly outlets: ReturnType<typeof createClient<typeof OutletService>>;
     readonly reports: ReturnType<typeof createClient<typeof SalesReportService>>;
   };
@@ -24,20 +24,21 @@ const test = serverTest.extend<{
     const dependencies = { database: database.value, env: testEnv, mutationQueue };
     const transport = createRouterTransport((router) => {
       registerOutletRoutes(router, dependencies);
-      registerOutletListingRoutes(router, { database: database.value });
+      registerReportListingRoutes(router, { database: database.value });
       registerSalesReportRoutes(router, dependencies);
     });
     await use({
-      listings: createClient(OutletListingService, transport),
+      listings: createClient(ReportListingService, transport),
       outlets: createClient(OutletService, transport),
       reports: createClient(SalesReportService, transport),
     });
   },
 });
 
-describe('OutletListingService', () => {
-  test('lists trimmed exact Outlet listings in creation order with latest values', async ({
+describe('ReportListingService', () => {
+  test('shares exact Report listings across Outlets while isolating Outlet metrics', async ({
     clients,
+    database,
   }) => {
     const firstOutlet = await clients.outlets.createOutlet({ name: 'Гончарная лавка' });
     const secondOutlet = await clients.outlets.createOutlet({ name: 'Керамический дворик' });
@@ -83,7 +84,7 @@ describe('OutletListingService', () => {
     assertSuccess(otherOutletReport);
 
     await expect(
-      clients.listings.listOutletListings({ outletId: firstOutlet.result.value.id }),
+      clients.listings.listReportListings({ outletId: firstOutlet.result.value.id }),
     ).resolves.toMatchObject({
       listings: [
         {
@@ -91,19 +92,17 @@ describe('OutletListingService', () => {
           lastOutletPriceKopecks: 3500,
           latestUnitsSold: 4,
           name: 'Кольцо',
-          outletId: firstOutlet.result.value.id,
         },
         {
           currentStockBalance: 2,
           lastOutletPriceKopecks: 4200,
           latestUnitsSold: 0,
           name: 'Серьги',
-          outletId: firstOutlet.result.value.id,
         },
       ],
     });
     await expect(
-      clients.listings.listOutletListings({ outletId: secondOutlet.result.value.id }),
+      clients.listings.listReportListings({ outletId: secondOutlet.result.value.id }),
     ).resolves.toMatchObject({
       listings: [
         {
@@ -113,6 +112,76 @@ describe('OutletListingService', () => {
         },
       ],
     });
+
+    await expect(
+      database.value.db.selectFrom('report_listings').selectAll().execute(),
+    ).resolves.toHaveLength(2);
+    const sharedListingReferences = await database.value.db
+      .selectFrom('sales_report_stock_balances')
+      .innerJoin('report_listings', 'report_listings.id', 'report_listing_id')
+      .select(['report_listing_id', 'report_listings.name'])
+      .where('report_listings.name', '=', 'Кольцо')
+      .execute();
+    expect([...new Set(sharedListingReferences.map((row) => row.report_listing_id))]).toHaveLength(
+      1,
+    );
+  });
+
+  test('keeps exact names distinct after trimming', async ({ clients, database }) => {
+    const outlet = await clients.outlets.createOutlet({ name: 'Гончарная лавка' });
+    assertSuccess(outlet);
+
+    const report = await clients.reports.createSalesReport({
+      outletId: outlet.result.value.id,
+      periodEndDate: '2026-11-30',
+      periodStartDate: '2026-11-01',
+      stockBalances: [
+        { listingName: ' Кольцо ', outletPriceKopecks: 3500, stockBalance: 1 },
+        { listingName: 'кольцо', outletPriceKopecks: 3600, stockBalance: 2 },
+        { listingName: 'Кольцо!', outletPriceKopecks: 3700, stockBalance: 3 },
+      ],
+    });
+    assertSuccess(report);
+
+    await expect(
+      database.value.db.selectFrom('report_listings').select('name').orderBy('name').execute(),
+    ).resolves.toEqual([{ name: 'Кольцо' }, { name: 'Кольцо!' }, { name: 'кольцо' }]);
+  });
+
+  test('derives Outlet membership from active and archived report rows', async ({
+    clients,
+    database,
+  }) => {
+    const outlet = await clients.outlets.createOutlet({ name: 'Гончарная лавка' });
+    assertSuccess(outlet);
+    const report = await clients.reports.createSalesReport({
+      outletId: outlet.result.value.id,
+      periodEndDate: '2026-11-30',
+      periodStartDate: '2026-11-01',
+      stockBalances: [{ listingName: 'Яшма', outletPriceKopecks: 3500, stockBalance: 5 }],
+    });
+    assertSuccess(report);
+
+    await clients.reports.setSalesReportArchived({ archived: true, id: report.result.value.id });
+    await expect(
+      clients.listings.listReportListings({ outletId: outlet.result.value.id }),
+    ).resolves.toMatchObject({
+      listings: [{ currentStockBalance: 0, lastOutletPriceKopecks: 0, name: 'Яшма' }],
+    });
+
+    await clients.reports.setSalesReportArchived({ archived: false, id: report.result.value.id });
+    const edited = await clients.reports.updateSalesReport({
+      id: report.result.value.id,
+      periodEndDate: '2026-11-30',
+      periodStartDate: '2026-11-01',
+    });
+    assertSuccess(edited);
+    await expect(
+      clients.listings.listReportListings({ outletId: outlet.result.value.id }),
+    ).resolves.toMatchObject({ listings: [] });
+    await expect(
+      database.value.db.selectFrom('report_listings').selectAll().execute(),
+    ).resolves.toHaveLength(1);
   });
 
   test('derives current Stock from period end and collision-safe saved ordering', async ({
@@ -141,7 +210,7 @@ describe('OutletListingService', () => {
     assertSuccess(olderPeriodSavedLater);
 
     await expect(
-      clients.listings.listOutletListings({ outletId: outlet.result.value.id }),
+      clients.listings.listReportListings({ outletId: outlet.result.value.id }),
     ).resolves.toMatchObject({
       listings: [{ currentStockBalance: 5, latestUnitsSold: 1, name: 'Яшма' }],
     });
@@ -157,7 +226,7 @@ describe('OutletListingService', () => {
       laterPeriod.result.value.updatedAtMs,
     );
     await expect(
-      clients.listings.listOutletListings({ outletId: outlet.result.value.id }),
+      clients.listings.listReportListings({ outletId: outlet.result.value.id }),
     ).resolves.toMatchObject({
       listings: [
         { currentStockBalance: 0, latestUnitsSold: 0, name: 'Яшма' },
@@ -173,7 +242,7 @@ describe('OutletListingService', () => {
     });
     assertSuccess(edited);
     await expect(
-      clients.listings.listOutletListings({ outletId: outlet.result.value.id }),
+      clients.listings.listReportListings({ outletId: outlet.result.value.id }),
     ).resolves.toMatchObject({
       listings: [
         { currentStockBalance: 3, latestUnitsSold: 0, name: 'Яшма' },
@@ -186,7 +255,7 @@ describe('OutletListingService', () => {
       id: laterPeriod.result.value.id,
     });
     await expect(
-      clients.listings.listOutletListings({ outletId: outlet.result.value.id }),
+      clients.listings.listReportListings({ outletId: outlet.result.value.id }),
     ).resolves.toMatchObject({
       listings: [
         { currentStockBalance: 0, name: 'Яшма' },
@@ -198,7 +267,7 @@ describe('OutletListingService', () => {
       id: laterPeriod.result.value.id,
     });
     await expect(
-      clients.listings.listOutletListings({ outletId: outlet.result.value.id }),
+      clients.listings.listReportListings({ outletId: outlet.result.value.id }),
     ).resolves.toMatchObject({
       listings: [
         { currentStockBalance: 3, name: 'Яшма' },

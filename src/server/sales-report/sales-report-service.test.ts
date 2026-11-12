@@ -307,7 +307,7 @@ describe('SalesReportService', () => {
     });
   });
 
-  test('stores section rows through immutable Outlet listing IDs without Sales value or Sales unit price', async ({
+  test('stores section rows through immutable Report listing IDs without Sales value or Sales unit price', async ({
     clients,
     database,
   }) => {
@@ -333,17 +333,17 @@ describe('SalesReportService', () => {
 
     const sales = await database.value.db
       .selectFrom('sales_report_sales')
-      .innerJoin('outlet_listings', 'outlet_listings.id', 'outlet_listing_id')
+      .innerJoin('report_listings', 'report_listings.id', 'report_listing_id')
       .select([
         'earnings_kopecks',
-        'outlet_listings.name',
-        'outlet_listing_id',
+        'report_listings.name',
+        'report_listing_id',
         'outlet_share_kopecks',
         'units_sold',
       ])
       .where('report_id', '=', report.result.value.id)
       .execute();
-    expect(sales.map(({ outlet_listing_id: _outletListingId, ...sale }) => sale)).toEqual([
+    expect(sales.map(({ report_listing_id: _reportListingId, ...sale }) => sale)).toEqual([
       {
         earnings_kopecks: 2000,
         name: 'Продажа без остатка',
@@ -353,16 +353,16 @@ describe('SalesReportService', () => {
     ]);
     const stockBalances = await database.value.db
       .selectFrom('sales_report_stock_balances')
-      .innerJoin('outlet_listings', 'outlet_listings.id', 'outlet_listing_id')
+      .innerJoin('report_listings', 'report_listings.id', 'report_listing_id')
       .select([
-        'outlet_listings.name',
-        'outlet_listing_id',
+        'report_listings.name',
+        'report_listing_id',
         'outlet_price_kopecks',
         'stock_balance',
       ])
       .where('report_id', '=', report.result.value.id)
       .execute();
-    expect(stockBalances.map(({ outlet_listing_id: _outletListingId, ...stock }) => stock)).toEqual(
+    expect(stockBalances.map(({ report_listing_id: _reportListingId, ...stock }) => stock)).toEqual(
       [
         {
           name: 'Остаток без продаж',
@@ -371,7 +371,7 @@ describe('SalesReportService', () => {
         },
       ],
     );
-    expect([...sales, ...stockBalances].every((row) => row.outlet_listing_id.length > 0)).toBe(
+    expect([...sales, ...stockBalances].every((row) => row.report_listing_id.length > 0)).toBe(
       true,
     );
 
@@ -380,7 +380,7 @@ describe('SalesReportService', () => {
     );
     expect(columns.rows.map((column) => column.name)).toEqual([
       'report_id',
-      'outlet_listing_id',
+      'report_listing_id',
       'units_sold',
       'earnings_kopecks',
       'outlet_share_kopecks',

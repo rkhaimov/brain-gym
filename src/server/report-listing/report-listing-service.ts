@@ -1,22 +1,40 @@
 import type { ConnectRouter, ServiceImpl } from '@connectrpc/connect';
 
-import { OutletListingService } from '../../shared/gen/ceramics/v1/outlet_listing_pb.js';
+import { ReportListingService } from '../../shared/gen/ceramics/v1/report_listing_pb.js';
 import type { ApplicationDatabase } from '../database/database.js';
 
-export interface OutletListingRouteDependencies {
+export interface ReportListingRouteDependencies {
   readonly database: ApplicationDatabase;
 }
 
-function createOutletListingService(
-  dependencies: OutletListingRouteDependencies,
-): ServiceImpl<typeof OutletListingService> {
+function createReportListingService(
+  dependencies: ReportListingRouteDependencies,
+): ServiceImpl<typeof ReportListingService> {
   const { database } = dependencies;
   return {
-    async listOutletListings(request) {
+    async listReportListings(request) {
+      const salesMemberships = await database.db
+        .selectFrom('sales_report_sales')
+        .innerJoin('sales_reports', 'sales_reports.id', 'report_id')
+        .select('sales_report_sales.report_listing_id')
+        .where('sales_reports.outlet_id', '=', request.outletId)
+        .execute();
+      const stockMemberships = await database.db
+        .selectFrom('sales_report_stock_balances')
+        .innerJoin('sales_reports', 'sales_reports.id', 'report_id')
+        .select('sales_report_stock_balances.report_listing_id')
+        .where('sales_reports.outlet_id', '=', request.outletId)
+        .execute();
+      const listingIds = new Set([
+        ...salesMemberships.map((membership) => membership.report_listing_id),
+        ...stockMemberships.map((membership) => membership.report_listing_id),
+      ]);
+      if (listingIds.size === 0) return { listings: [] };
+
       const listings = await database.db
-        .selectFrom('outlet_listings')
-        .select(['created_at_ms', 'id', 'name', 'outlet_id'])
-        .where('outlet_id', '=', request.outletId)
+        .selectFrom('report_listings')
+        .select(['created_at_ms', 'id', 'name'])
+        .where('id', 'in', [...listingIds])
         .orderBy('created_at_ms')
         .orderBy('name')
         .execute();
@@ -32,9 +50,8 @@ function createOutletListingService(
       const sales = await database.db
         .selectFrom('sales_report_sales')
         .innerJoin('sales_reports', 'sales_reports.id', 'report_id')
-        .innerJoin('outlet_listings', 'outlet_listings.id', 'outlet_listing_id')
         .select([
-          'sales_report_sales.outlet_listing_id',
+          'sales_report_sales.report_listing_id',
           'sales_report_sales.units_sold',
           'sales_report_sales.report_id',
         ])
@@ -47,9 +64,8 @@ function createOutletListingService(
       const stockBalances = await database.db
         .selectFrom('sales_report_stock_balances')
         .innerJoin('sales_reports', 'sales_reports.id', 'report_id')
-        .innerJoin('outlet_listings', 'outlet_listings.id', 'outlet_listing_id')
         .select([
-          'sales_report_stock_balances.outlet_listing_id',
+          'sales_report_stock_balances.report_listing_id',
           'sales_report_stock_balances.outlet_price_kopecks',
           'sales_report_stock_balances.stock_balance',
           'sales_report_stock_balances.report_id',
@@ -63,19 +79,19 @@ function createOutletListingService(
       const latestReportId = reports[0]?.id;
       const lastPrice = new Map<string, number>();
       stockBalances.forEach((stock) => {
-        if (!lastPrice.has(stock.outlet_listing_id)) {
-          lastPrice.set(stock.outlet_listing_id, stock.outlet_price_kopecks);
+        if (!lastPrice.has(stock.report_listing_id)) {
+          lastPrice.set(stock.report_listing_id, stock.outlet_price_kopecks);
         }
       });
       const latestSales = new Map(
         sales
           .filter((sale) => sale.report_id === latestReportId)
-          .map((sale) => [sale.outlet_listing_id, sale]),
+          .map((sale) => [sale.report_listing_id, sale]),
       );
       const latestStockBalances = new Map(
         stockBalances
           .filter((stock) => stock.report_id === latestReportId)
-          .map((stock) => [stock.outlet_listing_id, stock]),
+          .map((stock) => [stock.report_listing_id, stock]),
       );
 
       return {
@@ -88,7 +104,6 @@ function createOutletListingService(
             lastOutletPriceKopecks: lastPrice.get(listing.id) ?? 0,
             latestUnitsSold: latestSale?.units_sold ?? 0,
             name: listing.name,
-            outletId: listing.outlet_id,
           };
         }),
       };
@@ -96,9 +111,9 @@ function createOutletListingService(
   };
 }
 
-export function registerOutletListingRoutes(
+export function registerReportListingRoutes(
   router: ConnectRouter,
-  dependencies: OutletListingRouteDependencies,
+  dependencies: ReportListingRouteDependencies,
 ): void {
-  router.service(OutletListingService, createOutletListingService(dependencies));
+  router.service(ReportListingService, createReportListingService(dependencies));
 }

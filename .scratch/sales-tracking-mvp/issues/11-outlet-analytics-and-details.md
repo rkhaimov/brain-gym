@@ -10,7 +10,7 @@
 - [ ] Every Outlet row shows current Stock, Units sold, Earnings, and Outlet share.
 - [ ] Outlet rows can be sorted by any of the four measures.
 - [ ] Overall totals remain visible above the Outlet comparison and match the equivalent Product comparison totals for the same selection.
-- [ ] Opening an Outlet shows its current Stock balances by exact Outlet listing.
+- [ ] Opening an Outlet shows its current Stock balances by exact Report listing.
 - [ ] Outlet details show Product results and visibly marked Unmapped listings.
 - [ ] Outlet details retain the Sales report history and historical-report opening delivered by ticket 07.
 - [ ] The current Outlet name and code appear even when historical reports were recorded before a rename or code change.

@@ -4,13 +4,13 @@ Status: ready-for-agent
 
 ## Problem Statement
 
-The creator places ceramic products at multiple outlets. Each outlet periodically reports what sold, what remains in stock, and how much accrued to the creator. Once several outlets are involved, separate report files and outlet-specific listing names make it difficult to answer basic questions reliably:
+The creator places ceramic products at multiple outlets. Each outlet periodically reports what sold, what remains in stock, and how much accrued to the creator. Once several outlets are involved, separate report files and differently named Report listings make it difficult to answer basic questions reliably:
 
 - How much has the creator earned?
 - How much did the outlets retain?
 - Which products sell best or produce the highest earnings?
 - What stock currently remains at each outlet?
-- Which differently named outlet listings represent the same product?
+- Which differently named Report listings represent the same Product?
 
 The application must turn these reports into one durable, locally operated source of truth. It must preserve the outlet's original listing names while allowing the creator to group equivalent listings into canonical Products. It must support both manual Sales reports and the fixed-format Report file already used by the creator.
 
@@ -22,7 +22,7 @@ Build a Russian-language, desktop-oriented local web application for a single cr
 
 The creator maintains a Product catalog and a list of Outlets. Each Outlet may have an Outlet code used to associate its portion of a Report file. A Sales report belongs permanently to one Outlet, covers one Reporting period, records aggregated sales, and provides the complete Stock balance at the period end.
 
-Outlet listings retain the exact names supplied by each Outlet. Persistent Product mappings associate those Outlet listings with canonical Products. Unmapped listings remain valid and visible in analytics until the creator maps them.
+Report listings retain the exact names supplied in Sales reports. An exact name identifies one global Report listing across all Outlets. Persistent Product mappings associate Report listings with canonical Products, while Unmapped listings remain valid and visible in analytics until the creator maps them.
 
 The MVP provides:
 
@@ -77,7 +77,7 @@ flowchart LR
 2. As the creator, I can create a Product with a non-empty canonical name.
 3. As the creator, I am prevented from creating or renaming a Product to an exact name already used by another Product.
 4. As the creator, I can use names that differ only by case, whitespace, punctuation, or spelling because Product name equality uses the exact entered string and performs no normalization.
-5. As the creator, I can rename a Product and see its current name in all current and historical application views without changing the original Outlet listing names.
+5. As the creator, I can rename a Product and see its current name in all current and historical application views without changing the original Report listing names.
 6. As the creator, I can archive a Product without destroying its history.
 7. As the creator, I can restore an archived Product.
 8. As the creator, I normally see only active Products in new selections while archived Products remain visible in historical data.
@@ -91,7 +91,7 @@ flowchart LR
 13. As the creator, I can add, change, or remove an Outlet code at any time, provided the resulting non-empty code remains unique.
 14. As the creator, I understand that changing an Outlet code does not detach historical Sales reports from the Outlet, while a future Report file using the old code no longer identifies it.
 15. As the creator, I can rename an Outlet and see the current name throughout the application because Sales reports refer to the Outlet's immutable identity rather than copying its name.
-16. As the creator, I can archive an Outlet without destroying its Sales reports, listings, mappings, or analytics history.
+16. As the creator, I can archive an Outlet without destroying its Sales reports, Report-listing appearances, mappings, or analytics history.
 17. As the creator, I can restore an archived Outlet.
 18. As the creator, I normally see only active Outlets in new selections while archived Outlets remain available in historical views.
 19. As the creator, I can use an Outlet without a code for manual Sales reports and analytics, but that Outlet cannot receive imported data until a code is assigned.
@@ -101,11 +101,11 @@ flowchart LR
 20. As the creator, I can manually create a Sales report for one selected Outlet and one Reporting period.
 21. As the creator, I must enter a Reporting period start and end date, and the end date cannot precede the start date.
 22. As the creator, I can create reports with overlapping or repeated Reporting periods; the application does not reject them merely because another report covers the same dates.
-23. As the creator, I enter the period's sales as one aggregated row per Outlet listing, containing the exact listing name, Units sold, and total Earnings.
-24. As the creator, I enter the period-end inventory as one row per Outlet listing, containing the exact listing name, Stock balance, and Outlet price.
-25. As the creator, I cannot repeat the same exact Outlet listing name within the sales section of one Sales report.
-26. As the creator, I cannot repeat the same exact Outlet listing name within the Stock balance section of one Sales report.
-27. As the creator, I can use the same Outlet listing once in each section, and both occurrences share one Outlet price for that Sales report.
+23. As the creator, I enter the period's sales as one aggregated row per Report listing, containing the exact listing name, Units sold, and total Earnings.
+24. As the creator, I enter the period-end inventory as one row per Report listing, containing the exact listing name, Stock balance, and Outlet price.
+25. As the creator, I cannot repeat the same exact Report listing name within the sales section of one Sales report.
+26. As the creator, I cannot repeat the same exact Report listing name within the Stock balance section of one Sales report.
+27. As the creator, I can use the same Report listing once in each section, and both occurrences share one Outlet price for that Sales report.
 28. As the creator, when a listing appears in sales but not in the Stock balance section, I must supply its Outlet price with the sales entry.
 29. As the creator, I can enter only whole, non-negative Units sold and Stock balances.
 30. As the creator, I can enter only non-negative monetary amounts in whole kopecks.
@@ -140,40 +140,40 @@ flowchart LR
 56. As the creator, after a successful import each resulting outlet-local Sales report becomes an independent report that can later be viewed, corrected, or archived.
 57. As the creator, importing data for an Outlet and Reporting period that already has another Sales report is allowed; the application does not infer that the reports are duplicates.
 
-### Mapping Outlet listings to Products
+### Mapping Report listings to Products
 
-58. As the creator, I can leave a newly encountered Outlet listing Unmapped and still save its Sales report.
-59. As the creator, I can map an Outlet listing to an existing Product.
-60. As the creator, I can create a new Product directly while mapping an Outlet listing.
-61. As the creator, a Product mapping is identified by the Outlet and the listing's exact name, so the same listing in later Sales reports automatically reuses the mapping even when its Outlet price changes.
-62. As the creator, I can remap an Outlet listing to a different Product.
-63. As the creator, I can remove a Product mapping and return that Outlet listing's history to an Unmapped listing group.
-64. As the creator, mapping, remapping, or removing a mapping immediately reclassifies all historical and current results for that Outlet listing.
+58. As the creator, I can leave a newly encountered Report listing Unmapped and still save its Sales report.
+59. As the creator, I can map a Report listing to an existing Product.
+60. As the creator, I can create a new Product directly while mapping a Report listing.
+61. As the creator, a Product mapping belongs to the global exact-name Report listing, so it is reused in later Sales reports from every Outlet regardless of Outlet price changes.
+62. As the creator, I can remap a Report listing to a different Product.
+63. As the creator, I can remove a Product mapping and return that Report listing's history to an Unmapped state.
+64. As the creator, mapping, remapping, or removing a mapping immediately reclassifies all historical and current results for that Report listing.
 65. As the creator, an existing mapping to a Product remains effective if that Product is later archived.
-66. As the creator, I can view Outlet listings with All, Unmapped, and Mapped filters; entering from the mapping workflow defaults the view to Unmapped.
+66. As the creator, I can view Report listings with All, Unmapped, and Mapped filters; entering from the mapping workflow defaults the view to Unmapped.
 67. As the creator, I see Unmapped listings visibly distinguished from Products in analytics rather than omitted from totals.
-68. As the creator, Unmapped listings from all Outlets are grouped by exact listing-name equality, without normalizing case, whitespace, punctuation, or spelling.
+68. As the creator, Report listing identity uses the trimmed, otherwise exact name without normalizing case, punctuation, or spelling.
 69. As the creator, an Unmapped listing is not implicitly treated as an existing Product even when its exact name equals that Product's name; I must map it explicitly.
-70. As the creator, when an exact-name Unmapped group comes from several Outlets, I map each Outlet listing explicitly; mapping one does not silently map the others.
+70. As the creator, when a Report listing appears at several Outlets, mapping it once applies explicitly to all of those appearances.
 71. As the creator, the MVP does not offer fuzzy, spelling-based, or remembered Product suggestions.
 
 ### Reviewing history, stock, and analytics
 
 72. As the creator, I can open an Outlet's Sales report history and filter it by archive state.
 73. As the creator, I can open any historical Sales report and inspect the Stock balances recorded by that report.
-74. As the creator, current Stock for an Outlet listing comes from the active Sales report with the latest Reporting period end date.
-75. As the creator, when two active reports for the same Outlet listing have the same Reporting period end date, the report saved most recently determines current Stock. Saving an edit updates that ordering.
+74. As the creator, current Stock for a Report listing at an Outlet comes from that Outlet's active Sales report with the latest Reporting period end date.
+75. As the creator, when two active reports for the same Report listing at an Outlet have the same Reporting period end date, the report saved most recently determines current Stock. Saving an edit updates that ordering.
 76. As the creator, editing or archiving a report immediately recalculates which report determines current Stock.
 77. As the creator, I can select one, several, or all complete Sales reports as the input for sales analytics.
 78. As the creator, I can independently select one, several, or all Outlets for analytics.
 79. As the creator, I can combine Sales reports with different Reporting periods and see the selected periods clearly identified.
 80. As the creator, analytics sum Units sold, Earnings, and Outlet share across the selected reports and selected Outlets.
-81. As the creator, current Stock in analytics uses the latest active Sales report for each Outlet listing in the selected Outlets, rather than summing historical Stock balances or slicing a report by date.
+81. As the creator, current Stock in analytics uses the latest active Sales report for each Report listing at each selected Outlet, rather than summing historical Stock balances or slicing a report by date.
 82. As the creator, I can see overall totals for current Stock balance, Units sold, Earnings, and Outlet share above detailed comparison results.
 83. As the creator, I can compare and sort Products by current Stock balance, Units sold, Earnings, or Outlet share.
 84. As the creator, I can use Product ranking presets for Most sold, Highest earnings, and Lowest stock.
-85. As the creator, Product comparisons group every mapped Outlet listing under its Product and include marked Unmapped listing groups alongside Products.
-86. As the creator, I can open a Product and see every mapped Outlet listing contributing to it, with results broken down by Outlet.
+85. As the creator, Product comparisons group every mapped Report listing under its Product and include marked Unmapped Report listings alongside Products.
+86. As the creator, I can open a Product and see every mapped Report listing contributing to it, with results broken down by Outlet.
 87. As the creator, I can compare and sort Outlets by current Stock balance, Units sold, Earnings, or Outlet share.
 88. As the creator, I can open an Outlet and see its current Stock balances, Product results, Unmapped listings, and Sales report history.
 
@@ -235,14 +235,14 @@ flowchart LR
 ### Sales report, import, mapping, and analytics rules
 
 - A Sales report belongs to one immutable Outlet identity. Outlet names are not copied into Sales reports.
-- Outlet listing continuity and Product mapping use the exact pair of Outlet identity and listing name. Outlet price is report-specific and may be corrected when a report is edited.
+- Report listing continuity and Product mapping use one global trimmed, otherwise exact listing name across all Outlets. Outlet price is report-specific and may be corrected when a report is edited.
 - Treat the Stock balance section as the complete end-of-period inventory. Missing listings have zero Stock balance.
 - Derive Outlet share from `Units sold × Outlet price − Earnings`; it is not a separate user-entered amount.
 - The fixed-format Excel parser validates the complete file before opening the form. It reports one actionable problem at a time and never records a partially parsed file.
 - A valid multi-Outlet import uses the ordinary Sales report form grouped by Outlet and commits all included reports in one atomic operation.
 - Report-file Outlet association is an exact Outlet code lookup, not a user-maintained source mapping. Unknown codes require correction outside the import flow.
 - Product mappings apply retroactively by resolving analytics through the current mapping rather than copying a Product identity into every historical row.
-- Preserve exact raw Outlet listing names. Unmapped analytics grouping uses simple exact string equality across Outlets.
+- Preserve trimmed, otherwise exact Report listing names. One global identity is shared across Outlets by exact string equality.
 - Sales analytics aggregate complete selected Sales reports. Current Stock is a latest-state measure and is never summed across historical reports.
 
 ### Durability, backup, migration, and recovery
@@ -350,7 +350,7 @@ flowchart LR
 - Product images.
 - Package planning, production progress, package statuses, or delivery tracking.
 - Forecasting or recommending future package contents.
-- Search across Products, Outlets, Outlet listings, or Sales reports.
+- Search across Products, Outlets, Report listings, or Sales reports.
 - Multiple creators, collaboration, accounts, roles, invitations, authentication, or shared workspaces.
 - Mobile or tablet layouts.
 - Firefox, WebKit, legacy browser support, polyfills, or compatibility hacks.

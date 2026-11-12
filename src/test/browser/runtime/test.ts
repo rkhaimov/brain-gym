@@ -6,11 +6,11 @@ import {
   createOutletServiceMock,
   type OutletServiceSpies,
 } from '@/shared/gen/ceramics/v1/outlet_test.js';
-import { OutletListingService } from '@/shared/gen/ceramics/v1/outlet_listing_pb.js';
+import { ReportListingService } from '@/shared/gen/ceramics/v1/report_listing_pb.js';
 import {
-  createOutletListingServiceMock,
-  type OutletListingServiceSpies,
-} from '@/shared/gen/ceramics/v1/outlet_listing_test.js';
+  createReportListingServiceMock,
+  type ReportListingServiceSpies,
+} from '@/shared/gen/ceramics/v1/report_listing_test.js';
 import { ProductService } from '@/shared/gen/ceramics/v1/product_pb.js';
 import {
   createProductServiceMock,
@@ -25,7 +25,7 @@ import { screencastFixture } from './screencast-fixture.js';
 
 interface ApplicationServiceSpies {
   readonly outlet: OutletServiceSpies;
-  readonly outletListing: OutletListingServiceSpies;
+  readonly reportListing: ReportListingServiceSpies;
   readonly product: ProductServiceSpies;
   readonly salesReport: SalesReportServiceSpies;
 }
@@ -33,7 +33,7 @@ interface ApplicationServiceSpies {
 interface BrowserFixtures {
   readonly applicationServices: ApplicationServiceSpies;
   readonly outletService: OutletServiceSpies;
-  readonly outletListingService: OutletListingServiceSpies;
+  readonly reportListingService: ReportListingServiceSpies;
   readonly productService: ProductServiceSpies;
   readonly salesReportService: SalesReportServiceSpies;
 }
@@ -61,7 +61,7 @@ export const test = baseTest
     applicationServices: [
       async ({ task: _task }, use) => {
         const outlet = createOutletServiceMock().spies;
-        const outletListing = createOutletListingServiceMock().spies;
+        const reportListing = createReportListingServiceMock().spies;
         const product = createProductServiceMock().spies;
         const salesReport = createSalesReportServiceMock().spies;
         const transport = createRouterTransport((router) => {
@@ -71,8 +71,8 @@ export const test = baseTest
             setOutletArchived: outlet.setOutletArchived.handler,
             updateOutlet: outlet.updateOutlet.handler,
           });
-          router.service(OutletListingService, {
-            listOutletListings: outletListing.listOutletListings.handler,
+          router.service(ReportListingService, {
+            listReportListings: reportListing.listReportListings.handler,
           });
           router.service(ProductService, {
             createProduct: product.createProduct.handler,
@@ -90,15 +90,15 @@ export const test = baseTest
         });
         const application = await loadTestApplication();
         application.overrideTransport(transport);
-        await use({ outlet, outletListing, product, salesReport });
+        await use({ outlet, product, reportListing, salesReport });
       },
       { auto: true },
     ],
     outletService: async ({ applicationServices }, use) => {
       await use(applicationServices.outlet);
     },
-    outletListingService: async ({ applicationServices }, use) => {
-      await use(applicationServices.outletListing);
+    reportListingService: async ({ applicationServices }, use) => {
+      await use(applicationServices.reportListing);
     },
     productService: async ({ applicationServices }, use) => {
       await use(applicationServices.product);

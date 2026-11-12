@@ -34,7 +34,7 @@ export default defineConfig({
       '/ceramics.v1.OutletService': {
         target: 'http://127.0.0.1:3001',
       },
-      '/ceramics.v1.OutletListingService': {
+      '/ceramics.v1.ReportListingService': {
         target: 'http://127.0.0.1:3001',
       },
       '/ceramics.v1.SalesReportService': {

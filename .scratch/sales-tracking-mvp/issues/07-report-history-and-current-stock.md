@@ -14,9 +14,9 @@
 - [x] Saving an edit updates the report's saved ordering used for equal-date current Stock resolution.
 - [x] The creator can archive and restore a Sales report; the application offers no physical report deletion.
 - [x] Archived reports are read-only until restored and are excluded from current Stock and ordinary analytics by default.
-- [x] Current Stock for each Outlet listing comes from the active report with the latest Reporting period end date.
+- [x] Current Stock for each Report listing at an Outlet comes from that Outlet's active report with the latest Reporting period end date.
 - [x] When end dates tie, the report saved most recently determines current Stock.
-- [x] Outlet listing tables sort by immutable Outlet-listing creation time; Sales reports do not persist separate Sales or Stock row positions.
+- [x] Report listing tables sort by immutable global Report-listing creation time; Sales reports do not persist separate Sales or Stock row positions.
 - [x] Editing, archiving, or restoring a report immediately recalculates current Stock and all dependent totals.
 - [x] Renaming an Outlet changes its displayed name in report history without copying or rewriting an Outlet name inside each report.
 - [x] Server integration tests cover edit recalculation, immutable Outlet association, date ties, saved-order ties, omission-as-zero, archive, and restore.
@@ -27,4 +27,5 @@
 - 2026-11-11 — Implemented by `538511d`. The generated API now supports complete report updates and reversible archive state, Sales values are derived on reads, report saves use collision-safe monotonic ordering, and current Stock is recalculated from active Outlet reports with period-end and saved-order precedence.
 - 2026-11-11 — Verified with focused real-SQLite server integration tests (14), focused prebuilt Chromium Outlet-history tests (11), the shared Product-list owner tests (5), deterministic screenshot review, clean parallel Standards and Spec reviews from `82af88a364a9afd8eae5ad26c38650cd408c5c31`, and final `npm run check` (76 tests plus client/server production builds).
 - 2026-11-11 — Recorded the critical edit and archive/restore flows in `test-results/outlet-details-and-sales-report-history-opens-historical-values-and-edits-an-active-report.webm` and `test-results/outlet-details-and-sales-report-history-opens-an-archived-report-read-only-and-restores-it.webm`.
+- 2026-11-12 — Outlet Report-listing membership is now derived from active and archived report rows without a separate Outlet association. Active-report metrics remain isolated per Outlet; removing an Outlet's final reference removes the listing from that Outlet while preserving the global identity.
 

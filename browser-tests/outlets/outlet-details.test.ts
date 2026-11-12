@@ -9,9 +9,9 @@ import {
   createOutletStub,
 } from '@/shared/gen/ceramics/v1/outlet_test.js';
 import {
-  createListOutletListingsResponseStub,
-  createOutletListingStub,
-} from '@/shared/gen/ceramics/v1/outlet_listing_test.js';
+  createListReportListingsResponseStub,
+  createReportListingStub,
+} from '@/shared/gen/ceramics/v1/report_listing_test.js';
 import {
   createCreateSalesReportResponseStub,
   createGetSalesReportResponseStub,
@@ -33,20 +33,19 @@ const outlet = createOutletStub({
   id: 'outlet-id',
   name: 'Гончарная лавка',
 });
-const knownListing = createOutletListingStub({
+const knownListing = createReportListingStub({
   currentStockBalance: 5,
   id: 'listing-id',
   lastOutletPriceKopecks: 3500,
   latestUnitsSold: 2,
   name: 'Кольцо',
-  outletId: outlet.id,
 });
 
 test.describe('Outlet details and Sales report history', () => {
-  test.beforeEach(({ outletListingService, outletService, salesReportService }) => {
+  test.beforeEach(({ outletService, reportListingService, salesReportService }) => {
     outletService.listOutlets.resolves(createListOutletsResponseStub({ outlets: [outlet] }));
-    outletListingService.listOutletListings.resolves(
-      createListOutletListingsResponseStub({ listings: [knownListing] }),
+    reportListingService.listReportListings.resolves(
+      createListReportListingsResponseStub({ listings: [knownListing] }),
     );
     salesReportService.listSalesReports.resolves(
       createListSalesReportsResponseStub({ reports: [] }),
@@ -63,7 +62,7 @@ test.describe('Outlet details and Sales report history', () => {
     await expect.element(page.getByText(knownListing.name, { exact: true })).toBeVisible();
     await expect.element(page.getByText('35,00 ₽')).toBeVisible();
     await expect.element(page.getByText('5', { exact: true })).toBeVisible();
-    await details.screenshotPage('Outlet listing summaries');
+    await details.screenshotPage('Report listing summaries');
   });
 
   test('filters the Outlet report history by archive state', async ({ salesReportService }) => {
@@ -470,7 +469,7 @@ test.describe('Outlet details and Sales report history', () => {
     await details.addStock();
     await details.stockListing(0).click();
     await expect.element(page.getByRole('option', { name: knownListing.name })).toBeVisible();
-    await details.screenshotDialog('Outlet listing autocomplete');
+    await details.screenshotDialog('Report listing autocomplete');
     await page.getByRole('option', { name: knownListing.name }).click();
     await details.stockBalance(0).fill('5');
     await details.stockPrice(0).fill('35');
@@ -603,7 +602,7 @@ function createOutletDetailsPage() {
     periodEnd: () => dialog().getByLabelText('Конец периода'),
     periodStart: () => dialog().getByLabelText('Начало периода'),
     salesListing: (index: number) =>
-      salesRow(index).getByRole('combobox', { name: 'Позиция полки' }),
+      salesRow(index).getByRole('combobox', { name: 'Позиция отчёта' }),
     salesValue: (index: number) => salesRow(index).getByRole('textbox', { name: 'Сумма продаж' }),
     save: () => dialog().getByRole('button', { name: 'Сохранить отчёт' }).click(),
     report: (start: string, end: string) =>
@@ -616,7 +615,7 @@ function createOutletDetailsPage() {
     showArchivedReports: () => page.getByRole('button', { name: 'В архиве' }).click(),
     stockBalance: (index: number) => stockRow(index).getByRole('spinbutton', { name: 'Остаток' }),
     stockListing: (index: number) =>
-      stockRow(index).getByRole('combobox', { name: 'Позиция полки' }),
+      stockRow(index).getByRole('combobox', { name: 'Позиция отчёта' }),
     stockPrice: (index: number) => stockRow(index).getByRole('textbox', { name: 'Цена на полке' }),
     unitsSold: (index: number) => salesRow(index).getByRole('spinbutton', { name: 'Продано, шт.' }),
   };

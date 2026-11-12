@@ -24,15 +24,12 @@ const createSchema: Migration = {
       .execute();
 
     await database.schema
-      .createTable('outlet_listings')
+      .createTable('report_listings')
       .addColumn('id', 'text', (column) => column.primaryKey().notNull())
-      .addColumn('outlet_id', 'text', (column) =>
-        column.notNull().references('outlets.id').onDelete('restrict'),
-      )
       .addColumn('name', sql`text collate binary`, (column) => column.notNull())
       .addColumn('created_at_ms', 'integer', (column) => column.notNull())
-      .addUniqueConstraint('outlet_listings_identity', ['outlet_id', 'name'])
-      .addCheckConstraint('outlet_listings_name_nonempty', sql`length(name) > 0`)
+      .addUniqueConstraint('report_listings_name_unique', ['name'])
+      .addCheckConstraint('report_listings_name_nonempty', sql`length(name) > 0`)
       .execute();
 
     await database.schema
@@ -53,13 +50,13 @@ const createSchema: Migration = {
       .addColumn('report_id', 'text', (column) =>
         column.notNull().references('sales_reports.id').onDelete('cascade'),
       )
-      .addColumn('outlet_listing_id', 'text', (column) =>
-        column.notNull().references('outlet_listings.id').onDelete('restrict'),
+      .addColumn('report_listing_id', 'text', (column) =>
+        column.notNull().references('report_listings.id').onDelete('restrict'),
       )
       .addColumn('units_sold', 'integer', (column) => column.notNull().defaultTo(0))
       .addColumn('earnings_kopecks', 'integer', (column) => column.notNull().defaultTo(0))
       .addColumn('outlet_share_kopecks', 'integer', (column) => column.notNull().defaultTo(0))
-      .addPrimaryKeyConstraint('sales_report_sales_primary', ['report_id', 'outlet_listing_id'])
+      .addPrimaryKeyConstraint('sales_report_sales_primary', ['report_id', 'report_listing_id'])
       .addCheckConstraint('sales_report_sales_units_nonnegative', sql`units_sold >= 0`)
       .addCheckConstraint('sales_report_sales_earnings_nonnegative', sql`earnings_kopecks >= 0`)
       .addCheckConstraint(
@@ -73,14 +70,14 @@ const createSchema: Migration = {
       .addColumn('report_id', 'text', (column) =>
         column.notNull().references('sales_reports.id').onDelete('cascade'),
       )
-      .addColumn('outlet_listing_id', 'text', (column) =>
-        column.notNull().references('outlet_listings.id').onDelete('restrict'),
+      .addColumn('report_listing_id', 'text', (column) =>
+        column.notNull().references('report_listings.id').onDelete('restrict'),
       )
       .addColumn('stock_balance', 'integer', (column) => column.notNull().defaultTo(0))
       .addColumn('outlet_price_kopecks', 'integer', (column) => column.notNull().defaultTo(0))
       .addPrimaryKeyConstraint('sales_report_stock_balances_primary', [
         'report_id',
-        'outlet_listing_id',
+        'report_listing_id',
       ])
       .addCheckConstraint('sales_report_stock_balances_stock_nonnegative', sql`stock_balance >= 0`)
       .addCheckConstraint(

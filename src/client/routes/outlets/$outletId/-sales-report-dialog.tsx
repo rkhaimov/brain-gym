@@ -33,7 +33,7 @@ import {
   TableRow,
 } from '@/client/components/ui/table.js';
 import type { Outlet } from '@/shared/gen/ceramics/v1/outlet_pb.js';
-import { listOutletListings } from '@/shared/gen/ceramics/v1/outlet_listing-OutletListingService_connectquery.js';
+import { listReportListings } from '@/shared/gen/ceramics/v1/report_listing-ReportListingService_connectquery.js';
 import {
   createSalesReport,
   getSalesReport,
@@ -142,7 +142,7 @@ function FieldMessages({
   return <FieldError errors={errors.map((message) => ({ message }))} id={id} />;
 }
 
-function OutletListingInput({
+function ReportListingInput({
   describedBy,
   disabled,
   invalid,
@@ -202,7 +202,7 @@ function OutletListingInput({
         aria-describedby={describedBy}
         aria-expanded={open && visibleSuggestions.length > 0}
         aria-invalid={invalid || undefined}
-        aria-label="Позиция полки"
+        aria-label="Позиция отчёта"
         autoComplete="off"
         disabled={disabled}
         onBlur={(event) => {
@@ -318,7 +318,7 @@ function SalesReportDialogForm({
 }: SalesReportDialogFormProps) {
   const createMutation = useMutation(createSalesReport);
   const updateMutation = useMutation(updateSalesReport);
-  const listings = useQuery(listOutletListings, { outletId: outlet.id });
+  const listings = useQuery(listReportListings, { outletId: outlet.id });
   const nextRowId = useRef(
     (reportValue?.sales.length ?? 0) + (reportValue?.stockBalances.length ?? 0) + 1,
   );
@@ -634,7 +634,7 @@ function SalesReportDialogForm({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Позиция полки</TableHead>
+                      <TableHead>Позиция отчёта</TableHead>
                       <TableHead>Остаток</TableHead>
                       <TableHead>Цена на полке, ₽</TableHead>
                       <TableHead className="text-right">Действия</TableHead>
@@ -652,7 +652,7 @@ function SalesReportDialogForm({
                           role="group"
                         >
                           <TableCell className="min-w-56 align-top whitespace-normal">
-                            <OutletListingInput
+                            <ReportListingInput
                               describedBy={
                                 errors[listingKey] === undefined ? undefined : `${listingKey}-error`
                               }
@@ -751,7 +751,7 @@ function SalesReportDialogForm({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Позиция полки</TableHead>
+                      <TableHead>Позиция отчёта</TableHead>
                       <TableHead>Продано, шт.</TableHead>
                       <TableHead>Сумма продаж, ₽</TableHead>
                       <TableHead>Заработано, ₽</TableHead>
@@ -778,7 +778,7 @@ function SalesReportDialogForm({
                           role="group"
                         >
                           <TableCell className="min-w-52 align-top whitespace-normal">
-                            <OutletListingInput
+                            <ReportListingInput
                               describedBy={
                                 errors[listingKey] === undefined ? undefined : `${listingKey}-error`
                               }
