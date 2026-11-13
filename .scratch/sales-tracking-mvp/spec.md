@@ -22,7 +22,7 @@ Build a Russian-language, desktop-oriented local web application for a single cr
 
 The creator maintains a Product catalog and a list of exactly named Outlets. A Sales report belongs permanently to one Outlet, covers one Reporting period, records aggregated sales, and provides the complete Stock balance at the period end. Yandex Report files identify Outlets by the exact trimmed name in `Магазин "Твоя Полка" (<name>)`.
 
-Report listings retain the exact names supplied in Sales reports. An exact name identifies one global Report listing across all Outlets. Persistent Product mappings associate Report listings with canonical Products, while Unmapped listings remain valid and visible in analytics until the creator maps them.
+Report listings retain the exact names supplied in Sales reports. An exact name identifies one global Report listing across all Outlets. Persistent Product mappings associate Report listings with canonical Products. Unmapped listings remain valid and produce a prominent analytics warning, but their values are excluded until the creator maps them.
 
 The MVP provides:
 
@@ -124,7 +124,7 @@ flowchart LR
 
 ### Importing a Report file
 
-43. As the creator, I can explicitly import new Твоя Полка Report files from Yandex Mail from the Outlets page.
+43. As the creator, I can explicitly import new Твоя Полка Report files from Yandex Mail from the Overview dashboard and see analytics refresh immediately after a successful sync.
 44. As the creator, each click scans only INBOX UIDs newer than the last successfully scanned UID.
 45. As the creator, I receive a clear rejection when the workbook structure or a value cannot be parsed, including the relevant cell or location and the expected kind of value.
 46. As the creator, every selected workbook is validated before any workbook in the mailbox batch changes application data.
@@ -151,7 +151,7 @@ flowchart LR
 64. As the creator, mapping, remapping, or removing a mapping immediately reclassifies all historical and current results for that Report listing.
 65. As the creator, an existing mapping to a Product remains effective if that Product is later archived.
 66. As the creator, I can view Report listings with All, Unmapped, and Mapped filters; entering from the mapping workflow defaults the view to Unmapped.
-67. As the creator, I see Unmapped listings visibly distinguished from Products in analytics rather than omitted from totals.
+67. As the creator, I see a prominent warning when relevant Unmapped listings exist; they are excluded from analytics until mapped, and I can open the filtered mapping view and return to the same Overview filters.
 68. As the creator, Report listing identity uses the trimmed, otherwise exact name without normalizing case, punctuation, or spelling.
 69. As the creator, an Unmapped listing is not implicitly treated as an existing Product even when its exact name equals that Product's name; I must map it explicitly.
 70. As the creator, when a Report listing appears at several Outlets, mapping it once applies explicitly to all of those appearances.
@@ -164,16 +164,16 @@ flowchart LR
 74. As the creator, current Stock for a Report listing at an Outlet comes from that Outlet's active Sales report with the latest Reporting period end date.
 75. As the creator, when two active reports for the same Report listing at an Outlet have the same Reporting period end date, the report saved most recently determines current Stock. Saving an edit updates that ordering.
 76. As the creator, editing or archiving a report immediately recalculates which report determines current Stock.
-77. As the creator, I can select one, several, or all complete Sales reports as the input for sales analytics.
-78. As the creator, I can independently select one, several, or all Outlets for analytics.
-79. As the creator, I can combine Sales reports with different Reporting periods and see the selected periods clearly identified.
-80. As the creator, analytics sum Units sold, Earnings, and Outlet share across the selected reports and selected Outlets.
-81. As the creator, current Stock in analytics uses the latest active Sales report for each Report listing at each selected Outlet, rather than summing historical Stock balances or slicing a report by date.
-82. As the creator, I can see overall totals for current Stock balance, Units sold, Earnings, and Outlet share above detailed comparison results.
-83. As the creator, I can compare and sort Products by current Stock balance, Units sold, Earnings, or Outlet share.
+77. As the creator, I open the application on the Overview dashboard, sync Report files there, and keep my current analytics filters while refreshed numbers appear.
+78. As the creator, I can choose a custom inclusive date range or rolling last-7-day and last-30-day presets, with the last 30 days selected by default.
+79. As the creator, date-filtered sales analytics include complete active Sales reports whose Reporting-period end date is inside the selected range; reports are never prorated.
+80. As the creator, I can independently select one, several, or all active Outlets and one, several, or all canonical Products, including archived Products that retain mapped history.
+81. As the creator, analytics sum mapped Units sold, Earnings, and Outlet share across the filtered reports and Outlets, while Stock uses each Outlet's latest active report at or before the selected range end.
+82. As the creator, I see mapped totals for end-of-period Stock, Units sold, Earnings, and Outlet share plus the signed absolute change from the immediately preceding equal-length period.
+83. As the creator, I can compare and sort mapped Products by Stock, Units sold, Earnings, or Outlet share using their current canonical names.
 84. As the creator, I can use Product ranking presets for Most sold, Highest earnings, and Lowest stock.
-85. As the creator, Product comparisons group every mapped Report listing under its Product and include marked Unmapped Report listings alongside Products.
-86. As the creator, I can open a Product and see every mapped Report listing contributing to it, with results broken down by Outlet.
+85. As the creator, every Overview filter is stored in validated route parameters so the mapping workflow can return me to the same view and refetch current analytics.
+86. As the creator, Product detail drill-down is deferred beyond the MVP dashboard; Overview contains no inactive chart or detail placeholder.
 87. As the creator, I can compare and sort Outlets by current Stock balance, Units sold, Earnings, or Outlet share.
 88. As the creator, I can open an Outlet and see its current Stock balances, Product results, Unmapped listings, and Sales report history.
 
@@ -243,7 +243,9 @@ flowchart LR
 - Report-file Outlet association uses the exact trimmed parenthesized Outlet name. Unknown Outlets and Report listings are created automatically.
 - Product mappings apply retroactively by resolving analytics through the current mapping rather than copying a Product identity into every historical row.
 - Preserve trimmed, otherwise exact Report listing names. One global identity is shared across Outlets by exact string equality.
-- Sales analytics aggregate complete selected Sales reports. Current Stock is a latest-state measure and is never summed across historical reports.
+- Sales analytics aggregate complete active reports whose period end falls inside the selected inclusive range. Current Stock uses each selected Outlet's latest active report at or before the selected range end and is never summed across historical reports.
+- Product analytics resolve current mappings and canonical Product names at query time. Unmapped values are excluded from totals and rows and surfaced only through their distinct relevant-listing count and mapping workflow.
+- Every KPI compares with the immediately preceding equal-length inclusive period. Date, Outlet, and Product filters apply consistently to current totals, previous totals, Product rows, sorting, and ranking presets.
 
 ### Durability, backup, migration, and recovery
 

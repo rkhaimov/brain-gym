@@ -1,6 +1,11 @@
 import { createRouterTransport } from '@connectrpc/connect';
 import { test as baseTest, vi } from 'vitest';
 
+import { AnalyticsService } from '@/shared/gen/ceramics/v1/analytics_pb.js';
+import {
+  createAnalyticsServiceMock,
+  type AnalyticsServiceSpies,
+} from '@/shared/gen/ceramics/v1/analytics_test.js';
 import { OutletService } from '@/shared/gen/ceramics/v1/outlet_pb.js';
 import {
   createOutletServiceMock,
@@ -29,6 +34,7 @@ import {
 import { screencastFixture } from './screencast-fixture.js';
 
 interface ApplicationServiceSpies {
+  readonly analytics: AnalyticsServiceSpies;
   readonly outlet: OutletServiceSpies;
   readonly reportListing: ReportListingServiceSpies;
   readonly reportImport: ReportImportServiceSpies;
@@ -37,6 +43,7 @@ interface ApplicationServiceSpies {
 }
 
 interface BrowserFixtures {
+  readonly analyticsService: AnalyticsServiceSpies;
   readonly applicationServices: ApplicationServiceSpies;
   readonly outletService: OutletServiceSpies;
   readonly reportListingService: ReportListingServiceSpies;
@@ -67,12 +74,16 @@ export const test = baseTest
   .extend<BrowserFixtures>({
     applicationServices: [
       async ({ task: _task }, use) => {
+        const analytics = createAnalyticsServiceMock().spies;
         const outlet = createOutletServiceMock().spies;
         const reportListing = createReportListingServiceMock().spies;
         const reportImport = createReportImportServiceMock().spies;
         const product = createProductServiceMock().spies;
         const salesReport = createSalesReportServiceMock().spies;
         const transport = createRouterTransport((router) => {
+          router.service(AnalyticsService, {
+            getProductAnalytics: analytics.getProductAnalytics.handler,
+          });
           router.service(OutletService, {
             createOutlet: outlet.createOutlet.handler,
             listOutlets: outlet.listOutlets.handler,
@@ -105,10 +116,13 @@ export const test = baseTest
         });
         const application = await loadTestApplication();
         application.overrideTransport(transport);
-        await use({ outlet, product, reportImport, reportListing, salesReport });
+        await use({ analytics, outlet, product, reportImport, reportListing, salesReport });
       },
       { auto: true },
     ],
+    analyticsService: async ({ applicationServices }, use) => {
+      await use(applicationServices.analytics);
+    },
     outletService: async ({ applicationServices }, use) => {
       await use(applicationServices.outlet);
     },

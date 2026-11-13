@@ -6,10 +6,10 @@
 
 **Status:** ready-for-agent
 
-- [ ] Outlet comparison uses the same selected Sales reports and selected Outlets as Product analytics.
+- [ ] Outlet comparison uses the same selected date range, Outlets, and Products as Product analytics.
 - [ ] Every Outlet row shows current Stock, Units sold, Earnings, and Outlet share.
 - [ ] Outlet rows can be sorted by any of the four measures.
-- [ ] Overall totals remain visible above the Outlet comparison and match the equivalent Product comparison totals for the same selection.
+- [ ] Overall mapped totals remain visible above the Outlet comparison and match Product analytics for the same selection; relevant Unmapped listings stay excluded and retain the same warning workflow.
 - [ ] Opening an Outlet shows its current Stock balances by exact Report listing.
 - [ ] Outlet details show Product results and visibly marked Unmapped listings.
 - [ ] Outlet details retain the Sales report history and historical-report opening delivered by ticket 07.

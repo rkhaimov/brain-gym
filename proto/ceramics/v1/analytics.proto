@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package ceramics.v1;
+
+message AnalyticsMetrics {
+  double current_stock_balance = 1;
+  double units_sold = 2;
+  double earnings_kopecks = 3;
+  double outlet_share_kopecks = 4;
+}
+
+message AnalyticsOutletOption {
+  string id = 1;
+  string name = 2;
+}
+
+message AnalyticsProductOption {
+  string id = 1;
+  string name = 2;
+  bool archived = 3;
+}
+
+message ProductAnalyticsRow {
+  AnalyticsProductOption product = 1;
+  AnalyticsMetrics metrics = 2;
+}
+
+message GetProductAnalyticsRequest {
+  string period_start_date = 1;
+  string period_end_date = 2;
+  repeated string outlet_ids = 3;
+  repeated string product_ids = 4;
+}
+
+message GetProductAnalyticsResponse {
+  repeated AnalyticsOutletOption outlets = 1;
+  repeated AnalyticsProductOption products = 2;
+  AnalyticsMetrics totals = 3;
+  AnalyticsMetrics previous_period_totals = 4;
+  string previous_period_start_date = 5;
+  string previous_period_end_date = 6;
+  repeated ProductAnalyticsRow rows = 7;
+  uint32 unmapped_listing_count = 8;
+}
+
+service AnalyticsService {
+  rpc GetProductAnalytics(GetProductAnalyticsRequest) returns (GetProductAnalyticsResponse) {}
+}

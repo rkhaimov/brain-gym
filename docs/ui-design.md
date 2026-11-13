@@ -103,10 +103,10 @@ Keep destructive red distinct from terracotta so the primary color retains its b
 
 ## Dashboard source and adoption policy
 
-- Use shadcn/ui `dashboard-01` at commit [`6261bd89f72d794aea491482cc2acfd8dc3d63e2`](https://github.com/shadcn-ui/ui/tree/6261bd89f72d794aea491482cc2acfd8dc3d63e2/apps/v4/registry/new-york-v4/blocks/dashboard-01) as the pinned source for the desktop shell, navigation, header, content spacing, tables, and button placement.
+- Use the shadcn/ui dashboard example at commit [`e62c9435fff729a175f38983dee73b2cb4f6a069`](https://github.com/shadcn-ui/ui/tree/e62c9435fff729a175f38983dee73b2cb4f6a069/apps/v4/app/%28app%29/examples/dashboard) as the pinned source for the site header, content container spacing, KPI card grid, data-table composition, and button placement.
 - Copy only the markup and classes required by a working application flow. Do not install the complete block or retain its demo data, placeholder controls, charts, drag-and-drop, sorting, pagination, user menu, or other unused behavior.
 - Keep generated shadcn/ui primitives behaviorally and visually upstream-shaped. Limit local changes to repository formatting and lint compatibility, Russian accessible labels, semantic theme variables, and approved application identity.
-- Application-owned layout targets the fixed desktop presentation. Do not add responsive variants until a product requirement needs them; responsive behavior internal to a generated primitive may remain.
+- Application-owned layout targets the desktop presentation. Preserve the responsive container variants used by the pinned dashboard's spacing and KPI grid; do not invent separate mobile workflows or responsive compositions without a product requirement.
 - Add a navigation destination only when its route works. Add a primitive only when the same ticket consumes it.
 - Compose a screen directly from generated primitives until a second real use case demonstrates that a shared application module would provide leverage.
 
@@ -116,4 +116,4 @@ The local `artefacts` directory contains the approved analytics, Product-mapping
 
 The mockups establish composition and visual character. This document governs the normalized application name, logo treatment, color tokens, semantic color use, and icon conventions when mockup details differ.
 
-The Report-flow mockup's manual file-selection and editable import-review screens are superseded by ticket 09. The current flow is the explicit Yandex Mail action above the Outlets catalog, followed by an inline success, no-new-files, or destructive failure summary.
+The Report-flow mockup's manual file-selection and editable import-review screens are superseded by tickets 09 and 10. The current flow is the explicit Yandex Mail action at the top of the Overview dashboard, followed by an inline success, no-new-files, or destructive failure summary and immediate analytics refresh.

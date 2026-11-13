@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@connectrpc/connect-query';
-import { createFileRoute } from '@tanstack/react-router';
-import { PackageOpen, Pencil } from 'lucide-react';
+import { createFileRoute, useRouter } from '@tanstack/react-router';
+import { ArrowLeft, PackageOpen, Pencil } from 'lucide-react';
 import { z } from 'zod';
 
 import {
@@ -10,6 +10,7 @@ import {
 import { useMaintenancePage } from '@/client/components/maintenance/use-maintenance-page.js';
 import { useRefreshProductCatalog } from '@/client/components/products/product-catalog-query.js';
 import { Badge } from '@/client/components/ui/badge.js';
+import { Button } from '@/client/components/ui/button.js';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/client/components/ui/tabs.js';
 import {
   listProducts,
@@ -47,6 +48,11 @@ const productCatalogCopy: MaintenanceCatalogCopy = {
 
 const searchSchema = z.object({
   filter: z.enum(['all', 'unmapped', 'mapped']).optional().catch(undefined),
+  returnTo: z
+    .string()
+    .regex(/^\/(?:\?.*)?$/)
+    .optional()
+    .catch(undefined),
   tab: z.enum(['catalog', 'report-listings']).optional().catch(undefined),
 });
 
@@ -62,6 +68,8 @@ const filterToProto: Readonly<{
 
 function ProductsPage() {
   const search = Route.useSearch();
+  const router = useRouter();
+  const returnTo = search.returnTo;
   const navigate = Route.useNavigate();
   const activeTab = search.tab ?? 'catalog';
   const mappingFilter = search.filter ?? 'unmapped';
@@ -86,17 +94,28 @@ function ProductsPage() {
     void navigate({
       search:
         value === 'report-listings'
-          ? { filter: search.filter ?? 'unmapped', tab: 'report-listings' }
-          : { tab: 'catalog' },
+          ? {
+              filter: search.filter ?? 'unmapped',
+              returnTo: search.returnTo,
+              tab: 'report-listings',
+            }
+          : { returnTo: search.returnTo, tab: 'catalog' },
     });
   }
 
   function changeFilter(filter: MappingFilter): void {
-    void navigate({ search: { filter, tab: 'report-listings' } });
+    void navigate({ search: { filter, returnTo: search.returnTo, tab: 'report-listings' } });
   }
 
   return (
     <>
+      {returnTo === undefined ? null : (
+        <div className="px-6 pt-6">
+          <Button onClick={() => router.navigate({ href: returnTo })} size="sm" variant="outline">
+            <ArrowLeft /> Вернуться к обзору
+          </Button>
+        </div>
+      )}
       <section aria-label="Штучки" className="flex flex-col">
         <Tabs onValueChange={changeTab} value={activeTab}>
           <TabsList aria-label="Разделы штучек" className="mt-6 ml-6">

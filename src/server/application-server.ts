@@ -4,6 +4,7 @@ import { join } from 'node:path';
 
 import { connectNodeAdapter } from '@connectrpc/connect-node';
 
+import { registerAnalyticsRoutes } from './analytics/analytics-service.js';
 import type { BackupDestination } from './database/backup-destination.js';
 import { LocalFilesystemBackupDestination } from './database/backup-destination.js';
 import { prepareApplicationDatabase } from './database/database.js';
@@ -87,6 +88,7 @@ export async function startApplicationServer(
   const reportMailbox = options.reportMailbox ?? createYandexReportMailboxFromEnvironment();
   const requestHandler = connectNodeAdapter({
     routes: (router) => {
+      registerAnalyticsRoutes(router, { database });
       registerProductRoutes(router, {
         database,
         env,

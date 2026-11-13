@@ -1,5 +1,5 @@
 import { Link, useLocation, useMatches } from '@tanstack/react-router';
-import { Store } from 'lucide-react';
+import { House, Store } from 'lucide-react';
 import type { ComponentType, CSSProperties, PropsWithChildren } from 'react';
 
 import logoUrl from '@/client/assets/ceramics-logo.png';
@@ -49,10 +49,11 @@ interface NavigationItem {
   readonly headerIconClassName?: string;
   readonly icon: ComponentType<{ className?: string }>;
   readonly label: string;
-  readonly to: '/outlets' | '/products';
+  readonly to: '/' | '/outlets' | '/products';
 }
 
 const navigationItems: readonly NavigationItem[] = [
+  { icon: House, label: 'Обзор', to: '/' },
   {
     headerIconClassName: 'size-5',
     icon: CeramicProductIcon,
@@ -90,7 +91,7 @@ export function AppShell({ children }: PropsWithChildren) {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild size="lg">
-                <Link to="/products">
+                <Link to="/">
                   <img alt="" className="size-8" src={logoUrl} />
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-bold">Керамика</span>
