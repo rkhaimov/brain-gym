@@ -24,3 +24,7 @@
 - [ ] A manual rebuild and migration preserves existing application data, and the documented recovery procedure successfully restores and migrates an older backup.
 - [ ] Before completing this ticket, remove the temporary unpublished-schema rule from `AGENTS.md` and establish the release migration baseline.
 - [ ] Coverage reports are published without enforcing an arbitrary global percentage, and every agreed critical scenario is represented at its designated test seam.
+
+## Comments
+
+- 2026-11-13 — Partial implementation `d29972e` added the documented loopback-only production start and shutdown workflow plus the critical full-system Chromium flow. Verified with `npm run check` (formatting, lint, type checking, generated-artifact verification, 129 tests, and client/server builds). The remaining unchecked acceptance items are intentionally deferred, so the ticket stays open.
