@@ -138,7 +138,10 @@ export function AnalyticsFilters({
   }
 
   return (
-    <section aria-label="Фильтры аналитики" className="flex flex-wrap items-end gap-4 px-4 lg:px-6">
+    <section
+      aria-label="Фильтры аналитики"
+      className="flex flex-wrap items-start gap-4 px-4 lg:px-6"
+    >
       <div className="min-w-72 space-y-1.5">
         <span className="block text-sm font-medium">Период</span>
         <Popover

@@ -189,9 +189,21 @@ test.describe('Product analytics dashboard', () => {
     const outlet = filters.getByRole('combobox', { name: 'Магазины' });
     await expect.element(period).toBeVisible();
     await expect.element(outlet).toBeVisible();
-    expect(
-      filters.getByText('Период', { exact: true }).element().getBoundingClientRect().bottom,
-    ).toBeLessThanOrEqual(period.element().getBoundingClientRect().top);
+    const periodLabel = filters.getByText('Период', { exact: true }).element();
+    const outletLabel = filters.getByText('Магазины', { exact: true }).element();
+    const outletControl = outlet.element().closest('[data-slot="combobox-chips"]');
+    if (outletControl === null) throw new Error('Expected the Outlet combobox control');
+    expect(periodLabel.getBoundingClientRect().top).toBeCloseTo(
+      outletLabel.getBoundingClientRect().top,
+      0,
+    );
+    expect(period.element().getBoundingClientRect().top).toBeCloseTo(
+      outletControl.getBoundingClientRect().top,
+      0,
+    );
+    expect(periodLabel.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      period.element().getBoundingClientRect().top,
+    );
     expect(
       filters.getByText('Магазины', { exact: true }).element().getBoundingClientRect().bottom,
     ).toBeLessThanOrEqual(outlet.element().getBoundingClientRect().top);
