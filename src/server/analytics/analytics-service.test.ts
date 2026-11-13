@@ -61,6 +61,154 @@ describe('AnalyticsService', () => {
     ).rejects.toMatchObject({ code: Code.InvalidArgument });
   });
 
+  test('uses the selected Outlet report history for all-time analytics', async ({ clients }) => {
+    const north = await clients.outlets.createOutlet({ name: 'Север' });
+    const south = await clients.outlets.createOutlet({ name: 'Юг' });
+    const ring = await clients.products.createProduct({ name: 'Кольцо' });
+    const pendant = await clients.products.createProduct({ name: 'Кулон' });
+    assertSuccess(north);
+    assertSuccess(south);
+    assertSuccess(ring);
+    assertSuccess(pendant);
+
+    const firstNorth = await clients.reports.createSalesReport({
+      outletId: north.result.value.id,
+      periodEndDate: '2020-01-31',
+      periodStartDate: '2020-01-01',
+      sales: [
+        { earningsKopecks: 2000, listingName: 'Подвеска', salesValueKopecks: 2500, unitsSold: 1 },
+      ],
+    });
+    const ringNorth = await clients.reports.createSalesReport({
+      outletId: north.result.value.id,
+      periodEndDate: '2026-11-30',
+      periodStartDate: '2026-11-01',
+      sales: [
+        { earningsKopecks: 9000, listingName: 'Перстень', salesValueKopecks: 12_000, unitsSold: 3 },
+      ],
+      stockBalances: [{ listingName: 'Перстень', outletPriceKopecks: 4000, stockBalance: 5 }],
+    });
+    const futureNorth = await clients.reports.createSalesReport({
+      outletId: north.result.value.id,
+      periodEndDate: '2027-02-28',
+      periodStartDate: '2027-02-01',
+      stockBalances: [{ listingName: 'Перстень', outletPriceKopecks: 4000, stockBalance: 9 }],
+    });
+    const archivedNorth = await clients.reports.createSalesReport({
+      outletId: north.result.value.id,
+      periodEndDate: '2030-12-31',
+      periodStartDate: '2030-12-01',
+      sales: [
+        {
+          earningsKopecks: 50_000,
+          listingName: 'Перстень',
+          salesValueKopecks: 60_000,
+          unitsSold: 20,
+        },
+      ],
+    });
+    const southReport = await clients.reports.createSalesReport({
+      outletId: south.result.value.id,
+      periodEndDate: '2035-12-31',
+      periodStartDate: '2035-12-01',
+      sales: [
+        {
+          earningsKopecks: 80_000,
+          listingName: 'Перстень',
+          salesValueKopecks: 90_000,
+          unitsSold: 30,
+        },
+      ],
+    });
+    assertSuccess(firstNorth);
+    assertSuccess(ringNorth);
+    assertSuccess(futureNorth);
+    assertSuccess(archivedNorth);
+    assertSuccess(southReport);
+    await clients.reports.setSalesReportArchived({
+      archived: true,
+      id: archivedNorth.result.value.id,
+    });
+
+    const listings = (await clients.listings.listReportListings({})).listings;
+    const ringListing = listings.find(({ name }) => name === 'Перстень');
+    const pendantListing = listings.find(({ name }) => name === 'Подвеска');
+    if (ringListing === undefined || pendantListing === undefined) {
+      throw new Error('Expected both Report listings');
+    }
+    await clients.listings.setReportListingProduct({
+      productId: ring.result.value.id,
+      reportListingId: ringListing.id,
+    });
+    await clients.listings.setReportListingProduct({
+      productId: pendant.result.value.id,
+      reportListingId: pendantListing.id,
+    });
+
+    const analytics = await clients.analytics.getProductAnalytics({
+      allTime: true,
+      outletIds: [north.result.value.id],
+      productIds: [ring.result.value.id],
+    });
+
+    expect(analytics).toMatchObject({
+      bucketGranularity: AnalyticsBucketGranularity.MONTH,
+      previousPeriodEndDate: '',
+      previousPeriodStartDate: '',
+      previousPeriodTotals: {
+        currentStockBalance: 0,
+        earningsKopecks: 0,
+        outletShareKopecks: 0,
+        unitsSold: 0,
+      },
+      rows: [
+        {
+          metrics: {
+            currentStockBalance: 9,
+            earningsKopecks: 9000,
+            outletShareKopecks: 3000,
+            unitsSold: 3,
+          },
+          product: { id: ring.result.value.id },
+        },
+      ],
+      totals: {
+        currentStockBalance: 9,
+        earningsKopecks: 9000,
+        outletShareKopecks: 3000,
+        unitsSold: 3,
+      },
+    });
+    expect(analytics.trendBuckets[0]).toMatchObject({ periodStartDate: '2020-01-31' });
+    expect(analytics.trendBuckets.at(-1)).toMatchObject({ periodEndDate: '2027-02-28' });
+  });
+
+  test('returns empty all-time analytics when the selected Outlets have no reports', async ({
+    clients,
+  }) => {
+    const outlet = await clients.outlets.createOutlet({ name: 'Без отчётов' });
+    assertSuccess(outlet);
+
+    await expect(
+      clients.analytics.getProductAnalytics({
+        allTime: true,
+        outletIds: [outlet.result.value.id],
+      }),
+    ).resolves.toMatchObject({
+      bucketGranularity: AnalyticsBucketGranularity.UNSPECIFIED,
+      previousPeriodEndDate: '',
+      previousPeriodStartDate: '',
+      rows: [],
+      totals: {
+        currentStockBalance: 0,
+        earningsKopecks: 0,
+        outletShareKopecks: 0,
+        unitsSold: 0,
+      },
+      trendBuckets: [],
+    });
+  });
+
   test('groups complete reports into clipped ISO weeks and Outlet financial totals', async ({
     clients,
   }) => {
@@ -451,7 +599,7 @@ describe('AnalyticsService', () => {
     });
   });
 
-  test('answers a ten-year monthly workload within two seconds', async ({ clients, database }) => {
+  test('answers a ten-year all-time workload within two seconds', async ({ clients, database }) => {
     const outletCount = 5;
     const productCount = 10;
     const reportsPerOutlet = 120;
@@ -518,8 +666,7 @@ describe('AnalyticsService', () => {
 
     const startedAt = performance.now();
     const result = await clients.analytics.getProductAnalytics({
-      periodEndDate: '2026-12-31',
-      periodStartDate: '2017-01-01',
+      allTime: true,
     });
     const elapsedMs = performance.now() - startedAt;
 

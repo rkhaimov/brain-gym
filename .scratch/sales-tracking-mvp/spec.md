@@ -130,7 +130,7 @@ flowchart LR
 46. As the creator, every selected workbook is validated before any workbook in the mailbox batch changes application data.
 47. As the creator, no editable review form opens and no data or cursor change is recorded when any part of the batch fails validation.
 48. As the creator, I am protected from a file that repeats an Outlet section.
-49. As the creator, I am protected from a file that repeats the same exact listing within an Outlet's sales section or within its Stock balance section.
+49. As the creator, I am protected from a file that repeats the same exact listing within an Outlet's sales section. Repeated Stock rows for the same listing are combined by summing Stock balance and retaining the highest listed Outlet price. A fully refunded Report-file listing with blank net Units and Sales value and at most a one-kopeck negative Earnings rounding residue is omitted from imported Sales.
 50. As the creator, unknown exact Outlet and Report listing names are created automatically during import.
 51. As the creator, an archived exact-name Outlet receives its imported reports while remaining archived.
 52. As the creator, every Outlet appearing in either workbook section receives one Sales report for that file.
@@ -287,7 +287,7 @@ flowchart LR
 - Give every server integration test file an isolated temporary SQLite database and backup directory. Never mock Kysely or better-sqlite3.
 - Test complete domain operations through Connect handlers, including validation failures and recalculated results.
 - Use focused unit tests only for pure functions or edge-case matrices that would make handler integration tests prohibitively slow.
-- Test Report-file parsing with committed, small synthetic `.xlsx` fixtures. Cover current and legacy layouts, invalid cell types, duplicate Outlet sections, duplicate listings, malformed hierarchy, and malformed Reporting periods.
+- Test Report-file parsing with committed, small synthetic `.xlsx` fixtures. Cover current and legacy layouts, invalid cell types, duplicate Outlet sections, rejected duplicate Sales listings, combined duplicate Stock listings, malformed hierarchy, and malformed Reporting periods.
 - Test backup and migration behavior in isolated temporary directories, including rotation, preservation after failed backup, integrity rejection, pre-migration ordering, successful restore, and migration of restored older data.
 - Centralize nondeterministic environment behavior such as clocks and identity generation in an EnvService. Tests may patch that service with Vitest spies and must restore it after each test; tests that patch the same global service do not run concurrently.
 

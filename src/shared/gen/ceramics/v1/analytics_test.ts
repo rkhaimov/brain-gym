@@ -130,6 +130,7 @@ export function createGetProductAnalyticsRequestStub(
     periodEndDate: 'test-periodEndDate',
     outletIds: ['test-outletIds'],
     productIds: ['test-productIds'],
+    allTime: true,
     ...overrides,
   });
 }

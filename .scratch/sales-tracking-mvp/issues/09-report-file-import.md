@@ -18,12 +18,13 @@
 - [x] Listing summary rows supply report values and individual transaction rows are ignored.
 - [x] Sales value comes from `Сумма продажи`, Earnings comes from `Сумма комитента`, and a missing historical Earnings column stores zero.
 - [x] Stock outlet price comes from `Цена`, and a missing historical price column stores zero.
-- [x] Ruble values become safe integer kopecks, listing names use trimmed otherwise exact identity, and duplicate listings within one Outlet section reject the batch.
+- [x] Ruble values become safe integer kopecks, listing names use trimmed otherwise exact identity, duplicate Sales listings within one Outlet section reject the batch, and repeated Stock listings are combined by summing quantity and retaining the highest listed price.
+- [x] Fully refunded Sales summary rows with blank net Units and Sales value and at most a one-kopeck negative Earnings rounding residue are omitted.
 - [x] Unknown Report listing names are created with their existing global identity and remain Unmapped.
 - [x] All fetched files, Outlets, Report listings, Sales reports, and the cursor commit in one SQLite transaction; any failure saves none of them.
 - [x] A successful import reports created file, Sales report, Outlet, and Report listing counts and refreshes affected client queries.
 - [x] Ordinary repeated clicks use the IMAP cursor, but a resent workbook under a new UID may import again; content duplicate and revision handling remain backlog work.
-- [x] Synthetic committed workbook fixtures cover current and legacy shifted headers, multiple Outlets, missing-value fallbacks, invalid cells and periods, malformed hierarchy, and duplicate listings.
+- [x] Synthetic committed workbook fixtures cover current and legacy shifted headers, multiple Outlets, missing-value fallbacks, invalid cells and periods, malformed hierarchy, rejected duplicate Sales listings, and combined duplicate Stock listings.
 - [x] Connect-handler tests use an injected mailbox adapter and real temporary SQLite; prebuilt Chromium tests cover the complete button lifecycle.
 - [x] The real Yandex adapter uses TLS, an app password, read-only INBOX access, and no background synchronization or telemetry.
 
@@ -36,4 +37,10 @@
 - Real read-only incremental Yandex smoke imported 2 attachments into 6 Sales reports, 3 new Outlets, and 33 new Report listings; the immediate repeat imported 0 files.
 - Fixed-base Standards and Spec reviews reported no remaining findings.
 - Chromium screencasts cover the pending/success refresh flow and the destructive workbook-error flow.
+
+### 2026-11-13 — Corrected observed workbook parsing
+
+- Repeated Stock listing rows now sum their balances and retain the highest listed Outlet price; duplicate Sales listings remain invalid.
+- Fully refunded Sales summaries with blank net Units and Sales value and a one-kopeck negative Earnings rounding residue are omitted.
+- Verification: all 526 supplied Yandex workbooks parsed successfully; targeted lint and formatting, full typechecking, and all 79 server tests passed.
 

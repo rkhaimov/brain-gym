@@ -54,6 +54,7 @@ message GetProductAnalyticsRequest {
   string period_end_date = 2;
   repeated string outlet_ids = 3;
   repeated string product_ids = 4;
+  bool all_time = 5;
 }
 
 message GetProductAnalyticsResponse {

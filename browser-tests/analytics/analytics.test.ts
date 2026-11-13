@@ -527,6 +527,46 @@ test.describe('Product analytics dashboard', () => {
     await expect.element(filters.getByText('Пестеля', { exact: true })).toBeVisible();
     await expect.element(filters.getByText('Кулон', { exact: true })).toBeVisible();
 
+    const clearPeriod = filters.getByRole('button', {
+      name: 'Очистить период и показать данные за всё время',
+    });
+    await clearPeriod.hover();
+    await expect.element(page.getByText('Показать за всё время', { exact: true })).toBeVisible();
+    await clearPeriod.click();
+    await expect(analyticsService.getProductAnalytics.getLastRequest()).resolves.toMatchObject({
+      allTime: true,
+      outletIds: ['pestelya'],
+      productIds: ['pendant'],
+    });
+    await expect.element(period).toHaveTextContent('За всё время');
+    await expect.element(clearPeriod).not.toBeInTheDocument();
+    await expect
+      .element(page.getByRole('button', { name: /^Заработано: изменение/ }))
+      .not.toBeInTheDocument();
+    expect(window.location.search).toContain('period=all');
+    expect(window.location.search).not.toContain('from=');
+    expect(window.location.search).not.toContain('to=');
+
+    await window.openApplicationRoute(`/${window.location.search}`);
+    await expect.element(period).toHaveTextContent('За всё время');
+    await expect(analyticsService.getProductAnalytics.getLastRequest()).resolves.toMatchObject({
+      allTime: true,
+      outletIds: ['pestelya'],
+      productIds: ['pendant'],
+    });
+    await page.getByRole('button', { name: 'Выбрать период' }).click();
+    await page.getByRole('button', { name: 'Последние 7 дней' }).click();
+    await expect(analyticsService.getProductAnalytics.getLastRequest()).resolves.toMatchObject({
+      allTime: false,
+      periodEndDate: '2026-11-08',
+      periodStartDate: '2026-11-02',
+    });
+    expect(window.location.search).not.toContain('period=all');
+    await expect.element(clearPeriod).toBeVisible();
+    await expect
+      .element(page.getByRole('button', { name: /^Заработано: изменение/ }))
+      .toBeVisible();
+
     await page.getByRole('button', { name: 'Очистить магазины' }).click();
     await page.getByRole('button', { name: 'Очистить штучки' }).click();
     await expect(analyticsService.getProductAnalytics.getLastRequest()).resolves.toMatchObject({
@@ -548,6 +588,11 @@ test.describe('Product analytics dashboard', () => {
       .toHaveTextContent('10.10.2026 — 08.11.2026');
 
     await window.openApplicationRoute('/?to=2026-01-01');
+    await expect
+      .element(page.getByRole('button', { name: 'Выбрать период' }))
+      .toHaveTextContent('10.10.2026 — 08.11.2026');
+
+    await window.openApplicationRoute('/?period=invalid');
     await expect
       .element(page.getByRole('button', { name: 'Выбрать период' }))
       .toHaveTextContent('10.10.2026 — 08.11.2026');
@@ -649,7 +694,7 @@ test.describe('Product analytics dashboard', () => {
     expect(names()).toEqual(['Кулон', 'Кольцо', 'Брошь']);
   });
 
-  test('sends Unmapped work to Products and returns to the same analytics period', async ({
+  test('sends Unmapped work to Products and returns to the all-time analytics range', async ({
     analyticsService,
     reportImportService,
   }) => {
@@ -667,7 +712,10 @@ test.describe('Product analytics dashboard', () => {
       createGetReportImportStatusResponseStub({ lastSyncedAtMs: undefined }),
     );
 
-    await window.openApplicationRoute('/?from=2026-10-01&to=2026-10-31');
+    await window.openApplicationRoute('/?period=all');
+    await expect(analyticsService.getProductAnalytics.getLastRequest()).resolves.toMatchObject({
+      allTime: true,
+    });
     const callsBeforeMapping = analyticsService.getProductAnalytics.handler.mock.calls.length;
     await page.getByRole('link', { name: 'Сопоставить позиции' }).click();
 
@@ -678,8 +726,10 @@ test.describe('Product analytics dashboard', () => {
     expect(window.location.search).toContain('returnTo');
     await page.getByRole('button', { name: 'Вернуться к обзору' }).click();
     await expect.element(page.getByRole('heading', { level: 1, name: 'Обзор' })).toBeVisible();
-    expect(window.location.search).toContain('from=2026-10-01');
-    expect(window.location.search).toContain('to=2026-10-31');
+    expect(window.location.search).toContain('period=all');
+    await expect(analyticsService.getProductAnalytics.getLastRequest()).resolves.toMatchObject({
+      allTime: true,
+    });
     expect(analyticsService.getProductAnalytics.handler.mock.calls.length).toBeGreaterThan(
       callsBeforeMapping,
     );

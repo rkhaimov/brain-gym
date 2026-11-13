@@ -50,6 +50,27 @@ describe('Твоя Полка Report file parser', () => {
     });
   });
 
+  test('combines repeated Stock listings at different prices', async () => {
+    const reportFile = await readFile(resolve(fixtures, 'duplicate-stock-listing-prices.xlsx'));
+
+    await expect(parseReportFile(reportFile)).resolves.toMatchObject({
+      outlets: [
+        {
+          name: 'Пестеля',
+          stockBalances: [{ listingName: 'Кольцо', outletPriceKopecks: 45_000, stockBalance: 8 }],
+        },
+      ],
+    });
+  });
+
+  test('omits a fully refunded Sales listing with a one-kopeck rounding residue', async () => {
+    const reportFile = await readFile(resolve(fixtures, 'fully-refunded-sale.xlsx'));
+
+    await expect(parseReportFile(reportFile)).resolves.toMatchObject({
+      outlets: [{ name: 'Пестеля', sales: [] }],
+    });
+  });
+
   test.each([
     ['invalid-period.xlsx', 'ожидался отчётный период'],
     ['invalid-numeric.xlsx', 'ожидалось целое неотрицательное число'],

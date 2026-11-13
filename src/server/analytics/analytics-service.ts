@@ -38,6 +38,11 @@ interface AnalyticsPeriod {
   readonly granularity: AnalyticsBucketGranularity;
 }
 
+interface PeriodBounds {
+  readonly end: string;
+  readonly start: string;
+}
+
 function emptyMetrics(): Metrics {
   return {
     currentStockBalance: 0,
@@ -98,7 +103,7 @@ function analyticsPeriod(periodStartDate: string, periodEndDate: string): Analyt
   return { buckets, granularity };
 }
 
-function previousPeriod(periodStartDate: string, periodEndDate: string) {
+function previousPeriod(periodStartDate: string, periodEndDate: string): PeriodBounds {
   const start = parseCalendarDate(periodStartDate);
   const end = parseCalendarDate(periodEndDate);
   const durationDays = Math.floor((end.getTime() - start.getTime()) / DAY_MS) + 1;
@@ -111,6 +116,20 @@ function previousPeriod(periodStartDate: string, periodEndDate: string) {
     end: formatCalendarDate(previousEnd),
     start: formatCalendarDate(previousStart),
   };
+}
+
+function reportPeriodBounds(
+  reports: readonly Readonly<{ period_end_date: string }>[],
+): PeriodBounds | undefined {
+  const first = reports[0];
+  if (first === undefined) return undefined;
+  let start = first.period_end_date;
+  let end = first.period_end_date;
+  for (const report of reports.slice(1)) {
+    if (report.period_end_date < start) start = report.period_end_date;
+    if (report.period_end_date > end) end = report.period_end_date;
+  }
+  return { end, start };
 }
 
 function reportPrecedes(
@@ -162,8 +181,12 @@ function createAnalyticsService(
 
   return {
     async getProductAnalytics(request) {
-      const previous = previousPeriod(request.periodStartDate, request.periodEndDate);
-      const period = analyticsPeriod(request.periodStartDate, request.periodEndDate);
+      let previous = request.allTime
+        ? undefined
+        : previousPeriod(request.periodStartDate, request.periodEndDate);
+      let period = request.allTime
+        ? undefined
+        : analyticsPeriod(request.periodStartDate, request.periodEndDate);
       const [outletRows, productRows, mappedProductRows] = await Promise.all([
         database.db
           .selectFrom('outlets')
@@ -197,60 +220,79 @@ function createAnalyticsService(
       );
       const selectedProductIds =
         request.productIds.length === 0 ? undefined : new Set(request.productIds);
-      if (selectedOutletIds.size === 0) {
-        return {
-          bucketGranularity: period.granularity,
-          outlets: outletRows.map((outlet) => create(AnalyticsOutletOptionSchema, outlet)),
-          outletFinancials: [],
-          previousPeriodEndDate: previous.end,
-          previousPeriodStartDate: previous.start,
-          previousPeriodTotals: metricsToProtobuf(emptyMetrics()),
-          products: optionProductRows.map((product) =>
-            create(AnalyticsProductOptionSchema, {
-              archived: product.archived_at_ms !== null,
-              id: product.id,
-              name: product.name,
-            }),
-          ),
-          rows: [],
-          totals: metricsToProtobuf(emptyMetrics()),
-          trendBuckets: period.buckets.map((bucket) =>
+      const emptyResponse = () => ({
+        bucketGranularity: period?.granularity ?? AnalyticsBucketGranularity.UNSPECIFIED,
+        outlets: outletRows.map((outlet) => create(AnalyticsOutletOptionSchema, outlet)),
+        outletFinancials: [],
+        previousPeriodEndDate: previous?.end ?? '',
+        previousPeriodStartDate: previous?.start ?? '',
+        previousPeriodTotals: metricsToProtobuf(emptyMetrics()),
+        products: optionProductRows.map((product) =>
+          create(AnalyticsProductOptionSchema, {
+            archived: product.archived_at_ms !== null,
+            id: product.id,
+            name: product.name,
+          }),
+        ),
+        rows: [],
+        totals: metricsToProtobuf(emptyMetrics()),
+        trendBuckets:
+          period?.buckets.map((bucket) =>
             create(AnalyticsPeriodBucketSchema, {
               outletEarnings: [],
               periodEndDate: bucket.end,
               periodStartDate: bucket.start,
             }),
-          ),
-          unmappedListingCount: 0,
-        };
+          ) ?? [],
+        unmappedListingCount: 0,
+      });
+      if (selectedOutletIds.size === 0) {
+        return emptyResponse();
       }
 
-      const reports = await database.db
+      let reportsQuery = database.db
         .selectFrom('sales_reports')
         .select(['id', 'outlet_id', 'period_end_date', 'updated_at_ms'])
         .where('archived_at_ms', 'is', null)
-        .where('outlet_id', 'in', [...selectedOutletIds])
-        .where('period_end_date', '<=', request.periodEndDate)
-        .execute();
+        .where('outlet_id', 'in', [...selectedOutletIds]);
+      if (!request.allTime) {
+        reportsQuery = reportsQuery.where('period_end_date', '<=', request.periodEndDate);
+      }
+      const reports = await reportsQuery.execute();
+      if (request.allTime) {
+        const bounds = reportPeriodBounds(reports);
+        if (bounds === undefined) return emptyResponse();
+        period = analyticsPeriod(bounds.start, bounds.end);
+        previous = undefined;
+      }
+      if (period === undefined) throw new Error('Expected an analytics period');
       const currentSalesReportIds = new Set(
-        reports
-          .filter(
-            ({ period_end_date }) =>
-              period_end_date >= request.periodStartDate &&
-              period_end_date <= request.periodEndDate,
-          )
-          .map(({ id }) => id),
+        request.allTime
+          ? reports.map(({ id }) => id)
+          : reports
+              .filter(
+                ({ period_end_date }) =>
+                  period_end_date >= request.periodStartDate &&
+                  period_end_date <= request.periodEndDate,
+              )
+              .map(({ id }) => id),
       );
       const previousSalesReportIds = new Set(
-        reports
-          .filter(
-            ({ period_end_date }) =>
-              period_end_date >= previous.start && period_end_date <= previous.end,
-          )
-          .map(({ id }) => id),
+        previous === undefined
+          ? []
+          : reports
+              .filter(
+                ({ period_end_date }) =>
+                  period_end_date >= previous.start && period_end_date <= previous.end,
+              )
+              .map(({ id }) => id),
       );
-      const currentStockReportIds = latestReportIds(reports, request.periodEndDate);
-      const previousStockReportIds = latestReportIds(reports, previous.end);
+      const currentStockReportIds = latestReportIds(
+        reports,
+        request.allTime ? (period.buckets.at(-1)?.end ?? '') : request.periodEndDate,
+      );
+      const previousStockReportIds =
+        previous === undefined ? new Set<string>() : latestReportIds(reports, previous.end);
       const salesReportIds = [...new Set([...currentSalesReportIds, ...previousSalesReportIds])];
       const stockReportIds = [...new Set([...currentStockReportIds, ...previousStockReportIds])];
       const reportsById = new Map(reports.map((report) => [report.id, report]));
@@ -381,8 +423,8 @@ function createAnalyticsService(
                 }),
               ];
         }),
-        previousPeriodEndDate: previous.end,
-        previousPeriodStartDate: previous.start,
+        previousPeriodEndDate: previous?.end ?? '',
+        previousPeriodStartDate: previous?.start ?? '',
         previousPeriodTotals: metricsToProtobuf(previousTotals),
         products: optionProductRows.map((product) =>
           create(AnalyticsProductOptionSchema, {

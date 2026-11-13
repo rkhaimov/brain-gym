@@ -28,6 +28,7 @@ import type {
 import { currentDate, daysBefore, localCalendarDate, parseLocalDate } from './-analytics-date.js';
 
 interface AnalyticsFiltersProps {
+  readonly allTime: boolean;
   readonly outletIds: readonly string[];
   readonly outlets: readonly AnalyticsOutletOption[];
   readonly periodEndDate: string;
@@ -36,8 +37,13 @@ interface AnalyticsFiltersProps {
   readonly products: readonly AnalyticsProductOption[];
   readonly onChange: (filters: {
     readonly outletIds?: readonly string[];
-    readonly periodEndDate?: string;
-    readonly periodStartDate?: string;
+    readonly period?:
+      | { readonly kind: 'all' }
+      | {
+          readonly endDate: string;
+          readonly kind: 'range';
+          readonly startDate: string;
+        };
     readonly productIds?: readonly string[];
   }) => void;
 }
@@ -117,6 +123,7 @@ function MultipleFilter({
 }
 
 export function AnalyticsFilters({
+  allTime,
   outletIds,
   outlets,
   periodEndDate,
@@ -131,10 +138,19 @@ export function AnalyticsFilters({
   function chooseRollingPeriod(days: number): void {
     const today = currentDate();
     onChange({
-      periodEndDate: localCalendarDate(today),
-      periodStartDate: localCalendarDate(daysBefore(today, days - 1)),
+      period: {
+        endDate: localCalendarDate(today),
+        kind: 'range',
+        startDate: localCalendarDate(daysBefore(today, days - 1)),
+      },
     });
     setPeriodOpen(false);
+  }
+
+  function clearPeriod(): void {
+    setDraftRange(undefined);
+    setPeriodOpen(false);
+    onChange({ period: { kind: 'all' } });
   }
 
   return (
@@ -151,12 +167,39 @@ export function AnalyticsFilters({
           }}
           open={periodOpen}
         >
-          <PopoverTrigger asChild>
-            <Button aria-label="Выбрать период" className="w-full justify-start" variant="outline">
-              <CalendarDays />
-              {formatRussianDate(periodStartDate)} — {formatRussianDate(periodEndDate)}
-            </Button>
-          </PopoverTrigger>
+          <div className="flex w-full">
+            <PopoverTrigger asChild>
+              <Button
+                aria-label="Выбрать период"
+                className={
+                  allTime ? 'w-full justify-start' : 'min-w-0 flex-1 justify-start rounded-r-none'
+                }
+                variant="outline"
+              >
+                <CalendarDays />
+                {allTime
+                  ? 'За всё время'
+                  : `${formatRussianDate(periodStartDate)} — ${formatRussianDate(periodEndDate)}`}
+              </Button>
+            </PopoverTrigger>
+            {allTime ? null : (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    aria-label="Очистить период и показать данные за всё время"
+                    className="rounded-l-none border-l-0"
+                    onClick={clearPeriod}
+                    size="icon"
+                    type="button"
+                    variant="outline"
+                  >
+                    <X />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Показать за всё время</TooltipContent>
+              </Tooltip>
+            )}
+          </div>
           <PopoverContent align="start" className="w-auto p-0">
             <div className="flex gap-2 border-b p-3">
               <Button onClick={() => chooseRollingPeriod(7)} size="sm" variant="outline">
@@ -179,8 +222,11 @@ export function AnalyticsFilters({
                 setDraftRange(range);
                 if (range?.from === undefined || range.to === undefined) return;
                 onChange({
-                  periodEndDate: localCalendarDate(range.to),
-                  periodStartDate: localCalendarDate(range.from),
+                  period: {
+                    endDate: localCalendarDate(range.to),
+                    kind: 'range',
+                    startDate: localCalendarDate(range.from),
+                  },
                 });
                 setPeriodOpen(false);
               }}

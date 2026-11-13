@@ -129,6 +129,24 @@ async function writeInvalidFixtures(): Promise<void> {
   }
   await duplicateListing.xlsx.writeFile(resolve(fixtureDirectory, 'duplicate-listing.xlsx'));
 
+  const duplicateStockListingPrices = createMinimalWorkbook();
+  const duplicateStockListingPricesSheet = duplicateStockListingPrices.getWorksheet('TDSheet');
+  if (duplicateStockListingPricesSheet !== undefined) {
+    hierarchyRow(duplicateStockListingPricesSheet, 13, 'Кольцо', 4, { 5: 3, 7: 450 });
+  }
+  await duplicateStockListingPrices.xlsx.writeFile(
+    resolve(fixtureDirectory, 'duplicate-stock-listing-prices.xlsx'),
+  );
+
+  const fullyRefundedSale = createMinimalWorkbook();
+  const fullyRefundedSaleSheet = fullyRefundedSale.getWorksheet('TDSheet');
+  if (fullyRefundedSaleSheet !== undefined) {
+    fullyRefundedSaleSheet.getCell('D7').value = null;
+    fullyRefundedSaleSheet.getCell('F7').value = null;
+    fullyRefundedSaleSheet.getCell('H7').value = -0.01;
+  }
+  await fullyRefundedSale.xlsx.writeFile(resolve(fixtureDirectory, 'fully-refunded-sale.xlsx'));
+
   const duplicateOutlet = createMinimalWorkbook();
   const duplicateOutletSheet = duplicateOutlet.getWorksheet('TDSheet');
   if (duplicateOutletSheet !== undefined) {

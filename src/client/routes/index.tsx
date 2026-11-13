@@ -51,10 +51,12 @@ const searchSchema = z
   .object({
     from: calendarDate.optional().catch(undefined),
     outlets: z.array(z.string()).optional().catch(undefined),
+    period: z.literal('all').optional().catch(undefined),
     products: z.array(z.string()).optional().catch(undefined),
     to: calendarDate.optional().catch(undefined),
   })
   .transform((search) => {
+    if (search.period === 'all') return { ...search, from: undefined, to: undefined };
     const hasStart = search.from !== undefined;
     const hasEnd = search.to !== undefined;
     if (hasStart !== hasEnd) return { ...search, from: undefined, to: undefined };
@@ -77,6 +79,7 @@ function signedUnits(value: number): string {
 }
 
 interface KpiCardProps {
+  readonly compare: boolean;
   readonly current: number;
   readonly formatDifference: (value: number) => string;
   readonly formatValue: (value: number) => string;
@@ -87,6 +90,7 @@ interface KpiCardProps {
 }
 
 function KpiCard({
+  compare,
   current,
   formatDifference,
   formatValue,
@@ -108,20 +112,22 @@ function KpiCard({
         <CardTitle className="col-span-2 text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
           {formatValue(current)}
         </CardTitle>
-        <CardAction className="row-span-1">
-          <Tooltip>
-            <Badge asChild variant="outline">
-              <TooltipTrigger
-                aria-label={`${label}: изменение ${formatDifference(difference)}. Показать сравнение периодов`}
-              >
-                <TrendIcon /> {formatDifference(difference)}
-              </TooltipTrigger>
-            </Badge>
-            <TooltipContent className="max-w-72">
-              {selectedPeriod}: {formatValue(current)}. {previousPeriod}: {formatValue(previous)}.
-            </TooltipContent>
-          </Tooltip>
-        </CardAction>
+        {compare ? (
+          <CardAction className="row-span-1">
+            <Tooltip>
+              <Badge asChild variant="outline">
+                <TooltipTrigger
+                  aria-label={`${label}: изменение ${formatDifference(difference)}. Показать сравнение периодов`}
+                >
+                  <TrendIcon /> {formatDifference(difference)}
+                </TooltipTrigger>
+              </Badge>
+              <TooltipContent className="max-w-72">
+                {selectedPeriod}: {formatValue(current)}. {previousPeriod}: {formatValue(previous)}.
+              </TooltipContent>
+            </Tooltip>
+          </CardAction>
+        ) : null}
       </CardHeader>
     </Card>
   );
@@ -132,9 +138,11 @@ function DashboardPage() {
   const location = useLocation();
   const navigate = useNavigate({ from: '/' });
   const [today] = useState(currentDate);
+  const allTime = search.period === 'all';
   const periodEndDate = search.to ?? localCalendarDate(today);
   const periodStartDate = search.from ?? localCalendarDate(daysBefore(today, 29));
   const analytics = useQuery(getProductAnalytics, {
+    allTime,
     outletIds: search.outlets ?? [],
     periodEndDate,
     periodStartDate,
@@ -206,15 +214,21 @@ function DashboardPage() {
           ) : data === undefined ? null : (
             <>
               <AnalyticsFilters
+                allTime={allTime}
                 onChange={(filters) =>
                   navigate({
                     replace: true,
                     search: (priorSearch) => ({
                       ...priorSearch,
-                      ...(filters.periodStartDate === undefined
+                      ...(filters.period === undefined
                         ? {}
-                        : { from: filters.periodStartDate }),
-                      ...(filters.periodEndDate === undefined ? {} : { to: filters.periodEndDate }),
+                        : filters.period.kind === 'all'
+                          ? { from: undefined, period: 'all' as const, to: undefined }
+                          : {
+                              from: filters.period.startDate,
+                              period: undefined,
+                              to: filters.period.endDate,
+                            }),
                       ...(filters.outletIds === undefined
                         ? {}
                         : { outlets: [...filters.outletIds] }),
@@ -260,6 +274,7 @@ function DashboardPage() {
 
               <div className="grid grid-cols-1 gap-4 px-4 lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
                 <KpiCard
+                  compare={!allTime}
                   current={totals?.earningsKopecks ?? 0}
                   formatDifference={signedCurrency}
                   formatValue={formatRussianCurrency}
@@ -269,6 +284,7 @@ function DashboardPage() {
                   selectedPeriod={selectedPeriod}
                 />
                 <KpiCard
+                  compare={!allTime}
                   current={totals?.outletShareKopecks ?? 0}
                   formatDifference={signedCurrency}
                   formatValue={formatRussianCurrency}
@@ -278,6 +294,7 @@ function DashboardPage() {
                   selectedPeriod={selectedPeriod}
                 />
                 <KpiCard
+                  compare={!allTime}
                   current={totals?.unitsSold ?? 0}
                   formatDifference={signedUnits}
                   formatValue={(value) => `${russianInteger.format(value)} шт.`}
@@ -287,6 +304,7 @@ function DashboardPage() {
                   selectedPeriod={selectedPeriod}
                 />
                 <KpiCard
+                  compare={!allTime}
                   current={totals?.currentStockBalance ?? 0}
                   formatDifference={signedUnits}
                   formatValue={(value) => `${russianInteger.format(value)} шт.`}

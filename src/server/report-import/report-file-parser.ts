@@ -54,7 +54,13 @@ async function withoutWorkbookDrawings(source: Buffer): Promise<Buffer> {
 interface MutableOutletReport {
   readonly name: string;
   readonly sales: ParsedReportSale[];
-  readonly stockBalances: ParsedReportStockBalance[];
+  readonly stockBalances: MutableParsedReportStockBalance[];
+}
+
+interface MutableParsedReportStockBalance {
+  readonly listingName: string;
+  outletPriceKopecks: number;
+  stockBalance: number;
 }
 
 function cellText(cell: ExcelJS.Cell): string | undefined {
@@ -231,12 +237,25 @@ function parseSalesSection(
         throw new ReportFileParseError('позиция находится вне магазина', labelCell.address);
       }
       const listingName = requireText(labelCell, 'название позиции отчёта');
+      const unitsCell = row.getCell(unitsColumn);
+      const salesValueCell = row.getCell(salesValueColumn);
+      const earningsCell = earningsColumn === undefined ? undefined : row.getCell(earningsColumn);
+      const earningsValue = earningsCell?.value;
+      if (
+        unitsCell.value === null &&
+        salesValueCell.value === null &&
+        (earningsValue === null ||
+          earningsValue === undefined ||
+          (typeof earningsValue === 'number' && earningsValue >= -0.01 && earningsValue <= 0))
+      ) {
+        continue;
+      }
       ensureUniqueListing(namesByOutlet, outlet.name, listingName, labelCell.address);
-      const salesValueKopecks = rublesToKopecks(row.getCell(salesValueColumn), 'Сумма продажи');
+      const salesValueKopecks = rublesToKopecks(salesValueCell, 'Сумма продажи');
       const earningsKopecks =
         earningsColumn === undefined
           ? 0
-          : rublesToKopecks(row.getCell(earningsColumn), 'Сумма комитента');
+          : rublesToKopecks(earningsCell ?? row.getCell(earningsColumn), 'Сумма комитента');
       if (earningsKopecks > salesValueKopecks) {
         throw new ReportFileParseError(
           'сумма комитента превышает сумму продажи',
@@ -247,7 +266,7 @@ function parseSalesSection(
         earningsKopecks,
         listingName,
         salesValueKopecks,
-        unitsSold: requireNonNegativeInteger(row.getCell(unitsColumn), 'Кол'),
+        unitsSold: requireNonNegativeInteger(unitsCell, 'Кол'),
       });
     }
   }
@@ -261,7 +280,7 @@ function parseStockSection(
   const headers = headerColumns(sheet, startRow);
   const stockColumn = requiredHeader(headers, 'Количество Остаток', startRow);
   const priceColumn = headers.get('Цена');
-  const namesByOutlet = new Map<string, Set<string>>();
+  const balancesByOutlet = new Map<string, Map<string, MutableParsedReportStockBalance>>();
   const seenOutlets = new Set<string>();
   let outlet: MutableOutletReport | undefined;
 
@@ -276,13 +295,31 @@ function parseStockSection(
         throw new ReportFileParseError('позиция находится вне магазина', labelCell.address);
       }
       const listingName = requireText(labelCell, 'название позиции отчёта');
-      ensureUniqueListing(namesByOutlet, outlet.name, listingName, labelCell.address);
-      outlet.stockBalances.push({
-        listingName,
-        outletPriceKopecks:
-          priceColumn === undefined ? 0 : rublesToKopecks(row.getCell(priceColumn), 'Цена'),
-        stockBalance: requireNonNegativeInteger(row.getCell(stockColumn), 'Количество Остаток'),
-      });
+      const outletPriceKopecks =
+        priceColumn === undefined ? 0 : rublesToKopecks(row.getCell(priceColumn), 'Цена');
+      const stockBalance = requireNonNegativeInteger(
+        row.getCell(stockColumn),
+        'Количество Остаток',
+      );
+      const balances =
+        balancesByOutlet.get(outlet.name) ?? new Map<string, MutableParsedReportStockBalance>();
+      const existing = balances.get(listingName);
+      if (existing === undefined) {
+        const balance = { listingName, outletPriceKopecks, stockBalance };
+        balances.set(listingName, balance);
+        balancesByOutlet.set(outlet.name, balances);
+        outlet.stockBalances.push(balance);
+      } else {
+        const combinedStockBalance = existing.stockBalance + stockBalance;
+        if (!Number.isSafeInteger(combinedStockBalance)) {
+          throw new ReportFileParseError(
+            'суммарное количество остатков превышает допустимое значение',
+            labelCell.address,
+          );
+        }
+        existing.stockBalance = combinedStockBalance;
+        existing.outletPriceKopecks = Math.max(existing.outletPriceKopecks, outletPriceKopecks);
+      }
     }
   }
 }
