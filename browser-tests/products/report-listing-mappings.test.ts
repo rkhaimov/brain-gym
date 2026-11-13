@@ -165,7 +165,7 @@ test.describe(
       await expect.element(page.getByText('Кольцо', { exact: true })).toBeVisible();
 
       await page.getByText('Кольцо', { exact: true }).click();
-      await page.getByRole('button', { name: 'Убрать сопоставление' }).click();
+      await page.getByRole('option', { name: 'Кольцо' }).click();
       await expect.element(page.getByText('Сопоставить', { exact: true })).toBeVisible();
       const unmapRequest = await reportListingService.setReportListingProduct.getLastRequest();
       expect(unmapRequest.productId).toBeUndefined();

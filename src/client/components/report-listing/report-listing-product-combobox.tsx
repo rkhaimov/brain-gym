@@ -1,12 +1,5 @@
 import { useMutation, useQuery } from '@connectrpc/connect-query';
-import {
-  CheckIcon,
-  ChevronDownIcon,
-  CircleCheckIcon,
-  CircleIcon,
-  PlusIcon,
-  XIcon,
-} from 'lucide-react';
+import { CheckIcon, ChevronDownIcon, CircleCheckIcon, CircleIcon, PlusIcon } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 import { useRefreshProductCatalog } from '@/client/components/products/product-catalog-query.js';
@@ -131,7 +124,11 @@ function ReportListingProductComboboxImplementation({
                     <CommandItem
                       disabled={pending}
                       key={product.id}
-                      onSelect={() => void selectProduct(product.id)}
+                      onSelect={() =>
+                        void selectProduct(
+                          listing.product?.id === product.id ? undefined : product.id,
+                        )
+                      }
                       value={product.id}
                     >
                       <CheckIcon
@@ -150,18 +147,6 @@ function ReportListingProductComboboxImplementation({
             )}
             <CommandSeparator />
             <div className="p-1">
-              {listing.product === undefined ? null : (
-                <Button
-                  className="w-full justify-start"
-                  disabled={pending}
-                  onClick={() => void selectProduct()}
-                  size="sm"
-                  type="button"
-                  variant="ghost"
-                >
-                  <XIcon /> Убрать сопоставление
-                </Button>
-              )}
               <Button
                 className="w-full justify-start"
                 disabled={pending}
