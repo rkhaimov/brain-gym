@@ -17,7 +17,6 @@ import type { MutationQueue } from '../mutation-queue.js';
 
 const NAME_REQUIRED_MESSAGE = 'Введите название магазина';
 const NAME_ALREADY_EXISTS_MESSAGE = 'Магазин с таким названием уже существует';
-const CODE_ALREADY_EXISTS_MESSAGE = 'Магазин с таким кодом уже существует';
 const OUTLET_NOT_FOUND_MESSAGE = 'Магазин не найден';
 
 type OutletId = string & { readonly __outletId: true };
@@ -29,18 +28,16 @@ export interface OutletRouteDependencies {
 }
 
 type DomainOutlet = Readonly<
-  Omit<Outlet, keyof Message | 'code' | 'id'> & {
-    code: string | undefined;
+  Omit<Outlet, keyof Message | 'id'> & {
     id: OutletId;
   }
 >;
 
-type PersistedOutlet = Pick<Outlets, 'archived_at_ms' | 'code' | 'id' | 'name'>;
+type PersistedOutlet = Pick<Outlets, 'archived_at_ms' | 'id' | 'name'>;
 
 function outletFromDatabase(row: PersistedOutlet): DomainOutlet {
   return {
     archived: row.archived_at_ms !== null,
-    code: row.code ?? undefined,
     id: createOutletId(row.id),
     name: row.name,
   };
@@ -49,7 +46,6 @@ function outletFromDatabase(row: PersistedOutlet): DomainOutlet {
 function outletToProtobuf(outlet: DomainOutlet) {
   return create(OutletSchema, {
     archived: outlet.archived,
-    ...(outlet.code === undefined ? {} : { code: outlet.code }),
     id: outlet.id,
     name: outlet.name,
   });
@@ -64,22 +60,15 @@ function outletFailure(field: OutletMutationFailureField, message: string) {
   };
 }
 
-function optionalCode(code: string | undefined): string | null {
-  return code === undefined || code.length === 0 ? null : code;
-}
-
 function uniqueConstraintFailure(error: unknown) {
   if (!(error instanceof Error) || !('code' in error)) return undefined;
   if (error.code !== 'SQLITE_CONSTRAINT_UNIQUE') return undefined;
-  return error.message.includes('outlets.code')
-    ? outletFailure(OutletMutationFailureField.CODE, CODE_ALREADY_EXISTS_MESSAGE)
-    : outletFailure(OutletMutationFailureField.NAME, NAME_ALREADY_EXISTS_MESSAGE);
+  return outletFailure(OutletMutationFailureField.NAME, NAME_ALREADY_EXISTS_MESSAGE);
 }
 
 async function outletConflict(
   transaction: Transaction<DB>,
   candidate: Readonly<{
-    code: string | null;
     excludedId?: string | undefined;
     name: string;
   }>,
@@ -92,14 +81,7 @@ async function outletConflict(
     return outletFailure(OutletMutationFailureField.NAME, NAME_ALREADY_EXISTS_MESSAGE);
   }
 
-  if (candidate.code === null) return undefined;
-  let codeQuery = transaction.selectFrom('outlets').select('id').where('code', '=', candidate.code);
-  if (candidate.excludedId !== undefined) {
-    codeQuery = codeQuery.where('id', '!=', candidate.excludedId);
-  }
-  return (await codeQuery.executeTakeFirst()) === undefined
-    ? undefined
-    : outletFailure(OutletMutationFailureField.CODE, CODE_ALREADY_EXISTS_MESSAGE);
+  return undefined;
 }
 
 function createOutletService(
@@ -112,19 +94,16 @@ function createOutletService(
       if (request.name.length === 0) {
         return outletFailure(OutletMutationFailureField.NAME, NAME_REQUIRED_MESSAGE);
       }
-      const code = optionalCode(request.code);
-
       return mutationQueue.run(async () => {
         try {
           return await database.db.transaction().execute(async (transaction) => {
-            const conflict = await outletConflict(transaction, { code, name: request.name });
+            const conflict = await outletConflict(transaction, { name: request.name });
             if (conflict !== undefined) return conflict;
 
             const id = createOutletId(env.randomUUID());
             await transaction
               .insertInto('outlets')
               .values({
-                code,
                 created_at_ms: env.now().getTime(),
                 id,
                 name: request.name,
@@ -132,7 +111,6 @@ function createOutletService(
               .executeTakeFirstOrThrow();
             const outlet: DomainOutlet = {
               archived: false,
-              code: code ?? undefined,
               id,
               name: request.name,
             };
@@ -149,7 +127,7 @@ function createOutletService(
     async listOutlets(request) {
       const rows = await database.db
         .selectFrom('outlets')
-        .select(['archived_at_ms', 'code', 'id', 'name'])
+        .select(['archived_at_ms', 'id', 'name'])
         .where('archived_at_ms', request.archived ? 'is not' : 'is', null)
         .orderBy('created_at_ms', 'asc')
         .orderBy('id', 'asc')
@@ -162,13 +140,10 @@ function createOutletService(
       if (request.name.length === 0) {
         return outletFailure(OutletMutationFailureField.NAME, NAME_REQUIRED_MESSAGE);
       }
-      const code = optionalCode(request.code);
-
       return mutationQueue.run(async () => {
         try {
           return await database.db.transaction().execute(async (transaction) => {
             const conflict = await outletConflict(transaction, {
-              code,
               excludedId: request.id,
               name: request.name,
             });
@@ -176,9 +151,9 @@ function createOutletService(
 
             const row = await transaction
               .updateTable('outlets')
-              .set({ code, name: request.name })
+              .set({ name: request.name })
               .where('id', '=', request.id)
-              .returning(['archived_at_ms', 'code', 'id', 'name'])
+              .returning(['archived_at_ms', 'id', 'name'])
               .executeTakeFirst();
             return row === undefined
               ? outletFailure(OutletMutationFailureField.UNSPECIFIED, OUTLET_NOT_FOUND_MESSAGE)
@@ -204,7 +179,7 @@ function createOutletService(
             .updateTable('outlets')
             .set({ archived_at_ms: request.archived ? env.now().getTime() : null })
             .where('id', '=', request.id)
-            .returning(['archived_at_ms', 'code', 'id', 'name'])
+            .returning(['archived_at_ms', 'id', 'name'])
             .executeTakeFirst();
           return row === undefined
             ? outletFailure(OutletMutationFailureField.UNSPECIFIED, OUTLET_NOT_FOUND_MESSAGE)

@@ -41,7 +41,6 @@ export function createOutletStub(
   return create(OutletSchema, {
     id: 'test-id',
     name: 'test-name',
-    code: 'test-code',
     archived: true,
     ...overrides,
   });
@@ -54,7 +53,6 @@ export function createCreateOutletRequestStub(
 ): CreateOutletRequest {
   return create(CreateOutletRequestSchema, {
     name: 'test-name',
-    code: 'test-code',
     ...overrides,
   });
 }
@@ -112,7 +110,6 @@ export function createUpdateOutletRequestStub(
   return create(UpdateOutletRequestSchema, {
     id: 'test-id',
     name: 'test-name',
-    code: 'test-code',
     ...overrides,
   });
 }

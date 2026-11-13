@@ -5,19 +5,19 @@ package ceramics.v1;
 message Outlet {
   string id = 1;
   string name = 2;
-  optional string code = 3;
+  reserved 3;
   bool archived = 4;
 }
 
 message CreateOutletRequest {
   string name = 1;
-  optional string code = 2;
+  reserved 2;
 }
 
 enum OutletMutationFailureField {
   OUTLET_MUTATION_FAILURE_FIELD_UNSPECIFIED = 0;
   OUTLET_MUTATION_FAILURE_FIELD_NAME = 1;
-  OUTLET_MUTATION_FAILURE_FIELD_CODE = 2;
+  reserved 2;
 }
 
 message OutletMutationFailure {
@@ -43,7 +43,7 @@ message ListOutletsResponse {
 message UpdateOutletRequest {
   string id = 1;
   string name = 2;
-  optional string code = 3;
+  reserved 3;
 }
 
 message UpdateOutletResponse {

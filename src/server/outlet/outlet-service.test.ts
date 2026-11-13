@@ -47,7 +47,7 @@ const test = serverTest.extend<OutletFixtures>({
 });
 
 describe('OutletService', () => {
-  test('creator can create and retrieve an Outlet without a code', async ({ outletService }) => {
+  test('creator can create and retrieve an Outlet', async ({ outletService }) => {
     const client = outletService.client;
 
     const created = await client.createOutlet({ name: 'Гончарная лавка' });
@@ -56,54 +56,31 @@ describe('OutletService', () => {
       archived: false,
       name: 'Гончарная лавка',
     });
-    expect(created.result.value.code).toBeUndefined();
     const listed = await client.listOutlets({});
     expect(listed.outlets).toMatchObject([{ name: 'Гончарная лавка' }]);
-    expect(listed.outlets[0]?.code).toBeUndefined();
   });
 
-  test('creator can rename an Outlet and add, change, or remove its code without changing identity', async ({
-    outletService,
-  }) => {
+  test('creator can rename an Outlet without changing identity', async ({ outletService }) => {
     const client = outletService.client;
     const created = await client.createOutlet({ name: 'Гончарная лавка' });
     assertSuccess(created);
     const outletId = created.result.value.id;
 
     await expect(
-      client.updateOutlet({ code: 'GL', id: outletId, name: 'Гончарная лавка' }),
+      client.updateOutlet({ id: outletId, name: 'Новая гончарная лавка' }),
     ).resolves.toMatchObject({
       result: {
         case: 'success',
-        value: { code: 'GL', id: outletId, name: 'Гончарная лавка' },
+        value: { id: outletId, name: 'Новая гончарная лавка' },
       },
     });
-    await expect(
-      client.updateOutlet({ code: 'NEW', id: outletId, name: 'Новая гончарная лавка' }),
-    ).resolves.toMatchObject({
-      result: {
-        case: 'success',
-        value: { code: 'NEW', id: outletId, name: 'Новая гончарная лавка' },
-      },
-    });
-    const withoutCode = await client.updateOutlet({
-      code: '',
-      id: outletId,
-      name: 'Новая гончарная лавка',
-    });
-    assertSuccess(withoutCode);
-    expect(withoutCode.result.value).toMatchObject({
-      id: outletId,
-      name: 'Новая гончарная лавка',
-    });
-    expect(withoutCode.result.value.code).toBeUndefined();
   });
 
-  test('exact names and non-empty codes remain reserved across active and archived Outlets', async ({
+  test('exact names remain reserved across active and archived Outlets', async ({
     outletService,
   }) => {
     const client = outletService.client;
-    const reserved = await client.createOutlet({ code: 'GL', name: 'Гончарная лавка' });
+    const reserved = await client.createOutlet({ name: 'Гончарная лавка' });
     assertSuccess(reserved);
     await client.setOutletArchived({ archived: true, id: reserved.result.value.id });
 
@@ -116,29 +93,17 @@ describe('OutletService', () => {
         },
       },
     });
-    await expect(client.createOutlet({ code: 'GL', name: 'Другая точка' })).resolves.toMatchObject({
-      result: {
-        case: 'failure',
-        value: {
-          field: OutletMutationFailureField.CODE,
-          message: 'Магазин с таким кодом уже существует',
-        },
-      },
-    });
-
     const exactVariants = await Promise.all([
-      client.createOutlet({ code: 'gl', name: 'гончарная лавка' }),
-      client.createOutlet({ code: ' GL ', name: ' Гончарная лавка ' }),
-      client.createOutlet({ code: 'ГЛ!', name: 'Гончарная лавка!' }),
-      client.createOutlet({ code: '   ', name: '   ' }),
+      client.createOutlet({ name: 'гончарная лавка' }),
+      client.createOutlet({ name: ' Гончарная лавка ' }),
+      client.createOutlet({ name: 'Гончарная лавка!' }),
     ]);
     exactVariants.forEach(assertSuccess);
 
-    const editable = await client.createOutlet({ code: 'EDIT', name: 'Редактируемая точка' });
+    const editable = await client.createOutlet({ name: 'Редактируемая точка' });
     assertSuccess(editable);
     await expect(
       client.updateOutlet({
-        code: 'EDIT',
         id: editable.result.value.id,
         name: 'Гончарная лавка',
       }),
@@ -148,21 +113,6 @@ describe('OutletService', () => {
         value: {
           field: OutletMutationFailureField.NAME,
           message: 'Магазин с таким названием уже существует',
-        },
-      },
-    });
-    await expect(
-      client.updateOutlet({
-        code: 'GL',
-        id: editable.result.value.id,
-        name: 'Редактируемая точка',
-      }),
-    ).resolves.toMatchObject({
-      result: {
-        case: 'failure',
-        value: {
-          field: OutletMutationFailureField.CODE,
-          message: 'Магазин с таким кодом уже существует',
         },
       },
     });
@@ -226,12 +176,12 @@ describe('OutletService', () => {
   });
 
   test('Outlets survive closing and reopening the database', async ({ outletService }) => {
-    await outletService.client.createOutlet({ code: 'GL', name: 'Гончарная лавка' });
+    await outletService.client.createOutlet({ name: 'Гончарная лавка' });
 
     const restartedClient = await outletService.restart();
 
     await expect(restartedClient.listOutlets({})).resolves.toMatchObject({
-      outlets: [{ code: 'GL', name: 'Гончарная лавка' }],
+      outlets: [{ name: 'Гончарная лавка' }],
     });
   });
 });

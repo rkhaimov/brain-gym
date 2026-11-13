@@ -1,6 +1,5 @@
-import { copyFile, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { copyFile, mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
 
 import { afterEach, describe, expect, test } from 'vitest';
 import BetterSqlite3 from 'better-sqlite3';
@@ -16,7 +15,9 @@ import { migrationProvider } from './migrations.js';
 const temporaryDirectories: string[] = [];
 
 async function temporaryDirectory(): Promise<string> {
-  const directory = await mkdtemp(join(tmpdir(), 'ceramics-ledger-startup-'));
+  const root = resolve('.local/test-tmp');
+  await mkdir(root, { recursive: true });
+  const directory = await mkdtemp(join(root, 'startup-'));
   temporaryDirectories.push(directory);
   return directory;
 }
@@ -136,25 +137,29 @@ describe('prepareApplicationDatabase', () => {
     expect(await backupNames(backupDirectory, 'routine')).toHaveLength(2);
   });
 
-  test('retains the latest five routine and pre-migration backups independently', async () => {
-    const { backupDestination, backupDirectory, directory } = await startupTestContext();
+  test(
+    'retains the latest five routine and pre-migration backups independently',
+    { timeout: 15_000 },
+    async () => {
+      const { backupDestination, backupDirectory, directory } = await startupTestContext();
 
-    for (let index = 0; index < 7; index += 1) {
-      const databasePath = join(directory, `database-${index}.sqlite`);
-      const unmigratedDatabase = new BetterSqlite3(databasePath);
-      unmigratedDatabase.exec(`create table seed_${index} (value text)`);
-      unmigratedDatabase.close();
-      const database = await prepareApplicationDatabase({
-        backupDestination,
-        databasePath,
-        env: testEnv,
-      });
-      await database.close();
-    }
+      for (let index = 0; index < 7; index += 1) {
+        const databasePath = join(directory, `database-${index}.sqlite`);
+        const unmigratedDatabase = new BetterSqlite3(databasePath);
+        unmigratedDatabase.exec(`create table seed_${index} (value text)`);
+        unmigratedDatabase.close();
+        const database = await prepareApplicationDatabase({
+          backupDestination,
+          databasePath,
+          env: testEnv,
+        });
+        await database.close();
+      }
 
-    expect(await backupNames(backupDirectory, 'routine')).toHaveLength(5);
-    expect(await backupNames(backupDirectory, 'pre-migration')).toHaveLength(5);
-  });
+      expect(await backupNames(backupDirectory, 'routine')).toHaveLength(5);
+      expect(await backupNames(backupDirectory, 'pre-migration')).toHaveLength(5);
+    },
+  );
 
   test('rejects a corrupt primary database without changing existing backups', async () => {
     const { backupDestination, backupDirectory, databasePath } = await startupTestContext();

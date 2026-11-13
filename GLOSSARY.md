@@ -12,12 +12,11 @@ English terms are canonical in documentation and conversation. Russian terms are
 | Product | Штучка                   | Piece, item, goods, jewelry, SKU | A creator-defined kind of item used to group equivalent Report listings. Each product has a unique canonical name. |
 | Unit | штука                    | Piece, copy, instance | One physical example of a product. Units are counted but are not individually identified. |
 | Outlet | Магазин                 | Store, shop, retail point, location, partner | A uniquely named place that holds products on consignment and for which sales and stock balances are tracked separately. |
-| Outlet code | Код магазина            | Outlet name, source mapping | An optional, unique, changeable code by which report files identify an outlet. |
 | Report listing | Позиция отчёта            | Outlet listing, draft Product, report row, SKU | A globally identified exact name observed in Sales reports. The same exact name denotes the same thing across Outlets, while differently named Report listings may represent the same Product. |
 | Product mapping | Сопоставление            | Match, binding, link | The association between a Report listing and the Product it represents. Many Report listings may map to the same Product. |
 | Unmapped listing | Несопоставленная позиция | Unknown product, unmatched item | A Report listing that has no Product mapping. |
 | Sales report | Отчёт                    | Inventory action, inventory state, reconciliation | Data from one outlet covering sales during a reporting period and the complete stock balances at its end. |
-| Report file | Файл отчёта              | Sales report, import batch | A file containing sales and stock balance data for one reporting period and one or more outlets. |
+| Report file | Файл отчёта              | Sales report, import batch | A Твоя Полка workbook containing sales and stock balance data for one Reporting period and one or more Outlets. The parenthesized Outlet name in the workbook supplies exact Outlet identity during import. |
 | Reporting period | Отчётный период          | Month, cycle | The date interval covered by a sales report; it does not have to match a calendar month. |
 | Sale | Продажа                  | Transaction, realization | The sale of one or more units recorded under a Report listing at a particular time. |
 | Stock balance | Остаток                  | Stock state, current number, inventory state | The number of units recorded under a Report listing on a particular date. |

@@ -22,7 +22,6 @@ const fieldErrorsSchema = z.array(z.object({ message: z.string() }));
 const submissionErrorSchema = z.string().optional();
 
 export interface MaintenanceFormValues {
-  readonly code: string;
   readonly name: string;
 }
 
@@ -30,17 +29,11 @@ export type MaintenanceFormResult =
   | Readonly<{ case: 'success' }>
   | Readonly<{
       case: 'failure';
-      field: 'code' | 'name';
+      field: 'name';
       message: string;
     }>;
 
 interface MaintenanceFormDialogProps {
-  readonly codeField?:
-    | Readonly<{
-        label: string;
-        placeholder: string;
-      }>
-    | undefined;
   readonly defaultValues: MaintenanceFormValues;
   readonly description: string;
   readonly namePlaceholder?: string | undefined;
@@ -56,7 +49,6 @@ interface MaintenanceFormDialogProps {
 }
 
 function MaintenanceFormDialogImplementation({
-  codeField,
   defaultValues,
   description,
   namePlaceholder,
@@ -176,35 +168,6 @@ function MaintenanceFormDialogImplementation({
                   );
                 }}
               </form.Field>
-
-              {codeField === undefined ? null : (
-                <form.Field name="code">
-                  {(field) => {
-                    const fieldErrors = fieldErrorsSchema.parse(field.state.meta.errors);
-                    const fieldError = fieldErrors[0];
-                    return (
-                      <Field data-invalid={fieldError !== undefined}>
-                        <FieldLabel htmlFor="maintenance-code">{codeField.label}</FieldLabel>
-                        <Input
-                          aria-describedby={
-                            fieldError === undefined ? undefined : 'maintenance-code-error'
-                          }
-                          aria-invalid={fieldError === undefined ? undefined : true}
-                          autoComplete="off"
-                          disabled={isSubmitting}
-                          id="maintenance-code"
-                          name={field.name}
-                          onBlur={field.handleBlur}
-                          onChange={(event) => field.handleChange(event.target.value)}
-                          placeholder={codeField.placeholder}
-                          value={field.state.value}
-                        />
-                        <FieldError errors={fieldErrors} id="maintenance-code-error" />
-                      </Field>
-                    );
-                  }}
-                </form.Field>
-              )}
 
               <form.Subscribe selector={(state) => state.errorMap.onSubmit}>
                 {(submissionError) => {

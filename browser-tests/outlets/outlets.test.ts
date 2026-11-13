@@ -5,12 +5,15 @@ import { page } from 'vitest/browser';
 import {
   createCreateOutletResponseStub,
   createListOutletsResponseStub,
-  createOutletMutationFailureStub,
   createOutletStub,
   createSetOutletArchivedResponseStub,
   createUpdateOutletResponseStub,
 } from '@/shared/gen/ceramics/v1/outlet_test.js';
-import { OutletMutationFailureField } from '@/shared/gen/ceramics/v1/outlet_pb.js';
+import {
+  createImportNewReportFilesResponseStub,
+  createReportImportFailureStub,
+  createReportImportSuccessStub,
+} from '@/shared/gen/ceramics/v1/report_import_test.js';
 import { screenshot } from '@/test/browser/runtime/screenshot.js';
 import { test } from '@/test/browser/runtime/test.js';
 
@@ -19,39 +22,30 @@ test.describe('Outlet maintenance', () => {
     outletService.listOutlets.resolves(createListOutletsResponseStub({ outlets: [] }));
   });
 
-  test('displays Outlets with and without codes', async ({ outletService }) => {
-    const outletCode = 'GL';
-    const codedOutlet = createOutletStub({
+  test('places mail import above the Outlet catalog', async ({ outletService }) => {
+    const outlet = createOutletStub({
       archived: false,
-      code: outletCode,
-      id: 'coded-outlet-id',
+      id: 'outlet-id',
       name: 'Гончарная лавка',
     });
-    const codeLessOutlet = createOutletStub({
-      archived: false,
-      code: undefined,
-      id: 'code-less-outlet-id',
-      name: 'Керамический дворик',
-    });
-    outletService.listOutlets.resolves(
-      createListOutletsResponseStub({ outlets: [codedOutlet, codeLessOutlet] }),
-    );
+    outletService.listOutlets.resolves(createListOutletsResponseStub({ outlets: [outlet] }));
 
     const outlets = createOutletsPage();
     await outlets.open();
 
     await expect.element(outlets.navigation()).toHaveAttribute('aria-current', 'page');
-    await expect.element(outlets.outlet(codedOutlet.name)).toBeVisible();
-    await expect.element(outlets.outletCode(outletCode)).toBeVisible();
-    await expect.element(outlets.outlet(codeLessOutlet.name)).toBeVisible();
-    await expect.element(outlets.noCode()).toBeVisible();
-    await outlets.screenshotPage('Outlet list');
+    await expect.element(outlets.outlet(outlet.name)).toBeVisible();
+    const position = outlets
+      .importPanel()
+      .element()
+      .compareDocumentPosition(outlets.catalog().element());
+    expect(position & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
+    await outlets.screenshotPage('Outlet list with mail import');
   });
 
-  test('creates an Outlet without a code', async ({ outletService }) => {
+  test('creates an Outlet', async ({ outletService }) => {
     const outlet = createOutletStub({
       archived: false,
-      code: undefined,
       id: 'outlet-id',
       name: 'Гончарная лавка',
     });
@@ -68,31 +62,22 @@ test.describe('Outlet maintenance', () => {
     await outlets.open();
     await outlets.openCreateDialog();
     await outlets.name().fill(outlet.name);
-
-    await expect.element(outlets.code()).toHaveValue('');
     await outlets.screenshotDialog('Create Outlet form');
     await outlets.create();
 
-    const request = await outletService.createOutlet.getLastRequest();
-    expect(request).toMatchObject({ name: outlet.name });
-    expect(request.code).toBeUndefined();
+    await expect(outletService.createOutlet.getLastRequest()).resolves.toMatchObject({
+      name: outlet.name,
+    });
     await expect.element(outlets.outlet(outlet.name)).toBeVisible();
-    await expect.element(outlets.noCode()).toBeVisible();
   });
 
-  test('renames an Outlet and adds its code', async ({ outletService }) => {
-    const outletCode = 'GL';
+  test('renames an Outlet', async ({ outletService }) => {
     const outlet = createOutletStub({
       archived: false,
-      code: undefined,
       id: 'outlet-id',
       name: 'Гончарная лавка',
     });
-    const updatedOutlet = createOutletStub({
-      ...outlet,
-      code: outletCode,
-      name: 'Новая гончарная лавка',
-    });
+    const updatedOutlet = createOutletStub({ ...outlet, name: 'Новая гончарная лавка' });
     outletService.updateOutlet.resolves(
       createUpdateOutletResponseStub({ result: { case: 'success', value: updatedOutlet } }),
     );
@@ -105,57 +90,18 @@ test.describe('Outlet maintenance', () => {
     const outlets = createOutletsPage();
     await outlets.open();
     await outlets.openEditDialog(outlet.name);
-
-    await expect.element(outlets.editName()).toHaveValue(outlet.name);
-    await expect.element(outlets.editCode()).toHaveValue('');
     await outlets.editName().fill(updatedOutlet.name);
-    await outlets.editCode().fill(outletCode);
-    await outlets.screenshotDialog('Edit Outlet form');
     await outlets.save();
 
     await expect(outletService.updateOutlet.getLastRequest()).resolves.toMatchObject({
-      code: updatedOutlet.code,
       id: outlet.id,
       name: updatedOutlet.name,
     });
     await expect.element(outlets.outlet(updatedOutlet.name)).toBeVisible();
-    await expect.element(outlets.outletCode(outletCode)).toBeVisible();
-  });
-
-  test('removes an Outlet code', async ({ outletService }) => {
-    const outlet = createOutletStub({
-      archived: false,
-      code: 'GL',
-      id: 'outlet-id',
-      name: 'Гончарная лавка',
-    });
-    const updatedOutlet = createOutletStub({ ...outlet, code: undefined });
-    outletService.updateOutlet.resolves(
-      createUpdateOutletResponseStub({ result: { case: 'success', value: updatedOutlet } }),
-    );
-    outletService.listOutlets.handler.mockImplementation(async () =>
-      createListOutletsResponseStub({
-        outlets: [called(outletService.updateOutlet.handler) ? updatedOutlet : outlet],
-      }),
-    );
-
-    const outlets = createOutletsPage();
-    await outlets.open();
-    await outlets.openEditDialog(outlet.name);
-    await outlets.editCode().clear();
-    await outlets.save();
-
-    const request = await outletService.updateOutlet.getLastRequest();
-    expect(request.code).toBeUndefined();
-    await expect.element(outlets.noCode()).toBeVisible();
   });
 
   test('archives an Outlet', async ({ outletService }) => {
-    const outlet = createOutletStub({
-      archived: false,
-      id: 'outlet-id',
-      name: 'Гончарная лавка',
-    });
+    const outlet = createOutletStub({ archived: false, id: 'outlet-id', name: 'Гончарная лавка' });
     const archivedOutlet = createOutletStub({ ...outlet, archived: true });
     outletService.setOutletArchived.resolves(
       createSetOutletArchivedResponseStub({
@@ -173,69 +119,113 @@ test.describe('Outlet maintenance', () => {
     await outlets.open();
     await outlets.archive(outlet.name);
     await outlets.showArchived();
-
-    await expect(outletService.setOutletArchived.getLastRequest()).resolves.toMatchObject({
-      archived: true,
-      id: outlet.id,
-    });
     await expect.element(outlets.outlet(outlet.name)).toBeVisible();
   });
 
-  test('restores an Outlet', async ({ outletService }) => {
-    const outlet = createOutletStub({
-      archived: true,
-      id: 'outlet-id',
-      name: 'Гончарная лавка',
-    });
-    const restoredOutlet = createOutletStub({ ...outlet, archived: false });
-    outletService.setOutletArchived.resolves(
-      createSetOutletArchivedResponseStub({
-        result: { case: 'success', value: restoredOutlet },
+  test('imports reports, keeps the action pending, and refreshes Outlets', async ({
+    outletService,
+    reportImportService,
+  }) => {
+    let resolveImport:
+      | ((value: ReturnType<typeof createImportNewReportFilesResponseStub>) => void)
+      | undefined;
+    reportImportService.importNewReportFiles.handler.mockImplementation(
+      async () =>
+        await new Promise((resolve) => {
+          resolveImport = resolve;
+        }),
+    );
+    const importedOutlet = createOutletStub({ id: 'imported', name: 'Пестеля' });
+    outletService.listOutlets.handler.mockImplementation(async () =>
+      createListOutletsResponseStub({
+        outlets: called(reportImportService.importNewReportFiles.handler) ? [importedOutlet] : [],
       }),
     );
-    outletService.listOutlets.handler.mockImplementation(async (request) => {
-      const restored = called(outletService.setOutletArchived.handler);
-      return createListOutletsResponseStub({
-        outlets: request.archived === !restored ? [restored ? restoredOutlet : outlet] : [],
-      });
-    });
 
     const outlets = createOutletsPage();
     await outlets.open();
-    await outlets.showArchived();
-    await outlets.restore(outlet.name);
-    await outlets.showActive();
+    await outlets.importReports();
+    await expect.element(outlets.importButton()).toBeDisabled();
+    await expect.element(outlets.importButton()).toHaveTextContent('Загружаем отчёты…');
 
-    await expect(outletService.setOutletArchived.getLastRequest()).resolves.toMatchObject({
-      archived: false,
-      id: outlet.id,
-    });
-    await expect.element(outlets.outlet(outlet.name)).toBeVisible();
-  });
-
-  test('places an exact code collision on the Outlet code field', async ({ outletService }) => {
-    outletService.createOutlet.resolves(
-      createCreateOutletResponseStub({
+    resolveImport?.(
+      createImportNewReportFilesResponseStub({
         result: {
-          case: 'failure',
-          value: createOutletMutationFailureStub({
-            field: OutletMutationFailureField.CODE,
-            message: 'Магазин с таким кодом уже существует',
+          case: 'success',
+          value: createReportImportSuccessStub({
+            createdOutletCount: 1,
+            createdReportCount: 2,
+            createdReportListingCount: 3,
+            importedFileCount: 1,
           }),
         },
       }),
     );
+    await expect
+      .element(page.getByRole('alert').getByText('Отчёты загружены', { exact: true }))
+      .toBeVisible();
+    await expect
+      .element(
+        page
+          .getByRole('alert')
+          .getByText('Файлов: 1; отчётов: 2; магазинов: 1; позиций: 3.', { exact: true }),
+      )
+      .toBeVisible();
+    await expect.element(outlets.outlet(importedOutlet.name)).toBeVisible();
+    expect(await reportImportService.importNewReportFiles.getLastRequest()).toBeDefined();
+    await outlets.screenshotImport('Successful mail import');
+  });
 
+  test('reports when there are no new files', async ({ reportImportService }) => {
+    reportImportService.importNewReportFiles.resolves(
+      createImportNewReportFilesResponseStub({
+        result: {
+          case: 'success',
+          value: createReportImportSuccessStub({
+            createdOutletCount: 0,
+            createdReportCount: 0,
+            createdReportListingCount: 0,
+            importedFileCount: 0,
+          }),
+        },
+      }),
+    );
     const outlets = createOutletsPage();
     await outlets.open();
-    await outlets.openCreateDialog();
-    await outlets.name().fill('Гончарная лавка');
-    await outlets.code().fill('GL');
-    await outlets.create();
+    await outlets.importReports();
 
-    await expect.element(outlets.code()).toHaveAttribute('aria-invalid', 'true');
-    await expect.element(page.getByText('Магазин с таким кодом уже существует')).toBeVisible();
-    await outlets.screenshotDialog('Outlet code collision');
+    await expect
+      .element(page.getByRole('alert').getByText('Новых отчётов нет', { exact: true }))
+      .toBeVisible();
+  });
+
+  test('shows a destructive workbook error with its location', async ({ reportImportService }) => {
+    reportImportService.importNewReportFiles.resolves(
+      createImportNewReportFilesResponseStub({
+        result: {
+          case: 'failure',
+          value: createReportImportFailureStub({
+            attachmentName: 'Отчёт по продажам.xlsx',
+            location: 'D14',
+            message: 'ожидалась неотрицательная сумма',
+          }),
+        },
+      }),
+    );
+    const outlets = createOutletsPage();
+    await outlets.open();
+    await outlets.importReports();
+
+    const alert = page.getByRole('alert');
+    await expect.element(alert.getByText('Импорт не выполнен', { exact: true })).toBeVisible();
+    await expect
+      .element(
+        alert.getByText('ожидалась неотрицательная сумма · Отчёт по продажам.xlsx · D14', {
+          exact: true,
+        }),
+      )
+      .toBeVisible();
+    await outlets.screenshotImport('Failed mail import');
   });
 });
 
@@ -243,19 +233,21 @@ function createOutletsPage() {
   const catalog = () => page.getByRole('region', { name: 'Все магазины' });
   const createDialog = () => page.getByRole('dialog', { name: 'Новый магазин' });
   const editDialog = () => page.getByRole('dialog', { name: 'Изменить магазин' });
+  const importPanel = () => page.getByRole('region', { name: 'Отчёты из Яндекс Почты' });
 
   return {
     archive: (name: string) =>
       catalog()
         .getByRole('button', { name: `Архивировать ${name}` })
         .click(),
-    code: () => createDialog().getByRole('textbox', { name: 'Код магазина' }),
+    catalog,
     create: () => createDialog().getByRole('button', { name: 'Создать' }).click(),
-    editCode: () => editDialog().getByRole('textbox', { name: 'Код магазина' }),
     editName: () => editDialog().getByRole('textbox', { name: 'Название' }),
+    importButton: () => importPanel().getByRole('button'),
+    importPanel,
+    importReports: () => importPanel().getByRole('button').click(),
     name: () => createDialog().getByRole('textbox', { name: 'Название' }),
     navigation: () => page.getByRole('link', { exact: true, name: 'Магазины' }),
-    noCode: () => page.getByText('Без кода', { exact: true }),
     open: () => window.openApplicationRoute('/outlets'),
     openCreateDialog: () => page.getByRole('button', { name: 'Создать магазин' }).click(),
     openEditDialog: (name: string) =>
@@ -263,15 +255,10 @@ function createOutletsPage() {
         .getByRole('button', { name: `Изменить ${name}` })
         .click(),
     outlet: (name: string) => catalog().getByText(name, { exact: true }),
-    outletCode: (code: string) => catalog().getByText(code, { exact: true }),
-    restore: (name: string) =>
-      catalog()
-        .getByRole('button', { name: `Восстановить ${name}` })
-        .click(),
     save: () => editDialog().getByRole('button', { name: 'Сохранить' }).click(),
     screenshotDialog: (name: string) => screenshot(page.getByRole('dialog'), name),
-    screenshotPage: (name: string) => screenshot(catalog(), name),
-    showActive: () => page.getByRole('button', { name: 'Активные' }).click(),
+    screenshotImport: (name: string) => screenshot(importPanel(), name),
+    screenshotPage: (name: string) => screenshot(page.getByRole('main'), name),
     showArchived: () => page.getByRole('button', { name: 'Архив' }).click(),
   };
 }

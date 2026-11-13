@@ -32,6 +32,7 @@ test.describe(
       await products.openCreateDialog();
       await expect.element(products.dialog()).toBeVisible();
       await expect.element(products.name()).toHaveFocus();
+      expect(products.dialog().getByRole('textbox').elements()).toHaveLength(1);
       await products.screenshotModalState('Create Product dialog');
 
       await userEvent.keyboard('{Escape}');

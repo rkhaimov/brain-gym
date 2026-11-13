@@ -115,3 +115,5 @@ Keep destructive red distinct from terracotta so the primary color retains its b
 The local `artefacts` directory contains the approved analytics, Product-mapping, and Report-flow mockups. Use `app-showcase-report-flow.png` as the current Report-flow reference; the file with the `-original` suffix records the earlier version.
 
 The mockups establish composition and visual character. This document governs the normalized application name, logo treatment, color tokens, semantic color use, and icon conventions when mockup details differ.
+
+The Report-flow mockup's manual file-selection and editable import-review screens are superseded by ticket 09. The current flow is the explicit Yandex Mail action above the Outlets catalog, followed by an inline success, no-new-files, or destructive failure summary.

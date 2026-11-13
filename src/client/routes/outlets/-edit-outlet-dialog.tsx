@@ -17,16 +17,9 @@ export function EditOutletDialog({ outlet, ...props }: EditOutletDialogProps) {
   return (
     <OutletFormDialog
       {...props}
-      defaultCode={outlet.code ?? ''}
       defaultName={outlet.name}
       open
-      submit={(name, code) =>
-        mutation.mutateAsync({
-          id: outlet.id,
-          name,
-          ...(code === undefined ? {} : { code }),
-        })
-      }
+      submit={(name) => mutation.mutateAsync({ id: outlet.id, name })}
       submitLabel="Сохранить"
       title="Изменить магазин"
     />

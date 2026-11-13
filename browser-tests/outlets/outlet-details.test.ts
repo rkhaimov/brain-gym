@@ -34,7 +34,6 @@ import { test } from '@/test/browser/runtime/test.js';
 
 const outlet = createOutletStub({
   archived: false,
-  code: 'GL',
   id: 'outlet-id',
   name: 'Гончарная лавка',
 });
@@ -60,13 +59,12 @@ test.describe('Outlet details and Sales report history', () => {
     );
   });
 
-  test('displays the Outlet name, code, and listing summaries', async () => {
+  test('displays the Outlet name and listing summaries', async () => {
     const details = createOutletDetailsPage();
     await window.openApplicationRoute('/outlets');
     await page.getByRole('button', { name: `Открыть ${outlet.name}` }).click();
 
     await expect.element(page.getByRole('heading', { name: outlet.name })).toBeVisible();
-    await expect.element(page.getByText('GL', { exact: true })).toBeVisible();
     await expect.element(page.getByText(ring.name, { exact: true })).toBeVisible();
     await expect.element(page.getByText(knownListing.name, { exact: true })).toBeVisible();
     await expect.element(page.getByText('35,00 ₽')).toBeVisible();

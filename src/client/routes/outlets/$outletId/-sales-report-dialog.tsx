@@ -523,8 +523,7 @@ function SalesReportDialogForm({
   }
 
   const knownListingNames = listings.data?.listings.map((listing) => listing.name) ?? [];
-  const outletDescription =
-    outlet.code === undefined ? outlet.name : `${outlet.name} · ${outlet.code}`;
+  const outletDescription = outlet.name;
 
   return (
     <Dialog onOpenChange={changeOpen} open={open}>

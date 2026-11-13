@@ -12,7 +12,6 @@ export type Generated<T> =
 
 export interface Outlets {
   archived_at_ms: number | null;
-  code: string | null;
   created_at_ms: number;
   id: string;
   name: string;
@@ -30,6 +29,14 @@ export interface ReportListings {
   id: string;
   name: string;
   product_id: string | null;
+}
+
+export interface ReportMailImportState {
+  id: Generated<number>;
+  last_scanned_uid: number;
+  mailbox_account: string;
+  uid_validity: number;
+  updated_at_ms: number;
 }
 
 export interface SalesReports {
@@ -61,6 +68,7 @@ export interface DB {
   outlets: Outlets;
   products: Products;
   report_listings: ReportListings;
+  report_mail_import_state: ReportMailImportState;
   sales_report_sales: SalesReportSales;
   sales_report_stock_balances: SalesReportStockBalances;
   sales_reports: SalesReports;

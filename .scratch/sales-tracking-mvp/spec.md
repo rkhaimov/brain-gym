@@ -20,7 +20,7 @@ The data is personally and commercially important. Confirmed changes must surviv
 
 Build a Russian-language, desktop-oriented local web application for a single creator. A local Node.js server owns validation, calculations, persistence, analytics, backups, and migrations. A browser client provides the editing and review experience.
 
-The creator maintains a Product catalog and a list of Outlets. Each Outlet may have an Outlet code used to associate its portion of a Report file. A Sales report belongs permanently to one Outlet, covers one Reporting period, records aggregated sales, and provides the complete Stock balance at the period end.
+The creator maintains a Product catalog and a list of exactly named Outlets. A Sales report belongs permanently to one Outlet, covers one Reporting period, records aggregated sales, and provides the complete Stock balance at the period end. Yandex Report files identify Outlets by the exact trimmed name in `Магазин "Твоя Полка" (<name>)`.
 
 Report listings retain the exact names supplied in Sales reports. An exact name identifies one global Report listing across all Outlets. Persistent Product mappings associate Report listings with canonical Products, while Unmapped listings remain valid and visible in analytics until the creator maps them.
 
@@ -28,7 +28,7 @@ The MVP provides:
 
 - Product and Outlet maintenance;
 - manual Sales report entry and correction;
-- fixed-format Excel Report file import into an editable, all-or-nothing form;
+- explicit all-or-nothing import of new fixed-format Excel Report files from Yandex Mail;
 - persistent and historically effective Product mappings;
 - Sales report history, historical Stock balances, current Stock balances, totals, comparisons, and rankings;
 - local durable storage, startup backups, and migrations.
@@ -86,31 +86,31 @@ flowchart LR
 
 9. As the creator, I can create an Outlet with a non-empty, unique name.
 10. As the creator, I am prevented from creating or renaming an Outlet to an exact name already used by another Outlet.
-11. As the creator, I can create and fully use an Outlet without assigning an Outlet code.
-12. As the creator, I can optionally assign an Outlet code, and every non-empty Outlet code must be exactly unique among Outlets.
-13. As the creator, I can add, change, or remove an Outlet code at any time, provided the resulting non-empty code remains unique.
-14. As the creator, I understand that changing an Outlet code does not detach historical Sales reports from the Outlet, while a future Report file using the old code no longer identifies it.
+11. As the creator, I can fully use an Outlet using only its unique exact name.
+12. As the creator, a mail import creates an active Outlet when a workbook contains a new exact Outlet name.
+13. As the creator, a mail import reuses an existing exact-name Outlet instead of creating another identity.
+14. As the creator, importing for an archived exact-name Outlet does not restore it.
 15. As the creator, I can rename an Outlet and see the current name throughout the application because Sales reports refer to the Outlet's immutable identity rather than copying its name.
 16. As the creator, I can archive an Outlet without destroying its Sales reports, Report-listing appearances, mappings, or analytics history.
 17. As the creator, I can restore an archived Outlet.
 18. As the creator, I normally see only active Outlets in new selections while archived Outlets remain available in historical views.
-19. As the creator, I can use an Outlet without a code for manual Sales reports and analytics, but that Outlet cannot receive imported data until a code is assigned.
+19. As the creator, Outlet-name equality preserves case, whitespace, punctuation, spelling, and underscores after trimming the workbook's parenthesized name.
 
 ### Creating and correcting Sales reports
 
 20. As the creator, I can manually create a Sales report for one selected Outlet and one Reporting period.
 21. As the creator, I must enter a Reporting period start and end date, and the end date cannot precede the start date.
 22. As the creator, I can create reports with overlapping or repeated Reporting periods; the application does not reject them merely because another report covers the same dates.
-23. As the creator, I enter the period's sales as one aggregated row per Report listing, containing the exact listing name, Units sold, and total Earnings.
+23. As the creator, I enter the period's sales as one aggregated row per Report listing, containing the exact listing name, Units sold, Sales value, and Earnings.
 24. As the creator, I enter the period-end inventory as one row per Report listing, containing the exact listing name, Stock balance, and Outlet price.
 25. As the creator, I cannot repeat the same exact Report listing name within the sales section of one Sales report.
 26. As the creator, I cannot repeat the same exact Report listing name within the Stock balance section of one Sales report.
-27. As the creator, I can use the same Report listing once in each section, and both occurrences share one Outlet price for that Sales report.
-28. As the creator, when a listing appears in sales but not in the Stock balance section, I must supply its Outlet price with the sales entry.
+27. As the creator, I can use the same Report listing once in each section, and both occurrences share one Report-listing identity while keeping section-specific values.
+28. As the creator, a listing may appear in sales without appearing in the Stock balance section, or in Stock without appearing in sales.
 29. As the creator, I can enter only whole, non-negative Units sold and Stock balances.
 30. As the creator, I can enter only non-negative monetary amounts in whole kopecks.
-31. As the creator, I cannot record Earnings greater than `Units sold × Outlet price`.
-32. As the creator, I see Outlet share calculated for every sales entry as `Units sold × Outlet price − Earnings`.
+31. As the creator, I cannot record Earnings greater than Sales value.
+32. As the creator, I see Outlet share calculated for every sales entry as `Sales value − Earnings`.
 33. As the creator, I may omit a listing from the sales section when nothing sold; that means zero Units sold, zero Earnings, and zero Outlet share for that report.
 34. As the creator, I understand that the Stock balance section is the complete inventory at the period end. A previously known listing omitted from that section has a Stock balance of zero.
 35. As the creator, I can save a Sales report with no sales rows and no Stock balance rows; this records zero sales and an empty Outlet inventory rather than a neutral or no-op report.
@@ -124,19 +124,19 @@ flowchart LR
 
 ### Importing a Report file
 
-43. As the creator, I can import the one fixed Excel workbook structure supported by the MVP.
-44. As the creator, I can import one Report file containing a single Reporting period and data for multiple Outlets.
+43. As the creator, I can explicitly import new Твоя Полка Report files from Yandex Mail from the Outlets page.
+44. As the creator, each click scans only INBOX UIDs newer than the last successfully scanned UID.
 45. As the creator, I receive a clear rejection when the workbook structure or a value cannot be parsed, including the relevant cell or location and the expected kind of value.
-46. As the creator, I see one parsing or validation problem at a time so that I can correct the source file and retry.
-47. As the creator, no editable report form opens and no data is recorded when any part of the Report file fails structural validation.
-48. As the creator, I am protected from a file that repeats an Outlet report: each Outlet code may identify at most one Outlet section in the file.
+46. As the creator, every selected workbook is validated before any workbook in the mailbox batch changes application data.
+47. As the creator, no editable review form opens and no data or cursor change is recorded when any part of the batch fails validation.
+48. As the creator, I am protected from a file that repeats an Outlet section.
 49. As the creator, I am protected from a file that repeats the same exact listing within an Outlet's sales section or within its Stock balance section.
-50. As the creator, a Report file is rejected if it contains an unknown Outlet code. I can create the Outlet or correct its Outlet code separately and then retry the import.
-51. As the creator, an archived Outlet found by its code is dropped from the import by default, and I can restore that Outlet to include its report.
-52. As the creator, I cannot drop an individual active Outlet from an otherwise valid import.
-53. As the creator, after a file passes validation I see one fully editable form grouped by Outlet, using the same fields and validation rules as manual Sales report creation.
-54. As the creator, I can correct parsed dates, listings, quantities, prices, Earnings, and Product mappings before saving.
-55. As the creator, I can either save every included Outlet's Sales report together or cancel the entire import; a partial save cannot occur.
+50. As the creator, unknown exact Outlet and Report listing names are created automatically during import.
+51. As the creator, an archived exact-name Outlet receives its imported reports while remaining archived.
+52. As the creator, every Outlet appearing in either workbook section receives one Sales report for that file.
+53. As the creator, a successful click creates reports automatically without opening an editable form.
+54. As the creator, header-driven current and legacy layouts are accepted; absent historical Earnings and Stock outlet-price columns become zero.
+55. As the creator, all files, Outlets, Report listings, Sales reports, and the mail cursor commit together or all roll back.
 56. As the creator, after a successful import each resulting outlet-local Sales report becomes an independent report that can later be viewed, corrected, or archived.
 57. As the creator, importing data for an Outlet and Reporting period that already has another Sales report is allowed; the application does not infer that the reports are duplicates.
 
@@ -180,11 +180,11 @@ flowchart LR
 ### Local use, safety, and usability
 
 89. As the creator, I can start the application with one terminal command; it waits for the local server to become ready and then opens in my default supported browser.
-90. As the creator, I can use every MVP feature without an internet connection.
+90. As the creator, I can use every ordinary MVP feature without an internet connection; only an explicit Yandex Mail import requires internet access.
 91. As the creator, every save confirmed by the application survives normal shutdown, restart, and application updates.
 92. As the creator, a crash during a change leaves either the complete committed change or no change; I retry a change whose success was not confirmed.
 93. As the creator, I receive a usable Russian interface with keyboard-operable forms, labelled controls, readable contrast, visible validation messages, and browser zoom support.
-94. As the creator, my application data, diagnostics, and usage information are never sent to external services.
+94. As the creator, no telemetry, diagnostics, or background synchronization is sent to external services; only an explicit import exchanges IMAP traffic with Yandex.
 
 ## Implementation Decisions
 
@@ -195,7 +195,7 @@ flowchart LR
 - The codebase has three general runtime boundaries: server runtime, client runtime, and environment-neutral shared definitions.
 - The server binds only to the local computer and does not accept LAN or internet connections.
 - There is no authentication because the application is local and single-creator.
-- The built application has no runtime dependency on the internet or an external service and emits no telemetry.
+- Ordinary application work has no runtime dependency on the internet or an external service. The explicit Yandex import uses read-only IMAP and the application emits no telemetry.
 - One command starts the server, waits for readiness, and opens the application in the default supported browser.
 - The implementation must not depend on a specific operating system or use OS-sensitive APIs without an abstraction.
 - The supported browser target is evergreen Chromium. Do not ship polyfills or compatibility workarounds for legacy browsers, Firefox, or WebKit.
@@ -237,10 +237,10 @@ flowchart LR
 - A Sales report belongs to one immutable Outlet identity. Outlet names are not copied into Sales reports.
 - Report listing continuity and Product mapping use one global trimmed, otherwise exact listing name across all Outlets. Outlet price is report-specific and may be corrected when a report is edited.
 - Treat the Stock balance section as the complete end-of-period inventory. Missing listings have zero Stock balance.
-- Derive Outlet share from `Units sold × Outlet price − Earnings`; it is not a separate user-entered amount.
-- The fixed-format Excel parser validates the complete file before opening the form. It reports one actionable problem at a time and never records a partially parsed file.
-- A valid multi-Outlet import uses the ordinary Sales report form grouped by Outlet and commits all included reports in one atomic operation.
-- Report-file Outlet association is an exact Outlet code lookup, not a user-maintained source mapping. Unknown codes require correction outside the import flow.
+- Derive Outlet share from `Sales value − Earnings`; it is not a separate user-entered amount.
+- The fixed-format Excel parser validates the complete fetched batch before any database mutation. It reports the attachment and workbook location and never records a partial batch.
+- A valid multi-Outlet import creates the Sales reports directly and commits all included reports and its mail cursor in one atomic operation.
+- Report-file Outlet association uses the exact trimmed parenthesized Outlet name. Unknown Outlets and Report listings are created automatically.
 - Product mappings apply retroactively by resolving analytics through the current mapping rather than copying a Product identity into every historical row.
 - Preserve trimmed, otherwise exact Report listing names. One global identity is shared across Outlets by exact string equality.
 - Sales analytics aggregate complete selected Sales reports. Current Stock is a latest-state measure and is never summed across historical reports.
@@ -263,7 +263,7 @@ flowchart LR
 ### Quality attributes
 
 - Ordinary views, edits, and analytics must complete within two seconds against a seeded ten-year expected dataset on the target computer.
-- Parsing the maximum expected Report file of roughly 50 Outlets with ten listings each and opening its editable form must complete within five seconds.
+- Parsing and committing a maximum expected fetched batch of roughly 50 Outlets with ten listings each must complete within five seconds, excluding IMAP network time.
 - A production build must meet the official Core Web Vitals “good” thresholds under the seeded local workload: LCP at most 2.5 seconds, INP at most 200 milliseconds, and CLS at most 0.1.
 - The Russian UI must be keyboard-operable, use labelled controls, provide readable contrast and visible validation, and remain usable with browser zoom. No formal accessibility certification is required.
 
@@ -283,7 +283,7 @@ flowchart LR
 - Give every server integration test file an isolated temporary SQLite database and backup directory. Never mock Kysely or better-sqlite3.
 - Test complete domain operations through Connect handlers, including validation failures and recalculated results.
 - Use focused unit tests only for pure functions or edge-case matrices that would make handler integration tests prohibitively slow.
-- Test Report-file parsing with committed, small synthetic `.xlsx` fixtures. Cover the valid fixed format and individual failures including invalid cell types, duplicate Outlet codes, duplicate listings, unknown Outlets, and malformed Reporting periods.
+- Test Report-file parsing with committed, small synthetic `.xlsx` fixtures. Cover current and legacy layouts, invalid cell types, duplicate Outlet sections, duplicate listings, malformed hierarchy, and malformed Reporting periods.
 - Test backup and migration behavior in isolated temporary directories, including rotation, preservation after failed backup, integrity rejection, pre-migration ordering, successful restore, and migration of restored older data.
 - Centralize nondeterministic environment behavior such as clocks and identity generation in an EnvService. Tests may patch that service with Vitest spies and must restore it after each test; tests that patch the same global service do not run concurrently.
 
@@ -338,7 +338,7 @@ flowchart LR
 
 ### Scenario allocation
 
-- Keep the critical full-system browser workflow deliberately small. It covers creating Products and Outlets, importing and correcting a Report file, performing initial Product mapping, and viewing analytics and current Stock.
+- Keep the critical full-system browser workflow deliberately small. It uses an injected mailbox adapter to import Report files automatically, then performs initial Product mapping and views analytics and current Stock.
 - Cover manual Sales report creation, historical remapping, and report archive/restore in the appropriate server or client integration projects rather than duplicating them in the critical full-system workflow.
 - Use fixed Chromium screenshot tests for stable visual states and compare them with the client-approved design drafts.
 - Regenerate Protobuf, Connect Query, generated test artifacts, and Kysely database types in CI; fail when generation produces an uncommitted difference.
@@ -357,7 +357,7 @@ flowchart LR
 - LAN hosting, internet hosting, cloud synchronization, or remote access.
 - A cloud backup destination in the MVP; only the extension interface and local destination are included.
 - Multiple Report-file formats, free-form spreadsheet detection, partial imports, or importing individual Sale transactions.
-- Creating unknown Outlets inside the import form or mapping source Outlet names to existing Outlets.
+- Manual local-file import, interactive validation/correction/grouped review, attachment-content duplicate detection, resend reconciliation, and UIDVALIDITY-reset recovery.
 - Fuzzy Product matching, automatic name-based suggestions, or remembered mapping suggestions.
 - Tracking production cost, profit, payment transfers, or whether accrued Earnings have been paid.
 - Physical deletion, a general audit log, or general undo. Archiving and restoration provide the required reversible lifecycle.

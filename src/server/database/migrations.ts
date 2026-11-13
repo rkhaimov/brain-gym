@@ -16,11 +16,24 @@ const createSchema: Migration = {
       .createTable('outlets')
       .addColumn('id', 'text', (column) => column.primaryKey().notNull())
       .addColumn('name', sql`text collate binary`, (column) => column.notNull())
-      .addColumn('code', sql`text collate binary`)
       .addColumn('created_at_ms', 'integer', (column) => column.notNull())
       .addColumn('archived_at_ms', 'integer')
       .addUniqueConstraint('outlets_name_unique', ['name'])
-      .addUniqueConstraint('outlets_code_unique', ['code'])
+      .execute();
+
+    await database.schema
+      .createTable('report_mail_import_state')
+      .addColumn('id', 'integer', (column) => column.primaryKey().notNull())
+      .addColumn('mailbox_account', sql`text collate nocase`, (column) => column.notNull())
+      .addColumn('uid_validity', 'integer', (column) => column.notNull())
+      .addColumn('last_scanned_uid', 'integer', (column) => column.notNull())
+      .addColumn('updated_at_ms', 'integer', (column) => column.notNull())
+      .addCheckConstraint('report_mail_import_state_singleton', sql`id = 1`)
+      .addCheckConstraint('report_mail_import_state_uid_validity_positive', sql`uid_validity > 0`)
+      .addCheckConstraint(
+        'report_mail_import_state_last_uid_nonnegative',
+        sql`last_scanned_uid >= 0`,
+      )
       .execute();
 
     await database.schema

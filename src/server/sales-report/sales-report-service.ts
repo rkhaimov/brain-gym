@@ -135,7 +135,10 @@ function reportFailure(issue: SalesReportValidationIssue) {
   };
 }
 
-async function nextSavedAtMs(transaction: Transaction<DB>, env: EnvService): Promise<number> {
+export async function nextSavedAtMs(
+  transaction: Transaction<DB>,
+  env: EnvService,
+): Promise<number> {
   const latest = await transaction
     .selectFrom('sales_reports')
     .select(({ fn }) => fn.max<number>('updated_at_ms').as('updated_at_ms'))
@@ -143,7 +146,7 @@ async function nextSavedAtMs(transaction: Transaction<DB>, env: EnvService): Pro
   return Math.max(env.now().getTime(), (latest?.updated_at_ms ?? -1) + 1);
 }
 
-async function resolveListings(
+export async function resolveListings(
   transaction: Transaction<DB>,
   env: EnvService,
   request: CreateSalesReportRequest,
@@ -195,7 +198,7 @@ async function resolveListings(
   return listings;
 }
 
-async function replaceReportContents(
+export async function replaceReportContents(
   transaction: Transaction<DB>,
   reportId: string,
   request: CreateSalesReportRequest,

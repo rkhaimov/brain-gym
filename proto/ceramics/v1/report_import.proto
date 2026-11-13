@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package ceramics.v1;
+
+message ImportNewReportFilesRequest {}
+
+message ReportImportSuccess {
+  uint32 imported_file_count = 1;
+  uint32 created_report_count = 2;
+  uint32 created_outlet_count = 3;
+  uint32 created_report_listing_count = 4;
+}
+
+message ReportImportFailure {
+  string message = 1;
+  optional string attachment_name = 2;
+  optional string location = 3;
+}
+
+message ImportNewReportFilesResponse {
+  oneof result {
+    ReportImportSuccess success = 1;
+    ReportImportFailure failure = 2;
+  }
+}
+
+service ReportImportService {
+  rpc ImportNewReportFiles(ImportNewReportFilesRequest) returns (ImportNewReportFilesResponse) {}
+}

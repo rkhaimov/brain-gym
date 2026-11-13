@@ -1,6 +1,5 @@
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
 
 import { test as baseTest } from 'vitest';
 
@@ -19,7 +18,9 @@ interface ServerFixtures {
 
 export const test = baseTest.extend<ServerFixtures>({
   database: async ({ task: _task }, use) => {
-    const temporaryDirectory = await mkdtemp(join(tmpdir(), 'ceramics-ledger-server-'));
+    const testRoot = resolve('.local/test-tmp');
+    await mkdir(testRoot, { recursive: true });
+    const temporaryDirectory = await mkdtemp(join(testRoot, 'server-'));
     const databasePath = join(temporaryDirectory, 'test.sqlite');
     const backupDestination = new LocalFilesystemBackupDestination(
       join(temporaryDirectory, 'backups'),

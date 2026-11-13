@@ -21,11 +21,17 @@ import {
   createSalesReportServiceMock,
   type SalesReportServiceSpies,
 } from '@/shared/gen/ceramics/v1/sales_report_test.js';
+import { ReportImportService } from '@/shared/gen/ceramics/v1/report_import_pb.js';
+import {
+  createReportImportServiceMock,
+  type ReportImportServiceSpies,
+} from '@/shared/gen/ceramics/v1/report_import_test.js';
 import { screencastFixture } from './screencast-fixture.js';
 
 interface ApplicationServiceSpies {
   readonly outlet: OutletServiceSpies;
   readonly reportListing: ReportListingServiceSpies;
+  readonly reportImport: ReportImportServiceSpies;
   readonly product: ProductServiceSpies;
   readonly salesReport: SalesReportServiceSpies;
 }
@@ -34,6 +40,7 @@ interface BrowserFixtures {
   readonly applicationServices: ApplicationServiceSpies;
   readonly outletService: OutletServiceSpies;
   readonly reportListingService: ReportListingServiceSpies;
+  readonly reportImportService: ReportImportServiceSpies;
   readonly productService: ProductServiceSpies;
   readonly salesReportService: SalesReportServiceSpies;
 }
@@ -62,6 +69,7 @@ export const test = baseTest
       async ({ task: _task }, use) => {
         const outlet = createOutletServiceMock().spies;
         const reportListing = createReportListingServiceMock().spies;
+        const reportImport = createReportImportServiceMock().spies;
         const product = createProductServiceMock().spies;
         const salesReport = createSalesReportServiceMock().spies;
         const transport = createRouterTransport((router) => {
@@ -76,6 +84,9 @@ export const test = baseTest
               reportListing.createProductAndMapReportListing.handler,
             listReportListings: reportListing.listReportListings.handler,
             setReportListingProduct: reportListing.setReportListingProduct.handler,
+          });
+          router.service(ReportImportService, {
+            importNewReportFiles: reportImport.importNewReportFiles.handler,
           });
           router.service(ProductService, {
             createProduct: product.createProduct.handler,
@@ -93,7 +104,7 @@ export const test = baseTest
         });
         const application = await loadTestApplication();
         application.overrideTransport(transport);
-        await use({ outlet, product, reportListing, salesReport });
+        await use({ outlet, product, reportImport, reportListing, salesReport });
       },
       { auto: true },
     ],
@@ -102,6 +113,9 @@ export const test = baseTest
     },
     reportListingService: async ({ applicationServices }, use) => {
       await use(applicationServices.reportListing);
+    },
+    reportImportService: async ({ applicationServices }, use) => {
+      await use(applicationServices.reportImport);
     },
     productService: async ({ applicationServices }, use) => {
       await use(applicationServices.product);

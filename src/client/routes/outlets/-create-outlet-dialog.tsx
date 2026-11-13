@@ -16,11 +16,8 @@ export function CreateOutletDialog(props: CreateOutletDialogProps) {
   return (
     <OutletFormDialog
       {...props}
-      defaultCode=""
       defaultName=""
-      submit={(name, code) =>
-        mutation.mutateAsync({ name, ...(code === undefined ? {} : { code }) })
-      }
+      submit={(name) => mutation.mutateAsync({ name })}
       submitLabel="Создать"
       title="Новый магазин"
     />

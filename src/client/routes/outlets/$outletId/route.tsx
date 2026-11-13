@@ -4,7 +4,6 @@ import { ArrowLeft, Eye, FileText, Store } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/client/components/ui/alert.js';
-import { Badge } from '@/client/components/ui/badge.js';
 import { Button } from '@/client/components/ui/button.js';
 import { ReportListingProductCombobox } from '@/client/components/report-listing/report-listing-product-combobox.js';
 import {
@@ -111,10 +110,7 @@ function OutletDetailsPage() {
           </Link>
         </Button>
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-2xl font-bold">{outlet.name}</h2>
-            <Badge variant="secondary">{outlet.code ?? 'Без кода'}</Badge>
-          </div>
+          <h2 className="text-2xl font-bold">{outlet.name}</h2>
           <p className="text-sm text-muted-foreground">Позиции и отчёты магазина</p>
         </div>
       </div>

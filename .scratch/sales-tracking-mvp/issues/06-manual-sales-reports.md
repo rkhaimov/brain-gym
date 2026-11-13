@@ -2,7 +2,7 @@
 
 **What to build:** Let the creator record one Outlet's complete Sales report manually, including the period's aggregated sales and the complete Stock balance at period end. The form explains and enforces the business rules before any data is confirmed.
 
-**Blocked by:** 05: Manage Outlets and Outlet codes.
+**Blocked by:** 05: Manage Outlets.
 
 **Status:** completed
 
@@ -18,7 +18,7 @@
 - [x] The Stock balance section is stored as a complete period-end inventory; an omitted previously known listing represents zero Stock balance.
 - [x] A report with no sales rows and no Stock balance rows is valid and means zero sales and empty Outlet inventory.
 - [x] Newly encountered Report listings may remain Unmapped without preventing save.
-- [x] Each Outlet has a dedicated page with its name and code, a Report-listing summary tab, and a Sales-report history tab that opens report creation in a modal.
+- [x] Each Outlet has a dedicated page with its name, a Report-listing summary tab, and a Sales-report history tab that opens report creation in a modal.
 - [x] Listing fields in both report sections are editable autocompletes that accept Report listings already referenced by that Outlet or new names; validation appears beside the field that caused it and numeric values use numeric inputs.
 - [x] Report listings have global immutable IDs, exact unique names, and creation timestamps; separate Sales and Stock rows reference those IDs, store non-null zero arithmetic values, and do not persist row positions.
 - [x] The entire Sales report is saved atomically through the FIFO mutation queue and one SQLite transaction.

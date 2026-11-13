@@ -13,7 +13,7 @@
 - [ ] Opening an Outlet shows its current Stock balances by exact Report listing.
 - [ ] Outlet details show Product results and visibly marked Unmapped listings.
 - [ ] Outlet details retain the Sales report history and historical-report opening delivered by ticket 07.
-- [ ] The current Outlet name and code appear even when historical reports were recorded before a rename or code change.
+- [ ] The current Outlet name appears even when historical reports were recorded before a rename.
 - [ ] Archived Outlets remain available in historical contexts but are excluded from ordinary active selections by default.
 - [ ] Server integration tests verify Outlet grouping, totals, filters, archive behavior, and agreement with Product-level totals.
 - [ ] Prebuilt-client integration and screenshot tests cover sorting, totals, Outlet navigation, current Stock, Product results, Unmapped listings, and history.

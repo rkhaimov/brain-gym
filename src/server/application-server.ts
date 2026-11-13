@@ -14,6 +14,9 @@ import { registerReportListingRoutes } from './report-listing/report-listing-ser
 import { registerOutletRoutes } from './outlet/outlet-service.js';
 import { registerProductRoutes } from './product/product-service.js';
 import { registerSalesReportRoutes } from './sales-report/sales-report-service.js';
+import type { ReportMailbox } from './report-import/report-mailbox.js';
+import { registerReportImportRoutes } from './report-import/report-import-service.js';
+import { createYandexReportMailboxFromEnvironment } from './report-import/yandex-report-mailbox.js';
 
 export interface ApplicationServerOptions {
   readonly backupDestination?: BackupDestination;
@@ -21,6 +24,7 @@ export interface ApplicationServerOptions {
   readonly env?: EnvService;
   readonly host?: string;
   readonly port?: number;
+  readonly reportMailbox?: ReportMailbox;
 }
 
 export interface RunningApplicationServer {
@@ -80,6 +84,7 @@ export async function startApplicationServer(
     env,
   });
   const mutationQueue = new MutationQueue();
+  const reportMailbox = options.reportMailbox ?? createYandexReportMailboxFromEnvironment();
   const requestHandler = connectNodeAdapter({
     routes: (router) => {
       registerProductRoutes(router, {
@@ -96,6 +101,12 @@ export async function startApplicationServer(
       registerSalesReportRoutes(router, {
         database,
         env,
+        mutationQueue,
+      });
+      registerReportImportRoutes(router, {
+        database,
+        env,
+        mailbox: reportMailbox,
         mutationQueue,
       });
     },

@@ -32,7 +32,7 @@ export function ProductFormDialog({
 }: ProductFormDialogProps) {
   return (
     <MaintenanceFormDialog
-      defaultValues={{ code: '', name: defaultName }}
+      defaultValues={{ name: defaultName }}
       description="Название сохраняется точно как введено"
       namePlaceholder={defaultName.length === 0 ? 'Например, Кольцо' : undefined}
       onOpenChange={onOpenChange}
