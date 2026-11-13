@@ -170,7 +170,7 @@ flowchart LR
 80. As the creator, I can independently select one, several, or all active Outlets and one, several, or all canonical Products, including archived Products that retain mapped history.
 81. As the creator, analytics sum mapped Units sold, Earnings, and Outlet share across the filtered reports and Outlets, while Stock uses each Outlet's latest active report at or before the selected range end.
 82. As the creator, I see mapped totals for end-of-period Stock, Units sold, Earnings, and Outlet share plus the signed absolute change from the immediately preceding equal-length period.
-83. As the creator, I can compare and sort mapped Products by Stock, Units sold, Earnings, or Outlet share using their current canonical names.
+83. As the creator, I can compare and sort mapped Products by Stock, Earnings, or Outlet share using their current canonical names, and rank them by Units sold with the Most sold preset.
 84. As the creator, I can use Product ranking presets for Most sold, Highest earnings, and Lowest stock.
 85. As the creator, every Overview filter is stored in validated route parameters so the mapping workflow can return me to the same view and refetch current analytics.
 86. As the creator, Product detail drill-down is deferred beyond the MVP dashboard; Overview contains no inactive chart or detail placeholder.

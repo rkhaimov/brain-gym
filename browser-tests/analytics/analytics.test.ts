@@ -70,7 +70,23 @@ test.describe('Product analytics dashboard', () => {
     await expect.element(page.getByRole('heading', { level: 1, name: 'Обзор' })).toBeVisible();
     await expect.element(page.getByText(/128.?450,00/)).toBeVisible();
     await expect.element(page.getByText('186 шт.', { exact: true })).toBeVisible();
+    await expect
+      .element(page.getByText('Комиссия магазинов', { exact: true }))
+      .not.toBeInTheDocument();
+    await expect
+      .element(page.getByText('Остаток на конец периода', { exact: true }))
+      .not.toBeInTheDocument();
+    await expect.element(page.getByRole('button', { name: /^Комиссия: изменение/ })).toBeVisible();
+    await expect.element(page.getByRole('button', { name: /^Остаток: изменение/ })).toBeVisible();
+    await expect
+      .element(page.getByText('По сравнению с предыдущим периодом', { exact: true }))
+      .not.toBeInTheDocument();
     await expect.element(page.getByRole('row', { name: /Кольцо/ })).toBeVisible();
+    const comparison = page.getByRole('region', { name: 'Сравнение штучек' });
+    await expect
+      .element(comparison.getByRole('button', { name: 'Сортировать по проданным штукам' }))
+      .not.toBeInTheDocument();
+    await expect.element(comparison.getByText('46 шт.', { exact: true })).not.toBeInTheDocument();
     await expect
       .element(page.getByRole('alert').getByText(/2 несопоставленные позиции/))
       .toBeVisible();
@@ -168,6 +184,17 @@ test.describe('Product analytics dashboard', () => {
     );
 
     await window.openApplicationRoute('/');
+    const filters = page.getByRole('region', { name: 'Фильтры аналитики' });
+    const period = filters.getByRole('button', { name: 'Выбрать период' });
+    const outlet = filters.getByRole('combobox', { name: 'Магазины' });
+    await expect.element(period).toBeVisible();
+    await expect.element(outlet).toBeVisible();
+    expect(
+      filters.getByText('Период', { exact: true }).element().getBoundingClientRect().bottom,
+    ).toBeLessThanOrEqual(period.element().getBoundingClientRect().top);
+    expect(
+      filters.getByText('Магазины', { exact: true }).element().getBoundingClientRect().bottom,
+    ).toBeLessThanOrEqual(outlet.element().getBoundingClientRect().top);
     await page.getByRole('combobox', { name: 'Магазины' }).click();
     await expect.element(page.getByRole('listbox')).toBeVisible();
     expect(
@@ -250,7 +277,7 @@ test.describe('Product analytics dashboard', () => {
     });
   });
 
-  test('ranks Products with presets and sortable metric columns', async ({
+  test('ranks Products with presets and sortable visible metric columns', async ({
     analyticsService,
     reportImportService,
   }) => {
@@ -307,6 +334,7 @@ test.describe('Product analytics dashboard', () => {
         .map((row) => row.querySelector('td')?.textContent);
 
     await expect.element(comparison.getByText('Кулон', { exact: true })).toBeVisible();
+    await expect.element(comparison.getByText('20 шт.', { exact: true })).not.toBeInTheDocument();
     expect(names()).toEqual(['Кулон', 'Кольцо', 'Брошь']);
     await page.getByRole('button', { name: 'Больше заработано' }).click();
     expect(names()).toEqual(['Брошь', 'Кольцо', 'Кулон']);

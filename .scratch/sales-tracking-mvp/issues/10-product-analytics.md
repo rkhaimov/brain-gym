@@ -13,7 +13,7 @@
 - [x] Stock uses each selected Outlet's latest active report at or before the selected end date, including the saved-order tie rule.
 - [x] Date, Outlet, and Product filters apply to every KPI, previous-period comparison, Product row, sort, and ranking preset.
 - [x] KPI cards show Earnings, Outlet share, Units sold, and end-of-period Stock with signed absolute changes from the preceding equal-length period and a comparison tooltip.
-- [x] Product rows use current mappings and canonical names, include archived mapped Products, sort by all four metrics, and support Most sold, Highest earnings, and Lowest stock presets.
+- [x] Product rows use current mappings and canonical names, include archived mapped Products, show sortable Earnings, Outlet share, and Stock columns, and support Most sold, Highest earnings, and Lowest stock presets.
 - [x] Relevant Unmapped listings are excluded from every total and row, counted distinctly for the selected date and Outlets, and shown in an amber warning.
 - [x] The warning opens the Unmapped mapping view with a validated return URL; returning restores filters and refetches analytics.
 - [x] Mapping, remapping, report correction, report archive/restore, sync, Product rename, and Product archive affect the next result without a schema change.

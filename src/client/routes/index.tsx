@@ -11,7 +11,6 @@ import {
   Card,
   CardAction,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/client/components/ui/card.js';
@@ -119,12 +118,6 @@ function KpiCard({
           </Tooltip>
         </CardAction>
       </CardHeader>
-      <CardFooter className="flex-col items-start gap-1.5 text-sm">
-        <div className="flex gap-2 font-medium">
-          По сравнению с предыдущим периодом <TrendIcon />
-        </div>
-        <div className="text-muted-foreground">{previousPeriod}</div>
-      </CardFooter>
     </Card>
   );
 }
@@ -273,7 +266,7 @@ function DashboardPage() {
                   current={totals?.outletShareKopecks ?? 0}
                   formatDifference={signedCurrency}
                   formatValue={formatRussianCurrency}
-                  label="Комиссия магазинов"
+                  label="Комиссия"
                   previous={previous?.outletShareKopecks ?? 0}
                   previousPeriod={previousPeriod}
                   selectedPeriod={selectedPeriod}
@@ -291,7 +284,7 @@ function DashboardPage() {
                   current={totals?.currentStockBalance ?? 0}
                   formatDifference={signedUnits}
                   formatValue={(value) => `${russianInteger.format(value)} шт.`}
-                  label="Остаток на конец периода"
+                  label="Остаток"
                   previous={previous?.currentStockBalance ?? 0}
                   previousPeriod={previousPeriod}
                   selectedPeriod={selectedPeriod}
@@ -341,11 +334,6 @@ function DashboardPage() {
                       <TableRow>
                         <TableHead>Штучка</TableHead>
                         <SortableHead
-                          label="Продано"
-                          onClick={() => selectSort('unitsSold')}
-                          sortLabel="Сортировать по проданным штукам"
-                        />
-                        <SortableHead
                           label="Заработано"
                           onClick={() => selectSort('earningsKopecks')}
                           sortLabel="Сортировать по заработку"
@@ -365,7 +353,7 @@ function DashboardPage() {
                     <TableBody>
                       {rows.length === 0 ? (
                         <TableRow>
-                          <TableCell className="h-40 text-center" colSpan={5}>
+                          <TableCell className="h-40 text-center" colSpan={4}>
                             <div className="flex flex-col items-center gap-2 text-muted-foreground">
                               <PackageSearch /> За выбранный период данных пока нет
                             </div>
@@ -408,9 +396,6 @@ function SortableHead({
 function MetricCells({ metrics }: Readonly<{ metrics: AnalyticsMetrics | undefined }>) {
   return (
     <>
-      <TableCell className="text-right">
-        {russianInteger.format(metrics?.unitsSold ?? 0)} шт.
-      </TableCell>
       <TableCell className="text-right">
         {formatRussianCurrency(metrics?.earningsKopecks)}
       </TableCell>

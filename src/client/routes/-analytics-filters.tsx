@@ -61,7 +61,7 @@ function MultipleFilter({
   const names = new Map(options.map((option) => [option.id, option.name]));
   return (
     <div className="min-w-72 space-y-1.5">
-      <span className="text-sm font-medium">{label}</span>
+      <span className="block text-sm font-medium">{label}</span>
       <Combobox
         isItemEqualToValue={(item, value) => item === value}
         itemToStringLabel={(id) => names.get(id) ?? id}
@@ -139,8 +139,8 @@ export function AnalyticsFilters({
 
   return (
     <section aria-label="Фильтры аналитики" className="flex flex-wrap items-end gap-4 px-4 lg:px-6">
-      <div className="space-y-1.5">
-        <span className="text-sm font-medium">Период</span>
+      <div className="min-w-72 space-y-1.5">
+        <span className="block text-sm font-medium">Период</span>
         <Popover
           onOpenChange={(open) => {
             setPeriodOpen(open);
@@ -149,7 +149,7 @@ export function AnalyticsFilters({
           open={periodOpen}
         >
           <PopoverTrigger asChild>
-            <Button aria-label="Выбрать период" className="w-64 justify-start" variant="outline">
+            <Button aria-label="Выбрать период" className="w-full justify-start" variant="outline">
               <CalendarDays />
               {formatRussianDate(periodStartDate)} — {formatRussianDate(periodEndDate)}
             </Button>
