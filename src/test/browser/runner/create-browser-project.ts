@@ -12,6 +12,7 @@ import { reportListingProductComboboxContract } from '../../../client/components
 import { browserCommands } from './commands.js';
 import { createNeutralizeTestStylesPlugin } from './neutralize-test-styles.js';
 import { createTestApplicationStaticPlugin } from './static-plugin.js';
+import { createFullSystemApplicationPlugin } from './full-system-plugin.js';
 import { createTesterHtmlPath } from './tester-html.js';
 import { browserViewport } from './viewport.js';
 
@@ -32,7 +33,11 @@ export function createBrowserProject(): TestProjectInlineConfiguration {
         '@vitest/browser/locators',
       ],
     },
-    plugins: [createTestApplicationStaticPlugin(), createNeutralizeTestStylesPlugin()],
+    plugins: [
+      createTestApplicationStaticPlugin(),
+      createFullSystemApplicationPlugin(),
+      createNeutralizeTestStylesPlugin(),
+    ],
     test: {
       browser: {
         commands: browserCommands,

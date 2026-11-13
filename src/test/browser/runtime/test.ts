@@ -1,4 +1,5 @@
 import { createRouterTransport } from '@connectrpc/connect';
+import { createConnectTransport } from '@connectrpc/connect-web';
 import { test as baseTest, vi } from 'vitest';
 
 import { AnalyticsService } from '@/shared/gen/ceramics/v1/analytics_pb.js';
@@ -49,6 +50,7 @@ interface BrowserFixtures {
   readonly reportListingService: ReportListingServiceSpies;
   readonly reportImportService: ReportImportServiceSpies;
   readonly productService: ProductServiceSpies;
+  readonly realApplication: true;
   readonly salesReportService: SalesReportServiceSpies;
 }
 
@@ -134,6 +136,25 @@ export const test = baseTest
     },
     productService: async ({ applicationServices }, use) => {
       await use(applicationServices.product);
+    },
+    realApplication: async ({ applicationServices: _applicationServices }, use) => {
+      const startResponse = await fetch('/__full-system/start', { method: 'POST' });
+      if (!startResponse.ok) throw new Error(await startResponse.text());
+      const application = await loadTestApplication();
+      application.overrideTransport(
+        createConnectTransport({ baseUrl: window.location.origin, useBinaryFormat: false }),
+      );
+      let useFailed = false;
+      let useError: unknown;
+      try {
+        await use(true);
+      } catch (error) {
+        useFailed = true;
+        useError = error;
+      }
+      const stopResponse = await fetch('/__full-system/stop', { method: 'POST' });
+      if (useFailed) throw useError;
+      if (!stopResponse.ok) throw new Error(await stopResponse.text());
     },
     salesReportService: async ({ applicationServices }, use) => {
       await use(applicationServices.salesReport);

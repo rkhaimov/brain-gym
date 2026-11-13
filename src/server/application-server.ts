@@ -3,6 +3,7 @@ import type { AddressInfo } from 'node:net';
 import { join } from 'node:path';
 
 import { connectNodeAdapter } from '@connectrpc/connect-node';
+import sirv from 'sirv';
 
 import { registerAnalyticsRoutes } from './analytics/analytics-service.js';
 import type { BackupDestination } from './database/backup-destination.js';
@@ -21,9 +22,9 @@ import { createYandexReportMailboxFromEnvironment } from './report-import/yandex
 
 export interface ApplicationServerOptions {
   readonly backupDestination?: BackupDestination;
+  readonly clientDirectory?: string;
   readonly dataDirectory: string;
   readonly env?: EnvService;
-  readonly host?: string;
   readonly port?: number;
   readonly reportMailbox?: ReportMailbox;
 }
@@ -75,7 +76,7 @@ function serverPort(address: string | AddressInfo | null): number {
 export async function startApplicationServer(
   options: ApplicationServerOptions,
 ): Promise<RunningApplicationServer> {
-  const host = options.host ?? '127.0.0.1';
+  const host = '127.0.0.1';
   const env = options.env ?? productionEnv;
   const database = await prepareApplicationDatabase({
     backupDestination:
@@ -113,7 +114,20 @@ export async function startApplicationServer(
       });
     },
   });
-  const server = createServer(requestHandler);
+  const serveClient =
+    options.clientDirectory === undefined
+      ? undefined
+      : sirv(options.clientDirectory, { etag: true, single: true });
+  const server = createServer((request, response) => {
+    if (request.url?.startsWith('/ceramics.v1.') === true || serveClient === undefined) {
+      requestHandler(request, response);
+      return;
+    }
+    serveClient(request, response, () => {
+      response.statusCode = 404;
+      response.end();
+    });
+  });
 
   try {
     await listen(server, host, options.port ?? 3001);

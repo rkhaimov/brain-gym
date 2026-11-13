@@ -5,10 +5,11 @@ description: Client browser testing through the full Ceramics application. Use f
 
 # Client browser testing
 
-Write Vitest browser tests only through the prebuilt Ceramics application seam. Open a route with
-`window.openApplicationRoute()`, inject the generated Connect transport through the automatic test fixture, and
-observe behavior through accessible browser locators. Component rendering and internal collaborator mocks are outside
-this seam.
+Write Vitest browser tests only through the prebuilt Ceramics application seam. Ordinary route suites inject the
+generated Connect transport through the automatic test fixture. The critical full-system suite replaces that adapter
+with the real Connect transport, Node.js server, and isolated SQLite database. Open routes with
+`window.openApplicationRoute()` and observe behavior through accessible browser locators. Component rendering and
+internal collaborator mocks are outside this seam.
 
 ## Run
 
@@ -32,9 +33,10 @@ browser-tests/
         └── products.test.ts/
 ```
 
-Use `src/test/browser/runtime/test.ts` instead of importing `test` from Vitest. Every case receives fresh generated
-service spies and an injected transport; these client-boundary fixtures replace the server, and unregistered RPCs fail
-instead of reaching the network.
+Use `src/test/browser/runtime/test.ts` instead of importing `test` from Vitest. Ordinary cases receive fresh generated
+service spies and an injected transport; these client-seam fixtures replace the server, and unregistered RPCs fail
+instead of reaching the network. A full-system case requests the real-application fixture, which owns fresh server and
+database lifecycle below the same prebuilt application seam.
 
 ## Test structure
 
@@ -58,8 +60,10 @@ test.describe('Product catalog', () => {
 Use generated `create<Model>Stub(overrides)` factories and RPC helpers. Override only values that cause the scenario,
 connect entities, or replace generic visual data. Arrange shared valid state in `beforeEach`; keep one-case spy changes
 inside that case. Verify through UI when possible. Use `getLastRequest()` only for behavior the UI cannot distinguish.
-Keep one domain transition per case. When a response changes after a mutation, prefer deriving the pre/post response
-from the RPC spy's call history over maintaining mutable fake-server state.
+Keep one domain transition per ordinary case. The single critical full-system acceptance flow may cross the required
+import, mapping, analytics, and Stock balance transitions; keep those transitions out of other full-system cases. When
+a response changes after a mutation, prefer deriving the pre/post response from the RPC spy's call history over
+maintaining mutable fake-server state.
 
 Page objects are stateless factory functions. Expose repeated creator actions and semantic locators; keep assertions in
 the scenario. Prefer role, name, and label locators over CSS or incidental structure.

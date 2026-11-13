@@ -98,7 +98,11 @@ function KpiCard({
   const difference = current - previous;
   const TrendIcon = difference < 0 ? TrendingDown : difference > 0 ? TrendingUp : Minus;
   return (
-    <Card className="@container/card bg-gradient-to-t from-primary/5 to-card shadow-xs">
+    <Card
+      aria-label={label}
+      className="@container/card bg-gradient-to-t from-primary/5 to-card shadow-xs"
+      role="group"
+    >
       <CardHeader>
         <CardDescription>{label}</CardDescription>
         <CardTitle className="col-span-2 text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
