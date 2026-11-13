@@ -2,7 +2,7 @@
 
 **What to build:** Finish the MVP as a dependable local application the creator can start, use in Russian, and stop without risking confirmed data. All ordinary work remains offline; only an explicit Yandex Mail import uses the internet.
 
-**Blocked by:** 03: Protect data during startup and migration; 09: Import new Report files from Yandex Mail; 11: Compare and inspect Outlets.
+**Blocked by:** 03: Protect data during startup and migration; 09: Import new Report files from Yandex Mail; 11: Visualize analytics trends.
 
 **Status:** ready-for-agent
 

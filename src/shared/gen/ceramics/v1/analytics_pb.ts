@@ -2,15 +2,15 @@
 // @generated from file ceramics/v1/analytics.proto (package ceramics.v1, syntax proto3)
 /* eslint-disable */
 
-import type { GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
-import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
+import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
+import { enumDesc, fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file ceramics/v1/analytics.proto.
  */
 export const file_ceramics_v1_analytics: GenFile = /*@__PURE__*/
-  fileDesc("ChtjZXJhbWljcy92MS9hbmFseXRpY3MucHJvdG8SC2NlcmFtaWNzLnYxIn0KEEFuYWx5dGljc01ldHJpY3MSHQoVY3VycmVudF9zdG9ja19iYWxhbmNlGAEgASgBEhIKCnVuaXRzX3NvbGQYAiABKAESGAoQZWFybmluZ3Nfa29wZWNrcxgDIAEoARIcChRvdXRsZXRfc2hhcmVfa29wZWNrcxgEIAEoASIxChVBbmFseXRpY3NPdXRsZXRPcHRpb24SCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCSJEChZBbmFseXRpY3NQcm9kdWN0T3B0aW9uEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSEAoIYXJjaGl2ZWQYAyABKAgiewoTUHJvZHVjdEFuYWx5dGljc1JvdxI0Cgdwcm9kdWN0GAEgASgLMiMuY2VyYW1pY3MudjEuQW5hbHl0aWNzUHJvZHVjdE9wdGlvbhIuCgdtZXRyaWNzGAIgASgLMh0uY2VyYW1pY3MudjEuQW5hbHl0aWNzTWV0cmljcyJ5ChpHZXRQcm9kdWN0QW5hbHl0aWNzUmVxdWVzdBIZChFwZXJpb2Rfc3RhcnRfZGF0ZRgBIAEoCRIXCg9wZXJpb2RfZW5kX2RhdGUYAiABKAkSEgoKb3V0bGV0X2lkcxgDIAMoCRITCgtwcm9kdWN0X2lkcxgEIAMoCSKNAwobR2V0UHJvZHVjdEFuYWx5dGljc1Jlc3BvbnNlEjMKB291dGxldHMYASADKAsyIi5jZXJhbWljcy52MS5BbmFseXRpY3NPdXRsZXRPcHRpb24SNQoIcHJvZHVjdHMYAiADKAsyIy5jZXJhbWljcy52MS5BbmFseXRpY3NQcm9kdWN0T3B0aW9uEi0KBnRvdGFscxgDIAEoCzIdLmNlcmFtaWNzLnYxLkFuYWx5dGljc01ldHJpY3MSPQoWcHJldmlvdXNfcGVyaW9kX3RvdGFscxgEIAEoCzIdLmNlcmFtaWNzLnYxLkFuYWx5dGljc01ldHJpY3MSIgoacHJldmlvdXNfcGVyaW9kX3N0YXJ0X2RhdGUYBSABKAkSIAoYcHJldmlvdXNfcGVyaW9kX2VuZF9kYXRlGAYgASgJEi4KBHJvd3MYByADKAsyIC5jZXJhbWljcy52MS5Qcm9kdWN0QW5hbHl0aWNzUm93Eh4KFnVubWFwcGVkX2xpc3RpbmdfY291bnQYCCABKA0yfgoQQW5hbHl0aWNzU2VydmljZRJqChNHZXRQcm9kdWN0QW5hbHl0aWNzEicuY2VyYW1pY3MudjEuR2V0UHJvZHVjdEFuYWx5dGljc1JlcXVlc3QaKC5jZXJhbWljcy52MS5HZXRQcm9kdWN0QW5hbHl0aWNzUmVzcG9uc2UiAGIGcHJvdG8z");
+  fileDesc("ChtjZXJhbWljcy92MS9hbmFseXRpY3MucHJvdG8SC2NlcmFtaWNzLnYxIn0KEEFuYWx5dGljc01ldHJpY3MSHQoVY3VycmVudF9zdG9ja19iYWxhbmNlGAEgASgBEhIKCnVuaXRzX3NvbGQYAiABKAESGAoQZWFybmluZ3Nfa29wZWNrcxgDIAEoARIcChRvdXRsZXRfc2hhcmVfa29wZWNrcxgEIAEoASIxChVBbmFseXRpY3NPdXRsZXRPcHRpb24SCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCSJEChZBbmFseXRpY3NQcm9kdWN0T3B0aW9uEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSEAoIYXJjaGl2ZWQYAyABKAgiewoTUHJvZHVjdEFuYWx5dGljc1JvdxI0Cgdwcm9kdWN0GAEgASgLMiMuY2VyYW1pY3MudjEuQW5hbHl0aWNzUHJvZHVjdE9wdGlvbhIuCgdtZXRyaWNzGAIgASgLMh0uY2VyYW1pY3MudjEuQW5hbHl0aWNzTWV0cmljcyJmChlBbmFseXRpY3NPdXRsZXRGaW5hbmNpYWxzEhEKCW91dGxldF9pZBgBIAEoCRIYChBlYXJuaW5nc19rb3BlY2tzGAIgASgBEhwKFG91dGxldF9zaGFyZV9rb3BlY2tzGAMgASgBIkwKHUFuYWx5dGljc0Vhcm5pbmdzQ29udHJpYnV0aW9uEhEKCW91dGxldF9pZBgBIAEoCRIYChBlYXJuaW5nc19rb3BlY2tzGAIgASgBIpABChVBbmFseXRpY3NQZXJpb2RCdWNrZXQSGQoRcGVyaW9kX3N0YXJ0X2RhdGUYASABKAkSFwoPcGVyaW9kX2VuZF9kYXRlGAIgASgJEkMKD291dGxldF9lYXJuaW5ncxgDIAMoCzIqLmNlcmFtaWNzLnYxLkFuYWx5dGljc0Vhcm5pbmdzQ29udHJpYnV0aW9uInkKGkdldFByb2R1Y3RBbmFseXRpY3NSZXF1ZXN0EhkKEXBlcmlvZF9zdGFydF9kYXRlGAEgASgJEhcKD3BlcmlvZF9lbmRfZGF0ZRgCIAEoCRISCgpvdXRsZXRfaWRzGAMgAygJEhMKC3Byb2R1Y3RfaWRzGAQgAygJItAEChtHZXRQcm9kdWN0QW5hbHl0aWNzUmVzcG9uc2USMwoHb3V0bGV0cxgBIAMoCzIiLmNlcmFtaWNzLnYxLkFuYWx5dGljc091dGxldE9wdGlvbhI1Cghwcm9kdWN0cxgCIAMoCzIjLmNlcmFtaWNzLnYxLkFuYWx5dGljc1Byb2R1Y3RPcHRpb24SLQoGdG90YWxzGAMgASgLMh0uY2VyYW1pY3MudjEuQW5hbHl0aWNzTWV0cmljcxI9ChZwcmV2aW91c19wZXJpb2RfdG90YWxzGAQgASgLMh0uY2VyYW1pY3MudjEuQW5hbHl0aWNzTWV0cmljcxIiChpwcmV2aW91c19wZXJpb2Rfc3RhcnRfZGF0ZRgFIAEoCRIgChhwcmV2aW91c19wZXJpb2RfZW5kX2RhdGUYBiABKAkSLgoEcm93cxgHIAMoCzIgLmNlcmFtaWNzLnYxLlByb2R1Y3RBbmFseXRpY3NSb3cSHgoWdW5tYXBwZWRfbGlzdGluZ19jb3VudBgIIAEoDRJDChJidWNrZXRfZ3JhbnVsYXJpdHkYCSABKA4yJy5jZXJhbWljcy52MS5BbmFseXRpY3NCdWNrZXRHcmFudWxhcml0eRI5Cg10cmVuZF9idWNrZXRzGAogAygLMiIuY2VyYW1pY3MudjEuQW5hbHl0aWNzUGVyaW9kQnVja2V0EkEKEW91dGxldF9maW5hbmNpYWxzGAsgAygLMiYuY2VyYW1pY3MudjEuQW5hbHl0aWNzT3V0bGV0RmluYW5jaWFscyq/AQoaQW5hbHl0aWNzQnVja2V0R3JhbnVsYXJpdHkSLAooQU5BTFlUSUNTX0JVQ0tFVF9HUkFOVUxBUklUWV9VTlNQRUNJRklFRBAAEiQKIEFOQUxZVElDU19CVUNLRVRfR1JBTlVMQVJJVFlfREFZEAESJQohQU5BTFlUSUNTX0JVQ0tFVF9HUkFOVUxBUklUWV9XRUVLEAISJgoiQU5BTFlUSUNTX0JVQ0tFVF9HUkFOVUxBUklUWV9NT05USBADMn4KEEFuYWx5dGljc1NlcnZpY2USagoTR2V0UHJvZHVjdEFuYWx5dGljcxInLmNlcmFtaWNzLnYxLkdldFByb2R1Y3RBbmFseXRpY3NSZXF1ZXN0GiguY2VyYW1pY3MudjEuR2V0UHJvZHVjdEFuYWx5dGljc1Jlc3BvbnNlIgBiBnByb3RvMw");
 
 /**
  * @generated from message ceramics.v1.AnalyticsMetrics
@@ -116,6 +116,82 @@ export const ProductAnalyticsRowSchema: GenMessage<ProductAnalyticsRow> = /*@__P
   messageDesc(file_ceramics_v1_analytics, 3);
 
 /**
+ * @generated from message ceramics.v1.AnalyticsOutletFinancials
+ */
+export type AnalyticsOutletFinancials = Message<"ceramics.v1.AnalyticsOutletFinancials"> & {
+  /**
+   * @generated from field: string outlet_id = 1;
+   */
+  outletId: string;
+
+  /**
+   * @generated from field: double earnings_kopecks = 2;
+   */
+  earningsKopecks: number;
+
+  /**
+   * @generated from field: double outlet_share_kopecks = 3;
+   */
+  outletShareKopecks: number;
+};
+
+/**
+ * Describes the message ceramics.v1.AnalyticsOutletFinancials.
+ * Use `create(AnalyticsOutletFinancialsSchema)` to create a new message.
+ */
+export const AnalyticsOutletFinancialsSchema: GenMessage<AnalyticsOutletFinancials> = /*@__PURE__*/
+  messageDesc(file_ceramics_v1_analytics, 4);
+
+/**
+ * @generated from message ceramics.v1.AnalyticsEarningsContribution
+ */
+export type AnalyticsEarningsContribution = Message<"ceramics.v1.AnalyticsEarningsContribution"> & {
+  /**
+   * @generated from field: string outlet_id = 1;
+   */
+  outletId: string;
+
+  /**
+   * @generated from field: double earnings_kopecks = 2;
+   */
+  earningsKopecks: number;
+};
+
+/**
+ * Describes the message ceramics.v1.AnalyticsEarningsContribution.
+ * Use `create(AnalyticsEarningsContributionSchema)` to create a new message.
+ */
+export const AnalyticsEarningsContributionSchema: GenMessage<AnalyticsEarningsContribution> = /*@__PURE__*/
+  messageDesc(file_ceramics_v1_analytics, 5);
+
+/**
+ * @generated from message ceramics.v1.AnalyticsPeriodBucket
+ */
+export type AnalyticsPeriodBucket = Message<"ceramics.v1.AnalyticsPeriodBucket"> & {
+  /**
+   * @generated from field: string period_start_date = 1;
+   */
+  periodStartDate: string;
+
+  /**
+   * @generated from field: string period_end_date = 2;
+   */
+  periodEndDate: string;
+
+  /**
+   * @generated from field: repeated ceramics.v1.AnalyticsEarningsContribution outlet_earnings = 3;
+   */
+  outletEarnings: AnalyticsEarningsContribution[];
+};
+
+/**
+ * Describes the message ceramics.v1.AnalyticsPeriodBucket.
+ * Use `create(AnalyticsPeriodBucketSchema)` to create a new message.
+ */
+export const AnalyticsPeriodBucketSchema: GenMessage<AnalyticsPeriodBucket> = /*@__PURE__*/
+  messageDesc(file_ceramics_v1_analytics, 6);
+
+/**
  * @generated from message ceramics.v1.GetProductAnalyticsRequest
  */
 export type GetProductAnalyticsRequest = Message<"ceramics.v1.GetProductAnalyticsRequest"> & {
@@ -145,7 +221,7 @@ export type GetProductAnalyticsRequest = Message<"ceramics.v1.GetProductAnalytic
  * Use `create(GetProductAnalyticsRequestSchema)` to create a new message.
  */
 export const GetProductAnalyticsRequestSchema: GenMessage<GetProductAnalyticsRequest> = /*@__PURE__*/
-  messageDesc(file_ceramics_v1_analytics, 4);
+  messageDesc(file_ceramics_v1_analytics, 7);
 
 /**
  * @generated from message ceramics.v1.GetProductAnalyticsResponse
@@ -190,6 +266,21 @@ export type GetProductAnalyticsResponse = Message<"ceramics.v1.GetProductAnalyti
    * @generated from field: uint32 unmapped_listing_count = 8;
    */
   unmappedListingCount: number;
+
+  /**
+   * @generated from field: ceramics.v1.AnalyticsBucketGranularity bucket_granularity = 9;
+   */
+  bucketGranularity: AnalyticsBucketGranularity;
+
+  /**
+   * @generated from field: repeated ceramics.v1.AnalyticsPeriodBucket trend_buckets = 10;
+   */
+  trendBuckets: AnalyticsPeriodBucket[];
+
+  /**
+   * @generated from field: repeated ceramics.v1.AnalyticsOutletFinancials outlet_financials = 11;
+   */
+  outletFinancials: AnalyticsOutletFinancials[];
 };
 
 /**
@@ -197,7 +288,38 @@ export type GetProductAnalyticsResponse = Message<"ceramics.v1.GetProductAnalyti
  * Use `create(GetProductAnalyticsResponseSchema)` to create a new message.
  */
 export const GetProductAnalyticsResponseSchema: GenMessage<GetProductAnalyticsResponse> = /*@__PURE__*/
-  messageDesc(file_ceramics_v1_analytics, 5);
+  messageDesc(file_ceramics_v1_analytics, 8);
+
+/**
+ * @generated from enum ceramics.v1.AnalyticsBucketGranularity
+ */
+export enum AnalyticsBucketGranularity {
+  /**
+   * @generated from enum value: ANALYTICS_BUCKET_GRANULARITY_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: ANALYTICS_BUCKET_GRANULARITY_DAY = 1;
+   */
+  DAY = 1,
+
+  /**
+   * @generated from enum value: ANALYTICS_BUCKET_GRANULARITY_WEEK = 2;
+   */
+  WEEK = 2,
+
+  /**
+   * @generated from enum value: ANALYTICS_BUCKET_GRANULARITY_MONTH = 3;
+   */
+  MONTH = 3,
+}
+
+/**
+ * Describes the enum ceramics.v1.AnalyticsBucketGranularity.
+ */
+export const AnalyticsBucketGranularitySchema: GenEnum<AnalyticsBucketGranularity> = /*@__PURE__*/
+  enumDesc(file_ceramics_v1_analytics, 0);
 
 /**
  * @generated from service ceramics.v1.AnalyticsService

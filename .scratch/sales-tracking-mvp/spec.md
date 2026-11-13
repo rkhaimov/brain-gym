@@ -173,9 +173,9 @@ flowchart LR
 83. As the creator, I can compare and sort mapped Products by Stock, Earnings, or Outlet share using their current canonical names, and rank them by Units sold with the Most sold preset.
 84. As the creator, I can use Product ranking presets for Most sold, Highest earnings, and Lowest stock.
 85. As the creator, every Overview filter is stored in validated route parameters so the mapping workflow can return me to the same view and refetch current analytics.
-86. As the creator, Product detail drill-down is deferred beyond the MVP dashboard; Overview contains no inactive chart or detail placeholder.
-87. As the creator, I can compare and sort Outlets by current Stock balance, Units sold, Earnings, or Outlet share.
-88. As the creator, I can open an Outlet and see its current Stock balances, Product results, Unmapped listings, and Sales report history.
+86. As the creator, Product detail drill-down is deferred beyond the MVP dashboard; Overview contains no inactive detail placeholder.
+87. As the creator, I can see Earnings over the selected period as stacked bars whose adaptive day, ISO-week, or calendar-month intervals show each leading Outlet's contribution and combine the remainder as Other.
+88. As the creator, I can switch the same chart card to compare Earnings and Outlet share by leading Outlet, with the remainder combined as Other, without losing filters or interrupting analytics refreshes.
 
 ### Local use, safety, and usability
 
@@ -246,6 +246,8 @@ flowchart LR
 - Sales analytics aggregate complete active reports whose period end falls inside the selected inclusive range. Current Stock uses each selected Outlet's latest active report at or before the selected range end and is never summed across historical reports.
 - Product analytics resolve current mappings and canonical Product names at query time. Unmapped values are excluded from totals and rows and surfaced only through their distinct relevant-listing count and mapping workflow.
 - Every KPI compares with the immediately preceding equal-length inclusive period. Date, Outlet, and Product filters apply consistently to current totals, previous totals, Product rows, sorting, and ranking presets.
+- Analytics charts use calendar days through 14 selected days, clipped ISO weeks through 90 days, and clipped calendar months for longer ranges. Each complete report contributes wholly to the bucket containing its Reporting-period end date.
+- The Earnings trend shows the five leading Outlets and Other; the financial comparison shows the ten leading Outlets by Sales value and Other. Both charts exclude Unmapped values and use the same filters as the Product analytics result.
 
 ### Durability, backup, migration, and recovery
 

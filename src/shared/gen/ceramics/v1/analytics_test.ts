@@ -7,8 +7,12 @@ import { vi } from 'vitest';
 import type { Mock } from 'vitest';
 
 import {
+  AnalyticsBucketGranularity,
+  AnalyticsEarningsContributionSchema,
   AnalyticsMetricsSchema,
+  AnalyticsOutletFinancialsSchema,
   AnalyticsOutletOptionSchema,
+  AnalyticsPeriodBucketSchema,
   AnalyticsProductOptionSchema,
   AnalyticsService,
   GetProductAnalyticsRequestSchema,
@@ -16,8 +20,11 @@ import {
   ProductAnalyticsRowSchema,
 } from './analytics_pb.js';
 import type {
+  AnalyticsEarningsContribution,
   AnalyticsMetrics,
+  AnalyticsOutletFinancials,
   AnalyticsOutletOption,
+  AnalyticsPeriodBucket,
   AnalyticsProductOption,
   GetProductAnalyticsRequest,
   GetProductAnalyticsResponse,
@@ -75,6 +82,44 @@ export function createProductAnalyticsRowStub(
   });
 }
 
+export type AnalyticsOutletFinancialsStubOverrides = MessageInitShape<typeof AnalyticsOutletFinancialsSchema>;
+
+export function createAnalyticsOutletFinancialsStub(
+  overrides: AnalyticsOutletFinancialsStubOverrides = {},
+): AnalyticsOutletFinancials {
+  return create(AnalyticsOutletFinancialsSchema, {
+    outletId: 'test-outletId',
+    earningsKopecks: 1,
+    outletShareKopecks: 1,
+    ...overrides,
+  });
+}
+
+export type AnalyticsEarningsContributionStubOverrides = MessageInitShape<typeof AnalyticsEarningsContributionSchema>;
+
+export function createAnalyticsEarningsContributionStub(
+  overrides: AnalyticsEarningsContributionStubOverrides = {},
+): AnalyticsEarningsContribution {
+  return create(AnalyticsEarningsContributionSchema, {
+    outletId: 'test-outletId',
+    earningsKopecks: 1,
+    ...overrides,
+  });
+}
+
+export type AnalyticsPeriodBucketStubOverrides = MessageInitShape<typeof AnalyticsPeriodBucketSchema>;
+
+export function createAnalyticsPeriodBucketStub(
+  overrides: AnalyticsPeriodBucketStubOverrides = {},
+): AnalyticsPeriodBucket {
+  return create(AnalyticsPeriodBucketSchema, {
+    periodStartDate: 'test-periodStartDate',
+    periodEndDate: 'test-periodEndDate',
+    outletEarnings: [createAnalyticsEarningsContributionStub()],
+    ...overrides,
+  });
+}
+
 export type GetProductAnalyticsRequestStubOverrides = MessageInitShape<typeof GetProductAnalyticsRequestSchema>;
 
 export function createGetProductAnalyticsRequestStub(
@@ -103,6 +148,9 @@ export function createGetProductAnalyticsResponseStub(
     previousPeriodEndDate: 'test-previousPeriodEndDate',
     rows: [createProductAnalyticsRowStub()],
     unmappedListingCount: 1,
+    bucketGranularity: AnalyticsBucketGranularity.DAY,
+    trendBuckets: [createAnalyticsPeriodBucketStub()],
+    outletFinancials: [createAnalyticsOutletFinancialsStub()],
     ...overrides,
   });
 }

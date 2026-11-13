@@ -1,10 +1,13 @@
 import { Code, ConnectError } from '@connectrpc/connect';
 import { expect, vi } from 'vitest';
-import { page } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 
 import {
+  createAnalyticsEarningsContributionStub,
   createAnalyticsMetricsStub,
   createAnalyticsOutletOptionStub,
+  createAnalyticsOutletFinancialsStub,
+  createAnalyticsPeriodBucketStub,
   createAnalyticsProductOptionStub,
   createGetProductAnalyticsResponseStub,
   createProductAnalyticsRowStub,
@@ -15,7 +18,10 @@ import {
   createReportImportFailureStub,
   createReportImportSuccessStub,
 } from '@/shared/gen/ceramics/v1/report_import_test.js';
-import type { GetProductAnalyticsResponse } from '@/shared/gen/ceramics/v1/analytics_pb.js';
+import {
+  AnalyticsBucketGranularity,
+  type GetProductAnalyticsResponse,
+} from '@/shared/gen/ceramics/v1/analytics_pb.js';
 import { screenshot } from '@/test/browser/runtime/screenshot.js';
 import { test } from '@/test/browser/runtime/test.js';
 
@@ -25,10 +31,24 @@ test.describe('Product analytics dashboard', () => {
     reportImportService,
   }) => {
     const outlet = createAnalyticsOutletOptionStub({ id: 'outlet-1', name: 'Гончарная лавка' });
+    const secondOutlet = createAnalyticsOutletOptionStub({ id: 'outlet-2', name: 'Тёплая полка' });
     const product = createAnalyticsProductOptionStub({ id: 'product-1', name: 'Кольцо' });
     analyticsService.getProductAnalytics.resolves(
       createGetProductAnalyticsResponseStub({
-        outlets: [outlet],
+        bucketGranularity: AnalyticsBucketGranularity.WEEK,
+        outletFinancials: [
+          createAnalyticsOutletFinancialsStub({
+            earningsKopecks: 8_000_000,
+            outletId: outlet.id,
+            outletShareKopecks: 2_000_000,
+          }),
+          createAnalyticsOutletFinancialsStub({
+            earningsKopecks: 4_845_000,
+            outletId: secondOutlet.id,
+            outletShareKopecks: 1_498_000,
+          }),
+        ],
+        outlets: [outlet, secondOutlet],
         previousPeriodEndDate: '2026-10-09',
         previousPeriodStartDate: '2026-09-10',
         previousPeriodTotals: createAnalyticsMetricsStub({
@@ -55,6 +75,78 @@ test.describe('Product analytics dashboard', () => {
           outletShareKopecks: 3_498_000,
           unitsSold: 186,
         }),
+        trendBuckets: [
+          createAnalyticsPeriodBucketStub({
+            outletEarnings: [
+              createAnalyticsEarningsContributionStub({
+                earningsKopecks: 1_500_000,
+                outletId: outlet.id,
+              }),
+              createAnalyticsEarningsContributionStub({
+                earningsKopecks: 500_000,
+                outletId: secondOutlet.id,
+              }),
+            ],
+            periodEndDate: '2026-10-11',
+            periodStartDate: '2026-10-10',
+          }),
+          createAnalyticsPeriodBucketStub({
+            outletEarnings: [
+              createAnalyticsEarningsContributionStub({
+                earningsKopecks: 2_000_000,
+                outletId: outlet.id,
+              }),
+              createAnalyticsEarningsContributionStub({
+                earningsKopecks: 1_000_000,
+                outletId: secondOutlet.id,
+              }),
+            ],
+            periodEndDate: '2026-10-18',
+            periodStartDate: '2026-10-12',
+          }),
+          createAnalyticsPeriodBucketStub({
+            outletEarnings: [
+              createAnalyticsEarningsContributionStub({
+                earningsKopecks: 1_500_000,
+                outletId: outlet.id,
+              }),
+              createAnalyticsEarningsContributionStub({
+                earningsKopecks: 1_000_000,
+                outletId: secondOutlet.id,
+              }),
+            ],
+            periodEndDate: '2026-10-25',
+            periodStartDate: '2026-10-19',
+          }),
+          createAnalyticsPeriodBucketStub({
+            outletEarnings: [
+              createAnalyticsEarningsContributionStub({
+                earningsKopecks: 2_000_000,
+                outletId: outlet.id,
+              }),
+              createAnalyticsEarningsContributionStub({
+                earningsKopecks: 1_345_000,
+                outletId: secondOutlet.id,
+              }),
+            ],
+            periodEndDate: '2026-11-01',
+            periodStartDate: '2026-10-26',
+          }),
+          createAnalyticsPeriodBucketStub({
+            outletEarnings: [
+              createAnalyticsEarningsContributionStub({
+                earningsKopecks: 1_000_000,
+                outletId: outlet.id,
+              }),
+              createAnalyticsEarningsContributionStub({
+                earningsKopecks: 1_000_000,
+                outletId: secondOutlet.id,
+              }),
+            ],
+            periodEndDate: '2026-11-08',
+            periodStartDate: '2026-11-02',
+          }),
+        ],
         unmappedListingCount: 2,
       }),
     );
@@ -90,6 +182,7 @@ test.describe('Product analytics dashboard', () => {
     await expect
       .element(page.getByRole('alert').getByText(/2 несопоставленные позиции/))
       .toBeVisible();
+    await page.viewport(1440, 1600);
     await screenshot(page.getByRole('region', { name: 'Обзор' }), 'Product analytics dashboard');
 
     await expect(analyticsService.getProductAnalytics.getLastRequest()).resolves.toMatchObject({
@@ -106,6 +199,170 @@ test.describe('Product analytics dashboard', () => {
     await expect
       .element(page.getByRole('tooltip').getByText(/128.?450,00.*100.?000,00/))
       .toBeVisible();
+  });
+
+  test('switches between the Earnings trend and Outlet financial comparison', async ({
+    analyticsService,
+    reportImportService,
+  }) => {
+    const warmShelf = createAnalyticsOutletOptionStub({ id: 'warm', name: 'Тёплая полка' });
+    const lighthouse = createAnalyticsOutletOptionStub({ id: 'lighthouse', name: 'Маяк' });
+    analyticsService.getProductAnalytics.resolves(
+      createGetProductAnalyticsResponseStub({
+        bucketGranularity: AnalyticsBucketGranularity.WEEK,
+        outletFinancials: [
+          createAnalyticsOutletFinancialsStub({
+            earningsKopecks: 12_450_000,
+            outletId: warmShelf.id,
+            outletShareKopecks: 4_820_000,
+          }),
+          createAnalyticsOutletFinancialsStub({
+            earningsKopecks: 9_070_000,
+            outletId: lighthouse.id,
+            outletShareKopecks: 5_630_000,
+          }),
+        ],
+        outlets: [warmShelf, lighthouse],
+        previousPeriodTotals: createAnalyticsMetricsStub(),
+        products: [],
+        rows: [],
+        totals: createAnalyticsMetricsStub({ earningsKopecks: 21_520_000 }),
+        trendBuckets: [
+          createAnalyticsPeriodBucketStub({
+            outletEarnings: [
+              createAnalyticsEarningsContributionStub({
+                earningsKopecks: 5_000_000,
+                outletId: warmShelf.id,
+              }),
+              createAnalyticsEarningsContributionStub({
+                earningsKopecks: 3_000_000,
+                outletId: lighthouse.id,
+              }),
+            ],
+            periodEndDate: '2026-10-18',
+            periodStartDate: '2026-10-12',
+          }),
+          createAnalyticsPeriodBucketStub({
+            outletEarnings: [
+              createAnalyticsEarningsContributionStub({
+                earningsKopecks: 6_000_000,
+                outletId: warmShelf.id,
+              }),
+              createAnalyticsEarningsContributionStub({
+                earningsKopecks: 4_000_000,
+                outletId: lighthouse.id,
+              }),
+            ],
+            periodEndDate: '2026-10-25',
+            periodStartDate: '2026-10-19',
+          }),
+        ],
+        unmappedListingCount: 0,
+      }),
+    );
+    reportImportService.getReportImportStatus.resolves(
+      createGetReportImportStatusResponseStub({ lastSyncedAtMs: undefined }),
+    );
+
+    await window.openApplicationRoute('/');
+
+    await expect
+      .element(page.getByRole('img', { name: 'Динамика заработка по магазинам' }))
+      .toBeVisible();
+    await expect
+      .element(page.getByRole('img', { name: 'Заработано и комиссия по магазинам' }))
+      .not.toBeInTheDocument();
+    page.getByRole('img', { name: 'Динамика заработка по магазинам' }).element().focus();
+    await expect.element(page.getByText(/Тёплая полка.*50.?000,00/)).toBeVisible();
+    await userEvent.keyboard('{ArrowRight}');
+    await expect.element(page.getByText(/19\.10\.2026.*25\.10\.2026.*60.?000,00/)).toBeVisible();
+
+    await page.getByRole('tab', { name: 'По магазинам' }).click();
+
+    await expect
+      .element(page.getByRole('img', { name: 'Заработано и комиссия по магазинам' }))
+      .toBeVisible();
+    await expect
+      .element(page.getByRole('img', { name: 'Динамика заработка по магазинам' }))
+      .not.toBeInTheDocument();
+    page.getByRole('img', { name: 'Заработано и комиссия по магазинам' }).element().focus();
+    await expect
+      .element(page.getByText(/Тёплая полка.*124.?500,00.*48.?200,00.*27,9/))
+      .toBeVisible();
+    page.getByRole('tab', { name: 'По магазинам' }).element().focus();
+    await screenshot(
+      page.getByRole('region', { name: 'Графики аналитики' }),
+      'Outlet financial comparison chart',
+    );
+    await page.viewport(720, 900);
+    const chartBounds = page
+      .getByRole('img', { name: 'Заработано и комиссия по магазинам' })
+      .element()
+      .getBoundingClientRect();
+    const cardBounds = page
+      .getByRole('region', { name: 'Графики аналитики' })
+      .element()
+      .getBoundingClientRect();
+    expect(chartBounds.left).toBeGreaterThanOrEqual(cardBounds.left);
+    expect(chartBounds.right).toBeLessThanOrEqual(cardBounds.right);
+  });
+
+  test('aggregates lower-ranked Outlets as Others in both charts', async ({
+    analyticsService,
+    reportImportService,
+  }) => {
+    const outlets = Array.from({ length: 12 }, (_, index) =>
+      createAnalyticsOutletOptionStub({ id: `outlet-${index}`, name: `Магазин ${index + 1}` }),
+    );
+    analyticsService.getProductAnalytics.resolves(
+      createGetProductAnalyticsResponseStub({
+        bucketGranularity: AnalyticsBucketGranularity.WEEK,
+        outletFinancials: outlets.map((outlet, index) =>
+          createAnalyticsOutletFinancialsStub({
+            earningsKopecks: (12 - index) * 100_000,
+            outletId: outlet.id,
+            outletShareKopecks: (index + 1) * 200_000,
+          }),
+        ),
+        outlets,
+        previousPeriodTotals: createAnalyticsMetricsStub(),
+        products: [],
+        rows: [],
+        totals: createAnalyticsMetricsStub(),
+        trendBuckets: [
+          createAnalyticsPeriodBucketStub({
+            outletEarnings: outlets.map((outlet, index) =>
+              createAnalyticsEarningsContributionStub({
+                earningsKopecks: (12 - index) * 100_000,
+                outletId: outlet.id,
+              }),
+            ),
+            periodEndDate: '2026-11-08',
+            periodStartDate: '2026-11-02',
+          }),
+        ],
+        unmappedListingCount: 0,
+      }),
+    );
+    reportImportService.getReportImportStatus.resolves(
+      createGetReportImportStatusResponseStub({ lastSyncedAtMs: undefined }),
+    );
+
+    await window.openApplicationRoute('/');
+    const charts = page.getByRole('region', { name: 'Графики аналитики' });
+    await expect.element(charts.getByText('Остальные', { exact: true })).toBeVisible();
+    await expect.element(charts.getByText('Магазин 6', { exact: true })).not.toBeInTheDocument();
+    charts.getByRole('img', { name: 'Динамика заработка по магазинам' }).element().focus();
+    await expect
+      .element(charts.getByText(/Остальные.*28.?000,00.*Всего.*78.?000,00/))
+      .toBeVisible();
+
+    await charts.getByRole('tab', { name: 'По магазинам' }).click();
+    await expect.element(charts.getByText('Остальные', { exact: true })).toBeVisible();
+    await expect.element(charts.getByText('Магазин 1', { exact: true })).not.toBeInTheDocument();
+    charts.getByRole('img', { name: 'Заработано и комиссия по магазинам' }).element().focus();
+    for (let index = 0; index < 10; index += 1) await userEvent.keyboard('{ArrowDown}');
+    await expect.element(charts.getByText(/Остальные.*23.?000,00.*6.?000,00.*20,7/)).toBeVisible();
   });
 
   test('shows loading, empty, and retryable error states', async ({
@@ -134,6 +391,13 @@ test.describe('Product analytics dashboard', () => {
     await expect
       .element(page.getByText('За выбранный период данных пока нет', { exact: true }))
       .toBeVisible();
+    await expect
+      .element(page.getByText('За выбранный период финансовых данных пока нет', { exact: true }))
+      .toBeVisible();
+    await page.getByRole('tab', { name: 'По магазинам' }).click();
+    await expect
+      .element(page.getByText('За выбранный период финансовых данных пока нет', { exact: true }))
+      .toBeVisible();
 
     analyticsService.getProductAnalytics.rejects(
       new ConnectError('Server unavailable', Code.Unavailable),
@@ -161,29 +425,53 @@ test.describe('Product analytics dashboard', () => {
     analyticsService,
     reportImportService,
   }) => {
-    const outlets = [
-      createAnalyticsOutletOptionStub({ id: 'moscow', name: 'Москва-4' }),
-      createAnalyticsOutletOptionStub({ id: 'pestelya', name: 'Пестеля' }),
-    ];
+    const moscow = createAnalyticsOutletOptionStub({ id: 'moscow', name: 'Москва-4' });
+    const pestelya = createAnalyticsOutletOptionStub({ id: 'pestelya', name: 'Пестеля' });
+    const outlets = [moscow, pestelya];
     const products = [
       createAnalyticsProductOptionStub({ id: 'ring', name: 'Кольцо' }),
       createAnalyticsProductOptionStub({ id: 'pendant', name: 'Кулон' }),
     ];
-    analyticsService.getProductAnalytics.resolves(
-      createGetProductAnalyticsResponseStub({
+    analyticsService.getProductAnalytics.handler.mockImplementation(async (request) => {
+      const earningsKopecks =
+        request.outletIds.length > 0 || request.productIds.length > 0 ? 200_000 : 100_000;
+      return createGetProductAnalyticsResponseStub({
+        bucketGranularity: AnalyticsBucketGranularity.WEEK,
+        outletFinancials: [
+          createAnalyticsOutletFinancialsStub({
+            earningsKopecks,
+            outletId: pestelya.id,
+            outletShareKopecks: earningsKopecks / 5,
+          }),
+        ],
         outlets,
         previousPeriodTotals: createAnalyticsMetricsStub(),
         products,
         rows: [],
-        totals: createAnalyticsMetricsStub(),
+        totals: createAnalyticsMetricsStub({ earningsKopecks }),
+        trendBuckets: [
+          createAnalyticsPeriodBucketStub({
+            outletEarnings: [
+              createAnalyticsEarningsContributionStub({
+                earningsKopecks,
+                outletId: pestelya.id,
+              }),
+            ],
+            periodEndDate: request.periodEndDate,
+            periodStartDate: request.periodStartDate,
+          }),
+        ],
         unmappedListingCount: 0,
-      }),
-    );
+      });
+    });
     reportImportService.getReportImportStatus.resolves(
       createGetReportImportStatusResponseStub({ lastSyncedAtMs: undefined }),
     );
 
     await window.openApplicationRoute('/');
+    await page.getByRole('tab', { name: 'По магазинам' }).click();
+    page.getByRole('img', { name: 'Заработано и комиссия по магазинам' }).element().focus();
+    await expect.element(page.getByText(/Пестеля.*1.?000,00/)).toBeVisible();
     const filters = page.getByRole('region', { name: 'Фильтры аналитики' });
     const period = filters.getByRole('button', { name: 'Выбрать период' });
     const outlet = filters.getByRole('combobox', { name: 'Магазины' });
@@ -229,10 +517,15 @@ test.describe('Product analytics dashboard', () => {
       periodStartDate: '2026-11-02',
       productIds: ['pendant'],
     });
+    await expect
+      .element(page.getByRole('tab', { name: 'По магазинам' }))
+      .toHaveAttribute('data-state', 'active');
+    page.getByRole('img', { name: 'Заработано и комиссия по магазинам' }).element().focus();
+    await expect.element(page.getByText(/Пестеля.*2.?000,00/)).toBeVisible();
     expect(window.location.search).toContain('outlets');
     expect(window.location.search).toContain('products');
-    await expect.element(page.getByText('Пестеля', { exact: true })).toBeVisible();
-    await expect.element(page.getByText('Кулон', { exact: true })).toBeVisible();
+    await expect.element(filters.getByText('Пестеля', { exact: true })).toBeVisible();
+    await expect.element(filters.getByText('Кулон', { exact: true })).toBeVisible();
 
     await page.getByRole('button', { name: 'Очистить магазины' }).click();
     await page.getByRole('button', { name: 'Очистить штучки' }).click();
@@ -398,23 +691,45 @@ test.describe('Product analytics dashboard', () => {
   }) => {
     const importResult =
       createDeferred<ReturnType<typeof createImportNewReportFilesResponseStub>>();
+    const outlet = createAnalyticsOutletOptionStub({ id: 'sync-outlet', name: 'Маяк' });
     reportImportService.importNewReportFiles.handler.mockImplementation(() => importResult.promise);
-    analyticsService.getProductAnalytics.handler.mockImplementation(async () =>
-      createGetProductAnalyticsResponseStub({
-        outlets: [],
+    analyticsService.getProductAnalytics.handler.mockImplementation(async (request) => {
+      const imported = reportImportService.importNewReportFiles.handler.mock.calls.length > 0;
+      const earningsKopecks = imported ? 200_000 : 100_000;
+      return createGetProductAnalyticsResponseStub({
+        bucketGranularity: AnalyticsBucketGranularity.DAY,
+        outletFinancials: [
+          createAnalyticsOutletFinancialsStub({
+            earningsKopecks,
+            outletId: outlet.id,
+            outletShareKopecks: earningsKopecks / 4,
+          }),
+        ],
+        outlets: [outlet],
         previousPeriodTotals: createAnalyticsMetricsStub(),
         products: [],
         rows: [],
         totals: createAnalyticsMetricsStub({
           currentStockBalance: 0,
-          earningsKopecks: 0,
-          outletShareKopecks: 0,
-          unitsSold:
-            reportImportService.importNewReportFiles.handler.mock.calls.length === 0 ? 1 : 2,
+          earningsKopecks,
+          outletShareKopecks: earningsKopecks / 4,
+          unitsSold: imported ? 2 : 1,
         }),
+        trendBuckets: [
+          createAnalyticsPeriodBucketStub({
+            outletEarnings: [
+              createAnalyticsEarningsContributionStub({
+                earningsKopecks,
+                outletId: outlet.id,
+              }),
+            ],
+            periodEndDate: request.periodEndDate,
+            periodStartDate: request.periodEndDate,
+          }),
+        ],
         unmappedListingCount: 0,
-      }),
-    );
+      });
+    });
     reportImportService.getReportImportStatus.resolves(
       createGetReportImportStatusResponseStub({
         lastSyncedAtMs: new Date(2026, 10, 7, 9, 30).getTime(),
@@ -423,6 +738,9 @@ test.describe('Product analytics dashboard', () => {
 
     await window.openApplicationRoute('/?from=2026-11-01&to=2026-11-08');
     await expect.element(page.getByText('1 шт.', { exact: true })).toBeVisible();
+    await page.getByRole('tab', { name: 'По магазинам' }).click();
+    page.getByRole('img', { name: 'Заработано и комиссия по магазинам' }).element().focus();
+    await expect.element(page.getByText(/Маяк.*1.?000,00/)).toBeVisible();
     const syncButton = page
       .getByRole('region', { name: 'Отчёты из Яндекс Почты' })
       .getByRole('button');
@@ -446,6 +764,12 @@ test.describe('Product analytics dashboard', () => {
 
     await expect.element(page.getByText('Отчёты загружены', { exact: true })).toBeVisible();
     await expect.element(page.getByText('2 шт.', { exact: true })).toBeVisible();
+    await expect
+      .element(page.getByRole('tab', { name: 'По магазинам' }))
+      .toHaveAttribute('aria-selected', 'true');
+    page.getByRole('img', { name: 'Заработано и комиссия по магазинам' }).element().focus();
+    await expect.element(page.getByText(/Маяк.*2.?000,00/)).toBeVisible();
+    page.getByRole('tab', { name: 'По магазинам' }).element().focus();
     await screenshot(
       page.getByRole('region', { name: 'Отчёты из Яндекс Почты' }),
       'Successful dashboard mail sync',

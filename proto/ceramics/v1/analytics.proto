@@ -25,6 +25,30 @@ message ProductAnalyticsRow {
   AnalyticsMetrics metrics = 2;
 }
 
+enum AnalyticsBucketGranularity {
+  ANALYTICS_BUCKET_GRANULARITY_UNSPECIFIED = 0;
+  ANALYTICS_BUCKET_GRANULARITY_DAY = 1;
+  ANALYTICS_BUCKET_GRANULARITY_WEEK = 2;
+  ANALYTICS_BUCKET_GRANULARITY_MONTH = 3;
+}
+
+message AnalyticsOutletFinancials {
+  string outlet_id = 1;
+  double earnings_kopecks = 2;
+  double outlet_share_kopecks = 3;
+}
+
+message AnalyticsEarningsContribution {
+  string outlet_id = 1;
+  double earnings_kopecks = 2;
+}
+
+message AnalyticsPeriodBucket {
+  string period_start_date = 1;
+  string period_end_date = 2;
+  repeated AnalyticsEarningsContribution outlet_earnings = 3;
+}
+
 message GetProductAnalyticsRequest {
   string period_start_date = 1;
   string period_end_date = 2;
@@ -41,6 +65,9 @@ message GetProductAnalyticsResponse {
   string previous_period_end_date = 6;
   repeated ProductAnalyticsRow rows = 7;
   uint32 unmapped_listing_count = 8;
+  AnalyticsBucketGranularity bucket_granularity = 9;
+  repeated AnalyticsPeriodBucket trend_buckets = 10;
+  repeated AnalyticsOutletFinancials outlet_financials = 11;
 }
 
 service AnalyticsService {

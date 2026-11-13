@@ -34,6 +34,7 @@ import { getProductAnalytics } from '@/shared/gen/ceramics/v1/analytics-Analytic
 import type { AnalyticsMetrics } from '@/shared/gen/ceramics/v1/analytics_pb.js';
 
 import { currentDate, daysBefore, localCalendarDate } from './-analytics-date.js';
+import { AnalyticsCharts, type AnalyticsChartView } from './-analytics-charts.js';
 import { AnalyticsFilters } from './-analytics-filters.js';
 import { ReportSyncPanel } from './-report-sync-panel.js';
 
@@ -136,6 +137,7 @@ function DashboardPage() {
     productIds: search.products ?? [],
   });
   const data = analytics.data;
+  const [chartView, setChartView] = useState<AnalyticsChartView>('trend');
   const [sort, setSort] = useState<{
     readonly descending: boolean;
     readonly metric: keyof Pick<
@@ -288,6 +290,17 @@ function DashboardPage() {
                   previous={previous?.currentStockBalance ?? 0}
                   previousPeriod={previousPeriod}
                   selectedPeriod={selectedPeriod}
+                />
+              </div>
+
+              <div className="px-4 lg:px-6">
+                <AnalyticsCharts
+                  bucketGranularity={data.bucketGranularity}
+                  onViewChange={setChartView}
+                  outletFinancials={data.outletFinancials}
+                  outlets={data.outlets}
+                  trendBuckets={data.trendBuckets}
+                  view={chartView}
                 />
               </div>
 

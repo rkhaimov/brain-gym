@@ -1,7 +1,10 @@
 import { Code, createClient, createRouterTransport } from '@connectrpc/connect';
 import { describe, expect } from 'vitest';
 
-import { AnalyticsService } from '../../shared/gen/ceramics/v1/analytics_pb.js';
+import {
+  AnalyticsBucketGranularity,
+  AnalyticsService,
+} from '../../shared/gen/ceramics/v1/analytics_pb.js';
 import { OutletService } from '../../shared/gen/ceramics/v1/outlet_pb.js';
 import { ProductService } from '../../shared/gen/ceramics/v1/product_pb.js';
 import { ReportListingService } from '../../shared/gen/ceramics/v1/report_listing_pb.js';
@@ -56,6 +59,125 @@ describe('AnalyticsService', () => {
         periodStartDate: '2026-11-30',
       }),
     ).rejects.toMatchObject({ code: Code.InvalidArgument });
+  });
+
+  test('groups complete reports into clipped ISO weeks and Outlet financial totals', async ({
+    clients,
+  }) => {
+    const warmShelf = await clients.outlets.createOutlet({ name: 'Тёплая полка' });
+    const lighthouse = await clients.outlets.createOutlet({ name: 'Маяк' });
+    const product = await clients.products.createProduct({ name: 'Кольцо' });
+    assertSuccess(warmShelf);
+    assertSuccess(lighthouse);
+    assertSuccess(product);
+
+    const report = (
+      outletId: string,
+      periodEndDate: string,
+      earningsKopecks: number,
+      salesValueKopecks: number,
+    ) =>
+      clients.reports.createSalesReport({
+        outletId,
+        periodEndDate,
+        periodStartDate: periodEndDate,
+        sales: [
+          {
+            earningsKopecks,
+            listingName: 'Кольцо ручной работы',
+            salesValueKopecks,
+            unitsSold: 1,
+          },
+        ],
+      });
+    assertSuccess(await report(warmShelf.result.value.id, '2026-10-11', 1000, 1200));
+    assertSuccess(await report(lighthouse.result.value.id, '2026-10-18', 2000, 2500));
+    assertSuccess(await report(warmShelf.result.value.id, '2026-10-30', 3000, 3600));
+    assertSuccess(await report(lighthouse.result.value.id, '2026-11-08', 4000, 5000));
+
+    const listing = (await clients.listings.listReportListings({})).listings[0];
+    if (listing === undefined) throw new Error('Expected a Report listing');
+    await clients.listings.setReportListingProduct({
+      productId: product.result.value.id,
+      reportListingId: listing.id,
+    });
+
+    await expect(
+      clients.analytics.getProductAnalytics({
+        periodEndDate: '2026-11-08',
+        periodStartDate: '2026-10-10',
+      }),
+    ).resolves.toMatchObject({
+      bucketGranularity: AnalyticsBucketGranularity.WEEK,
+      outletFinancials: [
+        {
+          earningsKopecks: 4000,
+          outletId: warmShelf.result.value.id,
+          outletShareKopecks: 800,
+        },
+        {
+          earningsKopecks: 6000,
+          outletId: lighthouse.result.value.id,
+          outletShareKopecks: 1500,
+        },
+      ],
+      trendBuckets: [
+        {
+          outletEarnings: [{ earningsKopecks: 1000, outletId: warmShelf.result.value.id }],
+          periodEndDate: '2026-10-11',
+          periodStartDate: '2026-10-10',
+        },
+        {
+          outletEarnings: [{ earningsKopecks: 2000, outletId: lighthouse.result.value.id }],
+          periodEndDate: '2026-10-18',
+          periodStartDate: '2026-10-12',
+        },
+        { outletEarnings: [], periodEndDate: '2026-10-25', periodStartDate: '2026-10-19' },
+        {
+          outletEarnings: [{ earningsKopecks: 3000, outletId: warmShelf.result.value.id }],
+          periodEndDate: '2026-11-01',
+          periodStartDate: '2026-10-26',
+        },
+        {
+          outletEarnings: [{ earningsKopecks: 4000, outletId: lighthouse.result.value.id }],
+          periodEndDate: '2026-11-08',
+          periodStartDate: '2026-11-02',
+        },
+      ],
+    });
+  });
+
+  test('uses daily buckets through 14 days and monthly buckets beyond 90 days', async ({
+    clients,
+  }) => {
+    const daily = await clients.analytics.getProductAnalytics({
+      periodEndDate: '2026-01-14',
+      periodStartDate: '2026-01-01',
+    });
+    expect(daily.bucketGranularity).toBe(AnalyticsBucketGranularity.DAY);
+    expect(daily.trendBuckets).toHaveLength(14);
+    expect(daily.trendBuckets[0]).toMatchObject({
+      periodEndDate: '2026-01-01',
+      periodStartDate: '2026-01-01',
+    });
+
+    const weekly = await clients.analytics.getProductAnalytics({
+      periodEndDate: '2026-03-31',
+      periodStartDate: '2026-01-01',
+    });
+    expect(weekly.bucketGranularity).toBe(AnalyticsBucketGranularity.WEEK);
+
+    const monthly = await clients.analytics.getProductAnalytics({
+      periodEndDate: '2026-04-01',
+      periodStartDate: '2026-01-01',
+    });
+    expect(monthly.bucketGranularity).toBe(AnalyticsBucketGranularity.MONTH);
+    expect(monthly.trendBuckets).toMatchObject([
+      { periodEndDate: '2026-01-31', periodStartDate: '2026-01-01' },
+      { periodEndDate: '2026-02-28', periodStartDate: '2026-02-01' },
+      { periodEndDate: '2026-03-31', periodStartDate: '2026-03-01' },
+      { periodEndDate: '2026-04-01', periodStartDate: '2026-04-01' },
+    ]);
   });
 
   test('combines page filters, complete reports, as-of Stock, and the previous period', async ({
@@ -115,14 +237,20 @@ describe('AnalyticsService', () => {
     });
     assertSuccess(currentReport);
 
-    await expect(
-      clients.analytics.getProductAnalytics({
-        outletIds: [outlet.result.value.id],
-        periodEndDate: '2026-11-30',
-        periodStartDate: '2026-11-01',
-        productIds: [product.result.value.id],
-      }),
-    ).resolves.toMatchObject({
+    const analytics = await clients.analytics.getProductAnalytics({
+      outletIds: [outlet.result.value.id],
+      periodEndDate: '2026-11-30',
+      periodStartDate: '2026-11-01',
+      productIds: [product.result.value.id],
+    });
+    expect(analytics).toMatchObject({
+      outletFinancials: [
+        {
+          earningsKopecks: 9000,
+          outletId: outlet.result.value.id,
+          outletShareKopecks: 3000,
+        },
+      ],
       outlets: [{ id: outlet.result.value.id, name: 'Гончарная лавка' }],
       previousPeriodEndDate: '2026-10-31',
       previousPeriodStartDate: '2026-10-02',
@@ -152,6 +280,19 @@ describe('AnalyticsService', () => {
       },
       unmappedListingCount: 1,
     });
+    expect(analytics.trendBuckets).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          outletEarnings: [
+            expect.objectContaining({
+              earningsKopecks: 9000,
+              outletId: outlet.result.value.id,
+            }),
+          ],
+          periodEndDate: '2026-11-30',
+        }),
+      ]),
+    );
   });
 
   test('uses current Product names, archive state, and retroactive mappings with combined filters', async ({
@@ -378,12 +519,13 @@ describe('AnalyticsService', () => {
     const startedAt = performance.now();
     const result = await clients.analytics.getProductAnalytics({
       periodEndDate: '2026-12-31',
-      periodStartDate: '2026-12-01',
+      periodStartDate: '2017-01-01',
     });
     const elapsedMs = performance.now() - startedAt;
 
     expect(result.rows).toHaveLength(productCount);
-    expect(result.totals?.unitsSold).toBe(outletCount * productCount);
+    expect(result.trendBuckets).toHaveLength(reportsPerOutlet);
+    expect(result.totals?.unitsSold).toBe(outletCount * productCount * reportsPerOutlet);
     expect(elapsedMs).toBeLessThan(2000);
   });
 });

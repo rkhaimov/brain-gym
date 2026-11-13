@@ -104,7 +104,8 @@ Keep destructive red distinct from terracotta so the primary color retains its b
 ## Dashboard source and adoption policy
 
 - Use the shadcn/ui dashboard example at commit [`e62c9435fff729a175f38983dee73b2cb4f6a069`](https://github.com/shadcn-ui/ui/tree/e62c9435fff729a175f38983dee73b2cb4f6a069/apps/v4/app/%28app%29/examples/dashboard) as the pinned source for the site header, content container spacing, KPI card grid, data-table composition, and button placement.
-- Copy only the markup and classes required by a working application flow. Do not install the complete block or retain its demo data, placeholder controls, charts, drag-and-drop, sorting, pagination, user menu, or other unused behavior.
+- Copy only the markup and classes required by a working application flow. Do not install the complete block or retain its demo data, placeholder controls, drag-and-drop, sorting, pagination, user menu, or other unused behavior.
+- Overview analytics charts follow the public [`shadcn.io` Bar Chart](https://www.shadcn.io/charts/bar) composition and interaction design while using an application-owned subset built on the pinned TanStack Charts dependency. Keep the chart card, segmented view switch, axes, legends, tooltips, zero baseline, keyboard navigation, and semantic theme tokens aligned with that reference.
 - Keep generated shadcn/ui primitives behaviorally and visually upstream-shaped. Limit local changes to repository formatting and lint compatibility, Russian accessible labels, semantic theme variables, and approved application identity.
 - Application-owned layout targets the desktop presentation. Preserve the responsive container variants used by the pinned dashboard's spacing and KPI grid; do not invent separate mobile workflows or responsive compositions without a product requirement.
 - Add a navigation destination only when its route works. Add a primitive only when the same ticket consumes it.

@@ -1,21 +1,21 @@
-# 11: Compare and inspect Outlets
+# 11: Visualize analytics trends
 
-**What to build:** Let the creator compare Outlet performance and open one Outlet to understand its current stock, Product results, Unmapped work, and complete Sales report history in one place.
+**What to build:** Add one switchable Overview chart card for Earnings over time and the Earnings-versus-Outlet-share comparison, using the same filters and recalculation flow as Product analytics.
 
 **Blocked by:** 10: Compare Products and Unmapped listings.
 
 **Status:** ready-for-agent
 
-- [ ] Outlet comparison uses the same selected date range, Outlets, and Products as Product analytics.
-- [ ] Every Outlet row shows current Stock, Units sold, Earnings, and Outlet share.
-- [ ] Outlet rows can be sorted by any of the four measures.
-- [ ] Overall mapped totals remain visible above the Outlet comparison and match Product analytics for the same selection; relevant Unmapped listings stay excluded and retain the same warning workflow.
-- [ ] Opening an Outlet shows its current Stock balances by exact Report listing.
-- [ ] Outlet details show Product results and visibly marked Unmapped listings.
-- [ ] Outlet details retain the Sales report history and historical-report opening delivered by ticket 07.
-- [ ] The current Outlet name appears even when historical reports were recorded before a rename.
-- [ ] Archived Outlets remain available in historical contexts but are excluded from ordinary active selections by default.
-- [ ] Server integration tests verify Outlet grouping, totals, filters, archive behavior, and agreement with Product-level totals.
-- [ ] Prebuilt-client integration and screenshot tests cover sorting, totals, Outlet navigation, current Stock, Product results, Unmapped listings, and history.
-- [ ] Ordinary Outlet comparison and detail views complete within two seconds against the seeded ten-year expected dataset on the target computer.
+- [ ] The chart card defaults to «Динамика» and switches to «По магазинам» while displaying only the selected chart.
+- [ ] Changing date, Outlet, or Product filters updates every chart value; successful Report sync refreshes the values without resetting the selected chart.
+- [ ] Ranges through 14 days use calendar-day buckets, ranges through 90 days use clipped ISO-week buckets, and longer ranges use clipped calendar-month buckets.
+- [ ] Each complete active report contributes wholly to the bucket containing its Reporting-period end date; empty buckets remain visible and reports are never prorated.
+- [ ] The Earnings trend uses stacked bars for the five leading Outlets and combines the remainder as «Остальные».
+- [ ] The Outlet comparison uses paired horizontal Earnings and Outlet-share bars for the ten leading Outlets by Sales value and combines the remainder as «Остальные».
+- [ ] Tooltips expose exact currency values, bucket ranges, totals, and Outlet-share percentage through pointer and keyboard interaction.
+- [ ] Unmapped values remain excluded from chart values, while the existing warning and mapping workflow remain unchanged.
+- [ ] The charts use the public shadcn.io Bar Chart design and API as a reference, a local TanStack Charts SVG composition, theme tokens, reduced-motion behavior, and meaningful accessible names and descriptions.
+- [ ] Server integration tests verify bucket thresholds and clipping, complete-report assignment, filtering, current mappings, Unmapped exclusion, Outlet grouping, zero buckets, and agreement with Product totals.
+- [ ] Prebuilt-client integration and screenshot tests cover switching, keyboard tooltips, top-N aggregation, filter and sync refresh behavior, empty states, and both chart views.
+- [ ] The analytics handler completes within two seconds against the seeded ten-year expected dataset on the target computer.
 
