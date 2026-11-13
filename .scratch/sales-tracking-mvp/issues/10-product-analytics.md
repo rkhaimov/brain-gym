@@ -27,4 +27,5 @@
 
 - 2026-11-13 — Implemented in `ff80fe4` (`feat: add product analytics dashboard`). Verification: `npm run check` passed with formatting, lint, typechecking, generated-source verification, 18 test files and 122 tests, and production client/server builds. Standards and Spec reviews from pre-change commit `b68b6b9` were completed and their findings resolved before commit.
 - 2026-11-13 — Refined in `0467901` (`refactor: simplify analytics dashboard`): aligned equal-width filter fields, simplified KPI cards and labels, and removed Units sold from the Product table while retaining its KPI and ranking preset. The focused Chromium suite and `npm run check` passed with 122 tests and production builds.
+- 2026-11-13 — Corrected the filter-stack alignment in `26354fb` (`fix: align analytics range filter`) by top-aligning labels and controls. Chromium now asserts matching label and control coordinates; the reviewed screenshot, focused suite, and `npm run check` all passed.
 
