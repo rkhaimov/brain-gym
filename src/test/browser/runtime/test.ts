@@ -86,6 +86,7 @@ export const test = baseTest
             setReportListingProduct: reportListing.setReportListingProduct.handler,
           });
           router.service(ReportImportService, {
+            getReportImportStatus: reportImport.getReportImportStatus.handler,
             importNewReportFiles: reportImport.importNewReportFiles.handler,
           });
           router.service(ProductService, {

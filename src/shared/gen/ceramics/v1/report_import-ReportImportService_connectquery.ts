@@ -5,6 +5,11 @@
 import { ReportImportService } from "./report_import_pb.js";
 
 /**
+ * @generated from rpc ceramics.v1.ReportImportService.GetReportImportStatus
+ */
+export const getReportImportStatus = ReportImportService.method.getReportImportStatus;
+
+/**
  * @generated from rpc ceramics.v1.ReportImportService.ImportNewReportFiles
  */
 export const importNewReportFiles = ReportImportService.method.importNewReportFiles;

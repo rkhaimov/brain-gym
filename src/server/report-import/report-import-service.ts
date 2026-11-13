@@ -3,6 +3,7 @@ import type { ConnectRouter, ServiceImpl } from '@connectrpc/connect';
 import { Mutex } from 'async-mutex';
 
 import {
+  GetReportImportStatusResponseSchema,
   ImportNewReportFilesResponseSchema,
   ReportImportFailureSchema,
   ReportImportService,
@@ -170,6 +171,19 @@ function createReportImportService(
   const { database, mailbox } = dependencies;
 
   return {
+    getReportImportStatus: async () => {
+      const state = await database.db
+        .selectFrom('report_mail_import_state')
+        .select(['mailbox_account', 'updated_at_ms'])
+        .where('id', '=', IMPORT_STATE_ID)
+        .executeTakeFirst();
+      return create(
+        GetReportImportStatusResponseSchema,
+        state === undefined || state.mailbox_account !== normalizedMailboxAccount(mailbox)
+          ? {}
+          : { lastSyncedAtMs: state.updated_at_ms },
+      );
+    },
     importNewReportFiles: () =>
       importMutex.runExclusive(async () => {
         const state = await database.db

@@ -7,6 +7,8 @@ import { vi } from 'vitest';
 import type { Mock } from 'vitest';
 
 import {
+  GetReportImportStatusRequestSchema,
+  GetReportImportStatusResponseSchema,
   ImportNewReportFilesRequestSchema,
   ImportNewReportFilesResponseSchema,
   ReportImportFailureSchema,
@@ -14,6 +16,8 @@ import {
   ReportImportSuccessSchema,
 } from './report_import_pb.js';
 import type {
+  GetReportImportStatusRequest,
+  GetReportImportStatusResponse,
   ImportNewReportFilesRequest,
   ImportNewReportFilesResponse,
   ReportImportFailure,
@@ -27,6 +31,28 @@ export function createImportNewReportFilesRequestStub(
 ): ImportNewReportFilesRequest {
   return create(ImportNewReportFilesRequestSchema, {
 
+    ...overrides,
+  });
+}
+
+export type GetReportImportStatusRequestStubOverrides = MessageInitShape<typeof GetReportImportStatusRequestSchema>;
+
+export function createGetReportImportStatusRequestStub(
+  overrides: GetReportImportStatusRequestStubOverrides = {},
+): GetReportImportStatusRequest {
+  return create(GetReportImportStatusRequestSchema, {
+
+    ...overrides,
+  });
+}
+
+export type GetReportImportStatusResponseStubOverrides = MessageInitShape<typeof GetReportImportStatusResponseSchema>;
+
+export function createGetReportImportStatusResponseStub(
+  overrides: GetReportImportStatusResponseStubOverrides = {},
+): GetReportImportStatusResponse {
+  return create(GetReportImportStatusResponseSchema, {
+    lastSyncedAtMs: 1,
     ...overrides,
   });
 }
@@ -69,6 +95,43 @@ export function createImportNewReportFilesResponseStub(
   });
 }
 
+export interface GetReportImportStatusRpcSpy {
+  readonly handler: Mock<(request: GetReportImportStatusRequest) => Promise<GetReportImportStatusResponse>>;
+  getLastRequest(): Promise<GetReportImportStatusRequest>;
+  rejects(error: ConnectError): void;
+  resolves(value: GetReportImportStatusResponse): void;
+}
+
+function createGetReportImportStatusRpcSpy(): GetReportImportStatusRpcSpy {
+  const handler = vi.fn<(request: GetReportImportStatusRequest) => Promise<GetReportImportStatusResponse>>(
+    async () => createGetReportImportStatusResponseStub(),
+  );
+
+  return {
+    handler,
+    async getLastRequest() {
+      let request: GetReportImportStatusRequest | undefined;
+      await vi.waitFor(() => {
+        const call = handler.mock.calls.at(-1);
+        if (call === undefined) {
+          throw new Error('getReportImportStatus has not received a request');
+        }
+        request = call[0];
+      });
+      if (request === undefined) {
+        throw new Error('getReportImportStatus request was not captured');
+      }
+      return request;
+    },
+    rejects(error) {
+      handler.mockRejectedValue(error);
+    },
+    resolves(value) {
+      handler.mockResolvedValue(value);
+    },
+  };
+}
+
 export interface ImportNewReportFilesRpcSpy {
   readonly handler: Mock<(request: ImportNewReportFilesRequest) => Promise<ImportNewReportFilesResponse>>;
   getLastRequest(): Promise<ImportNewReportFilesRequest>;
@@ -107,6 +170,7 @@ function createImportNewReportFilesRpcSpy(): ImportNewReportFilesRpcSpy {
 }
 
 export interface ReportImportServiceSpies {
+  readonly getReportImportStatus: GetReportImportStatusRpcSpy;
   readonly importNewReportFiles: ImportNewReportFilesRpcSpy;
 }
 
@@ -117,10 +181,12 @@ export interface ReportImportServiceMock {
 
 export function createReportImportServiceMock(): ReportImportServiceMock {
   const spies: ReportImportServiceSpies = {
+    getReportImportStatus: createGetReportImportStatusRpcSpy(),
     importNewReportFiles: createImportNewReportFilesRpcSpy(),
   };
   const transport = createRouterTransport((router) => {
     router.service(ReportImportService, {
+      getReportImportStatus: spies.getReportImportStatus.handler,
       importNewReportFiles: spies.importNewReportFiles.handler,
     });
   });

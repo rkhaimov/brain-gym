@@ -64,6 +64,7 @@ const test = serverTest.extend<{
 
 describe('Yandex Mail Report import', () => {
   test('imports a complete mailbox batch and advances its cursor', async ({ clients, mailbox }) => {
+    expect((await clients.imports.getReportImportStatus({})).lastSyncedAtMs).toBeUndefined();
     const archived = await clients.outlets.createOutlet({ name: 'Москва-4' });
     assertSuccess(archived);
     await clients.outlets.setOutletArchived({ archived: true, id: archived.result.value.id });
@@ -79,6 +80,8 @@ describe('Yandex Mail Report import', () => {
         importedFileCount: 1,
       },
     });
+    const status = await clients.imports.getReportImportStatus({});
+    expect(typeof status.lastSyncedAtMs).toBe('number');
     expect(await clients.outlets.listOutlets({ archived: false })).toMatchObject({
       outlets: [{ name: 'Пестеля' }],
     });

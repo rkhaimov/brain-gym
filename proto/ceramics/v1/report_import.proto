@@ -4,6 +4,12 @@ package ceramics.v1;
 
 message ImportNewReportFilesRequest {}
 
+message GetReportImportStatusRequest {}
+
+message GetReportImportStatusResponse {
+  optional double last_synced_at_ms = 1;
+}
+
 message ReportImportSuccess {
   uint32 imported_file_count = 1;
   uint32 created_report_count = 2;
@@ -25,5 +31,6 @@ message ImportNewReportFilesResponse {
 }
 
 service ReportImportService {
+  rpc GetReportImportStatus(GetReportImportStatusRequest) returns (GetReportImportStatusResponse) {}
   rpc ImportNewReportFiles(ImportNewReportFilesRequest) returns (ImportNewReportFilesResponse) {}
 }

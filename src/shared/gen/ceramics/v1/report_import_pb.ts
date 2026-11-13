@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file ceramics/v1/report_import.proto.
  */
 export const file_ceramics_v1_report_import: GenFile = /*@__PURE__*/
-  fileDesc("Ch9jZXJhbWljcy92MS9yZXBvcnRfaW1wb3J0LnByb3RvEgtjZXJhbWljcy52MSIdChtJbXBvcnROZXdSZXBvcnRGaWxlc1JlcXVlc3QilAEKE1JlcG9ydEltcG9ydFN1Y2Nlc3MSGwoTaW1wb3J0ZWRfZmlsZV9jb3VudBgBIAEoDRIcChRjcmVhdGVkX3JlcG9ydF9jb3VudBgCIAEoDRIcChRjcmVhdGVkX291dGxldF9jb3VudBgDIAEoDRIkChxjcmVhdGVkX3JlcG9ydF9saXN0aW5nX2NvdW50GAQgASgNInwKE1JlcG9ydEltcG9ydEZhaWx1cmUSDwoHbWVzc2FnZRgBIAEoCRIcCg9hdHRhY2htZW50X25hbWUYAiABKAlIAIgBARIVCghsb2NhdGlvbhgDIAEoCUgBiAEBQhIKEF9hdHRhY2htZW50X25hbWVCCwoJX2xvY2F0aW9uIpIBChxJbXBvcnROZXdSZXBvcnRGaWxlc1Jlc3BvbnNlEjMKB3N1Y2Nlc3MYASABKAsyIC5jZXJhbWljcy52MS5SZXBvcnRJbXBvcnRTdWNjZXNzSAASMwoHZmFpbHVyZRgCIAEoCzIgLmNlcmFtaWNzLnYxLlJlcG9ydEltcG9ydEZhaWx1cmVIAEIICgZyZXN1bHQyhAEKE1JlcG9ydEltcG9ydFNlcnZpY2USbQoUSW1wb3J0TmV3UmVwb3J0RmlsZXMSKC5jZXJhbWljcy52MS5JbXBvcnROZXdSZXBvcnRGaWxlc1JlcXVlc3QaKS5jZXJhbWljcy52MS5JbXBvcnROZXdSZXBvcnRGaWxlc1Jlc3BvbnNlIgBiBnByb3RvMw");
+  fileDesc("Ch9jZXJhbWljcy92MS9yZXBvcnRfaW1wb3J0LnByb3RvEgtjZXJhbWljcy52MSIdChtJbXBvcnROZXdSZXBvcnRGaWxlc1JlcXVlc3QiHgocR2V0UmVwb3J0SW1wb3J0U3RhdHVzUmVxdWVzdCJVCh1HZXRSZXBvcnRJbXBvcnRTdGF0dXNSZXNwb25zZRIeChFsYXN0X3N5bmNlZF9hdF9tcxgBIAEoAUgAiAEBQhQKEl9sYXN0X3N5bmNlZF9hdF9tcyKUAQoTUmVwb3J0SW1wb3J0U3VjY2VzcxIbChNpbXBvcnRlZF9maWxlX2NvdW50GAEgASgNEhwKFGNyZWF0ZWRfcmVwb3J0X2NvdW50GAIgASgNEhwKFGNyZWF0ZWRfb3V0bGV0X2NvdW50GAMgASgNEiQKHGNyZWF0ZWRfcmVwb3J0X2xpc3RpbmdfY291bnQYBCABKA0ifAoTUmVwb3J0SW1wb3J0RmFpbHVyZRIPCgdtZXNzYWdlGAEgASgJEhwKD2F0dGFjaG1lbnRfbmFtZRgCIAEoCUgAiAEBEhUKCGxvY2F0aW9uGAMgASgJSAGIAQFCEgoQX2F0dGFjaG1lbnRfbmFtZUILCglfbG9jYXRpb24ikgEKHEltcG9ydE5ld1JlcG9ydEZpbGVzUmVzcG9uc2USMwoHc3VjY2VzcxgBIAEoCzIgLmNlcmFtaWNzLnYxLlJlcG9ydEltcG9ydFN1Y2Nlc3NIABIzCgdmYWlsdXJlGAIgASgLMiAuY2VyYW1pY3MudjEuUmVwb3J0SW1wb3J0RmFpbHVyZUgAQggKBnJlc3VsdDL2AQoTUmVwb3J0SW1wb3J0U2VydmljZRJwChVHZXRSZXBvcnRJbXBvcnRTdGF0dXMSKS5jZXJhbWljcy52MS5HZXRSZXBvcnRJbXBvcnRTdGF0dXNSZXF1ZXN0GiouY2VyYW1pY3MudjEuR2V0UmVwb3J0SW1wb3J0U3RhdHVzUmVzcG9uc2UiABJtChRJbXBvcnROZXdSZXBvcnRGaWxlcxIoLmNlcmFtaWNzLnYxLkltcG9ydE5ld1JlcG9ydEZpbGVzUmVxdWVzdBopLmNlcmFtaWNzLnYxLkltcG9ydE5ld1JlcG9ydEZpbGVzUmVzcG9uc2UiAGIGcHJvdG8z");
 
 /**
  * @generated from message ceramics.v1.ImportNewReportFilesRequest
@@ -24,6 +24,36 @@ export type ImportNewReportFilesRequest = Message<"ceramics.v1.ImportNewReportFi
  */
 export const ImportNewReportFilesRequestSchema: GenMessage<ImportNewReportFilesRequest> = /*@__PURE__*/
   messageDesc(file_ceramics_v1_report_import, 0);
+
+/**
+ * @generated from message ceramics.v1.GetReportImportStatusRequest
+ */
+export type GetReportImportStatusRequest = Message<"ceramics.v1.GetReportImportStatusRequest"> & {
+};
+
+/**
+ * Describes the message ceramics.v1.GetReportImportStatusRequest.
+ * Use `create(GetReportImportStatusRequestSchema)` to create a new message.
+ */
+export const GetReportImportStatusRequestSchema: GenMessage<GetReportImportStatusRequest> = /*@__PURE__*/
+  messageDesc(file_ceramics_v1_report_import, 1);
+
+/**
+ * @generated from message ceramics.v1.GetReportImportStatusResponse
+ */
+export type GetReportImportStatusResponse = Message<"ceramics.v1.GetReportImportStatusResponse"> & {
+  /**
+   * @generated from field: optional double last_synced_at_ms = 1;
+   */
+  lastSyncedAtMs?: number | undefined;
+};
+
+/**
+ * Describes the message ceramics.v1.GetReportImportStatusResponse.
+ * Use `create(GetReportImportStatusResponseSchema)` to create a new message.
+ */
+export const GetReportImportStatusResponseSchema: GenMessage<GetReportImportStatusResponse> = /*@__PURE__*/
+  messageDesc(file_ceramics_v1_report_import, 2);
 
 /**
  * @generated from message ceramics.v1.ReportImportSuccess
@@ -55,7 +85,7 @@ export type ReportImportSuccess = Message<"ceramics.v1.ReportImportSuccess"> & {
  * Use `create(ReportImportSuccessSchema)` to create a new message.
  */
 export const ReportImportSuccessSchema: GenMessage<ReportImportSuccess> = /*@__PURE__*/
-  messageDesc(file_ceramics_v1_report_import, 1);
+  messageDesc(file_ceramics_v1_report_import, 3);
 
 /**
  * @generated from message ceramics.v1.ReportImportFailure
@@ -82,7 +112,7 @@ export type ReportImportFailure = Message<"ceramics.v1.ReportImportFailure"> & {
  * Use `create(ReportImportFailureSchema)` to create a new message.
  */
 export const ReportImportFailureSchema: GenMessage<ReportImportFailure> = /*@__PURE__*/
-  messageDesc(file_ceramics_v1_report_import, 2);
+  messageDesc(file_ceramics_v1_report_import, 4);
 
 /**
  * @generated from message ceramics.v1.ImportNewReportFilesResponse
@@ -111,12 +141,20 @@ export type ImportNewReportFilesResponse = Message<"ceramics.v1.ImportNewReportF
  * Use `create(ImportNewReportFilesResponseSchema)` to create a new message.
  */
 export const ImportNewReportFilesResponseSchema: GenMessage<ImportNewReportFilesResponse> = /*@__PURE__*/
-  messageDesc(file_ceramics_v1_report_import, 3);
+  messageDesc(file_ceramics_v1_report_import, 5);
 
 /**
  * @generated from service ceramics.v1.ReportImportService
  */
 export const ReportImportService: GenService<{
+  /**
+   * @generated from rpc ceramics.v1.ReportImportService.GetReportImportStatus
+   */
+  getReportImportStatus: {
+    methodKind: "unary";
+    input: typeof GetReportImportStatusRequestSchema;
+    output: typeof GetReportImportStatusResponseSchema;
+  },
   /**
    * @generated from rpc ceramics.v1.ReportImportService.ImportNewReportFiles
    */

@@ -22,6 +22,14 @@ export function formatRussianDate(isoDate: string): string {
   return `${day}.${month}.${year}`;
 }
 
+/** Formats a local instant as the application-wide Russian date-and-time display value. */
+export function formatRussianDateTime(timestampMs: number): string {
+  const date = new Date(timestampMs);
+  if (Number.isNaN(date.getTime())) return '—';
+  const twoDigits = (value: number) => value.toString().padStart(2, '0');
+  return `${twoDigits(date.getDate())}.${twoDigits(date.getMonth() + 1)}.${date.getFullYear()}, ${twoDigits(date.getHours())}:${twoDigits(date.getMinutes())}`;
+}
+
 /** Converts a Russian DD.MM.YYYY field value to the API's timezone-free YYYY-MM-DD date. */
 export function parseRussianDate(displayDate: string): string | undefined {
   const match = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(displayDate.trim());

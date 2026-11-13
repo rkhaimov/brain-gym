@@ -4,6 +4,7 @@ import {
   formatRussianCurrency,
   formatRussianCurrencyInput,
   formatRussianDate,
+  formatRussianDateTime,
   parseRussianDate,
   parseRussianRubles,
 } from '@/client/lib/localization.js';
@@ -14,6 +15,12 @@ test.describe('Russian display formats', () => {
     expect(formatRussianDate('2026-11-01')).toBe('01.11.2026');
     expect(parseRussianDate('01.11.2026')).toBe('2026-11-01');
     expect(parseRussianDate('31.02.2026')).toBeUndefined();
+  });
+
+  test('formats the local synchronization date and time', () => {
+    expect(formatRussianDateTime(new Date(2026, 10, 13, 15, 47).getTime())).toBe(
+      '13.11.2026, 15:47',
+    );
   });
 
   test('formats and parses ruble values with kopeck precision', () => {
