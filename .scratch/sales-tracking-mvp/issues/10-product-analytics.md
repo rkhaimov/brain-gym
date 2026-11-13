@@ -4,7 +4,7 @@
 
 **Blocked by:** 07: Correct Sales reports and calculate current Stock; 08: Map Report listings to Products.
 
-**Status:** ready-for-agent
+**Status:** completed
 
 - [x] `/` is the Russian Overview dashboard and its destination appears first in the sidebar.
 - [x] The complete Yandex Mail sync panel lives on Overview; a successful sync refetches analytics without resetting route filters.
@@ -22,4 +22,8 @@
 - [x] Prebuilt-client browser and screenshot tests cover presets and custom dates, searchable filters and clearing, KPIs and tooltips, sorting, mapping return, sync refresh, and page states.
 - [x] Ordinary Product analytics complete within two seconds against the seeded ten-year expected dataset on the target computer.
 - [x] Product drill-down is deferred to its own backlog specification; this ticket leaves no chart or unused detail placeholder.
+
+## Comments
+
+- 2026-11-13 — Implemented in `ff80fe4` (`feat: add product analytics dashboard`). Verification: `npm run check` passed with formatting, lint, typechecking, generated-source verification, 18 test files and 122 tests, and production client/server builds. Standards and Spec reviews from pre-change commit `b68b6b9` were completed and their findings resolved before commit.
 
