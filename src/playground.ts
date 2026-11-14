@@ -1,20 +1,11 @@
-import { treeEditDistance, type TreeNode } from "./zhang-shasha";
+import { BinaryMinHeap } from "./binary-min-heap";
 
-function node(
-  value: string,
-  children: TreeNode<string>[] = [],
-): TreeNode<string> {
-  return { value, children };
+const ascending = (left: number, right: number): number => left - right;
+
+const heap = new BinaryMinHeap(ascending);
+
+for (const value of [5, 2, 4, 1, 3]) {
+  heap.push(value);
 }
 
-const left = node("R", [node("A", [node("B"), node("C")])]);
-const right = node("R", [node("B"), node("C")]);
-
-
-console.log(
-  treeEditDistance(left, right, {
-    insert: () => 1,
-    delete: () => 1,
-    replace: (leftValue, rightValue) => (leftValue === rightValue ? 0 : 1),
-  }),
-);
+console.log(Array.from({ length: 5 }, () => heap.pop()));
