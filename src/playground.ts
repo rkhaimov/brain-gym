@@ -1,11 +1,34 @@
-import { BinaryMinHeap } from "./binary-min-heap";
+import { aStar, type Edge, type SearchResult } from "./a-star";
 
-const ascending = (left: number, right: number): number => left - right;
+const result = search(
+  {
+    start: [
+      { state: "a", cost: 1 },
+      { state: "b", cost: 2 },
+    ],
+    a: [{ state: "shared", cost: 10 }],
+    b: [{ state: "shared", cost: 1 }],
+    shared: [{ state: "goal", cost: 100 }],
+  },
+  "start",
+  "goal",
+);
 
-const heap = new BinaryMinHeap(ascending);
+console.log(result);
 
-for (const value of [5, 2, 4, 1, 3]) {
-  heap.push(value);
+type Graph = Partial<Record<string, Edge<string>[]>>;
+
+function search(
+  graph: Graph,
+  start: string,
+  goal: string,
+  heuristic: (state: string) => number = () => 0,
+): SearchResult<string> | null {
+  return aStar(
+    start,
+    (state) => state === goal,
+    (state) => graph[state] ?? [],
+    heuristic,
+    (state) => state,
+  );
 }
-
-console.log(Array.from({ length: 5 }, () => heap.pop()));
